@@ -32,9 +32,11 @@ function ensureMountNode(id: string): HTMLElement {
   return mount
 }
 
+import AvatarPage from './pages/components/avatar'
+
 function main() {
   const node = ensureMountNode('app')
-  render(React.createElement('div', null, '42'), node)
+  render(<div><AvatarPage /></div>, node)
 }
 
 

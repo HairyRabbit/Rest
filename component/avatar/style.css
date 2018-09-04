@@ -1,0 +1,23 @@
+/**
+ * <Avatar />
+ *
+ * avatar styles
+ */
+
+.main {
+  display: inline-block;
+  line-height: 0;
+}
+
+
+/**
+ * style
+ */
+
+.round {
+  border-radius: 2px;
+}
+
+.circle {
+  border-radius: 50%;
+}

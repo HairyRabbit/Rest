@@ -15,18 +15,6 @@
     ]
   ],
   "plugins": [
-    [
-      "@babel/plugin-proposal-class-properties",
-      {
-        "loose": true
-      }
-    ],
-    [
-      "@babel/plugin-proposal-object-rest-spread",
-      {
-        "useBuiltIns": true
-      }
-    ],
     "@babel/plugin-syntax-dynamic-import",
     "react-hot-loader/babel",
     "@rabbitcc/log/inject-position"
@@ -34,7 +22,12 @@
   "env": {
     "development": {
       "plugins": [
-        "@rabbitcc/babel/remove-test"
+        ["@rabbitcc/babel/remove-test", {
+          "include": [
+            "enzyme",
+            "enzyme-adapter-react-16"
+          ]
+        }]
       ]
     },
     "test": {
@@ -42,7 +35,10 @@
         "power-assert"
       ],
       "plugins": [
-        "@babel/plugin-transform-modules-commonjs"
+        "@babel/plugin-transform-modules-commonjs",
+        ["babel-plugin-webpack-alias", {
+          "config": "./script/webpack/website.js"
+        }]
       ]
     },
     "production": {
@@ -61,7 +57,12 @@
         ]
       ],
       "plugins": [
-        "@rabbitcc/babel/remove-test"
+        ["@rabbitcc/babel/remove-test", {
+          "include": [
+            "enzyme",
+            "enzyme-adapter-react-16"
+          ]
+        }]
       ]
     }
   }

@@ -24,7 +24,20 @@ export default {
     rules: [{
       test: /\.js$/,
       use: 'babel-loader'
+    },{
+      test: /\.css$/,
+      use: [
+        'style-loader',
+        'css-loader?modules'
+      ]
     }]
+  },
+  resolve: {
+    alias: {
+      '~component': path.resolve('component')
+    },
+    unsafeCache: true,
+    extensions: ['.js']
   },
   plugins: [
     new HtmlWebpackPlugin({
