@@ -1,0 +1,68 @@
+{
+  "presets": [
+    "@babel/preset-flow",
+    "@babel/preset-react",
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "esmodules": true,
+          "node": true
+        },
+        "modules": false,
+        "loose": true
+      }
+    ]
+  ],
+  "plugins": [
+    [
+      "@babel/plugin-proposal-class-properties",
+      {
+        "loose": true
+      }
+    ],
+    [
+      "@babel/plugin-proposal-object-rest-spread",
+      {
+        "useBuiltIns": true
+      }
+    ],
+    "@babel/plugin-syntax-dynamic-import",
+    "react-hot-loader/babel",
+    "@rabbitcc/log/inject-position"
+  ],
+  "env": {
+    "development": {
+      "plugins": [
+        "@rabbitcc/babel/remove-test"
+      ]
+    },
+    "test": {
+      "presets": [
+        "power-assert"
+      ],
+      "plugins": [
+        "@babel/plugin-transform-modules-commonjs"
+      ]
+    },
+    "production": {
+      "presets": [
+        [
+          "@babel/preset-env",
+          {
+            "targets": {
+              "browsers": ["last 2 versions", "ie >= 9"]
+            },
+            "modules": false,
+            "loose": true,
+            "useBuiltIns": "usage",
+            "debug": true
+          }
+        ]
+      ],
+      "plugins": [
+        "@rabbitcc/babel/remove-test"
+      ]
+    }
+  }
+}
