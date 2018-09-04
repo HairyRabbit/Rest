@@ -17,7 +17,7 @@ export default {
     ]
   },
   output: {
-    path: path.resolve('doc'),
+    path: path.resolve('docs'),
     filename: '[name].js'
   },
   module: {
