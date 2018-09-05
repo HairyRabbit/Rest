@@ -6,7 +6,7 @@
 
 import { flattenDeep } from 'lodash'
 
-function classnames(...args: Array<string | Array<string>>): string {
+function classnames(...args: Array<?(boolean | string | Array<string>)>): string {
   return flattenDeep(args).filter(Boolean).join(' ')
 }
 

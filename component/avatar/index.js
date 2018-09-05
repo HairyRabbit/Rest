@@ -24,13 +24,28 @@ type Round =
   | 'lg'
   | string
 
+type StyleProp = {
+  [key: string]: string
+}
+
 type Props = {
   value: string,
   size?: Size,
-  round?: Round
+  round?: Round,
+  classNames?: {  main?: string, image?: string },
+  className?: string,
+  styles?: { main?: StyleProp, image?: StyleProp },
+  style?: StyleProp
 }
 
-function Avatar({ value, size = 'md', round = true, classNames = {}, className, styles = {}, style: componentStyle, ...props }: Props): React.Node {
+function Avatar({ value,
+                  size = 'md',
+                  round /* = true */,  // #facebook/flow/issues/6408
+                  classNames = {},
+                  className,
+                  styles = {},
+                  style: componentStyle,
+                  ...props }: Props): React.Node {
   if('production' !== process.env.NODE_ENV) {
     if(!value) {
       throw new Error(
@@ -46,7 +61,7 @@ function Avatar({ value, size = 'md', round = true, classNames = {}, className, 
   }
 
   const [ sizeClassName, sizeStyle ] = mapSize(size)
-  const [ roundClassName, roundStyle ] = mapRound(round)
+  const [ roundClassName, roundStyle ] = mapRound(round || true)
   const mainClassNames = cs(
     style.main,
     sizeClassName,
@@ -78,8 +93,12 @@ function Avatar({ value, size = 'md', round = true, classNames = {}, className, 
   )
 }
 
-
-function mapSize(size: Size): [?string, ?{ width: string, height: string }] {
+/**
+ * map size value to classname or custrom style
+ *
+ * @pure
+ */
+function mapSize(size: Size, style: Object = style): [?string, ?{ width: string, height: string }] {
   switch(size) {
     case 'xs':
       return [style.sizeXS, null]
@@ -96,9 +115,12 @@ function mapSize(size: Size): [?string, ?{ width: string, height: string }] {
   }
 }
 
-
-
-function mapRound(round: Round): [?string, ?{ borderRadius: string }] {
+/**
+ * map round value to classname or custrom style
+ *
+ * @pure
+ */
+function mapRound(round: Round, style: Object = style): [?string, ?{ borderRadius: string }] {
   switch(typeof round) {
     case 'boolean':
       return [round ? style.circle : style.rect, null]
@@ -152,7 +174,6 @@ describe('component <Avatar />', (done) => {
     assert.deepStrictEqual(mapRound(true), [style.circle, null])
     assert.deepStrictEqual(mapRound(false), [style.rect, null])
     assert.deepStrictEqual(mapRound('42rem'), [null, { borderRadius: '42rem' }])
-    assert.deepStrictEqual(mapRound(null), [null, null])
   })
 
   it('helper mapSize()', () => {

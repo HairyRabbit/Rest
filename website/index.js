@@ -40,6 +40,6 @@ function main() {
 }
 
 
-/// RUN
+/// run
 
 main()

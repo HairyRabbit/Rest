@@ -28,7 +28,8 @@ export default {
       test: /\.css$/,
       use: [
         'style-loader',
-        'css-loader?modules'
+        'css-loader?importLoaders=1&modules',
+        'postcss-loader'
       ]
     }]
   },
