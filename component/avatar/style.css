@@ -4,18 +4,73 @@
  * avatar styles
  */
 
+
+/**
+ * container
+ */
+
 .main {
   display: inline-block;
   line-height: 0;
 }
 
+.image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+
 
 /**
- * style
+ * size
  */
 
-.round {
+.sizeXS {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.sizeSM {
+  width: 2rem;
+  height: 2rem;
+}
+
+.sizeMD {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.sizeLG {
+  width: 3.25rem;
+  height: 3.25rem;
+}
+
+.sizeXL {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+
+/**
+ * round
+ */
+
+.rect {
+  border-radius: 0;
+}
+
+.roundSM {
   border-radius: 2px;
+}
+
+.roundMD {
+  border-radius: 4px;
+}
+
+.roundLG {
+  border-radius: 6px;
 }
 
 .circle {
