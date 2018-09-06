@@ -60,8 +60,8 @@ function Avatar({ value,
     }
   }
 
-  const [ sizeClassName, sizeStyle ] = mapSize(size)
-  const [ roundClassName, roundStyle ] = mapRound(round || true)
+  const [ sizeClassName, sizeStyle ] = mapSize(size, style)
+  const [ roundClassName, roundStyle ] = mapRound(undefined === round ? true : round, style)
   const mainClassNames = cs(
     style.main,
     sizeClassName,
@@ -88,7 +88,8 @@ function Avatar({ value,
          style={mainStyles}>
       <img className={imageClassNames}
            style={imageStyles}
-           src={value} />
+           src={value}
+           {...props} />
     </div>
   )
 }
@@ -98,7 +99,7 @@ function Avatar({ value,
  *
  * @pure
  */
-function mapSize(size: Size, style: Object = style): [?string, ?{ width: string, height: string }] {
+function mapSize(size: Size, style: Object = {}): [?string, ?{ width: string, height: string }] {
   switch(size) {
     case 'xs':
       return [style.sizeXS, null]
@@ -120,7 +121,7 @@ function mapSize(size: Size, style: Object = style): [?string, ?{ width: string,
  *
  * @pure
  */
-function mapRound(round: Round, style: Object = style): [?string, ?{ borderRadius: string }] {
+function mapRound(round: Round, style: Object = {}): [?string, ?{ borderRadius: string }] {
   switch(typeof round) {
     case 'boolean':
       return [round ? style.circle : style.rect, null]

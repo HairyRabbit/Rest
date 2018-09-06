@@ -6,12 +6,11 @@
 
 import * as React from 'react'
 import { render } from 'react-dom'
+import '../style/main.css'
 
 
 /**
  * install mount node if not found by id
- *
- * @nopure
  */
 function ensureMountNode(id: string): HTMLElement {
   const node = document.getElementById(id)
@@ -32,11 +31,11 @@ function ensureMountNode(id: string): HTMLElement {
   return mount
 }
 
-import AvatarPage from './pages/components/avatar'
+import Avatar from './pages/components/avatar.md'
 
 function main() {
   const node = ensureMountNode('app')
-  render(<div><AvatarPage /></div>, node)
+  render(<Avatar />, node)
 }
 
 

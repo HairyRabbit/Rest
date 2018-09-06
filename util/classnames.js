@@ -6,6 +6,7 @@
 
 import { flattenDeep } from 'lodash'
 
+
 function classnames(...args: Array<?(boolean | string | Array<string>)>): string {
   return flattenDeep(args).filter(Boolean).join(' ')
 }
@@ -44,7 +45,8 @@ describe('util classnames()', () => {
   it('real world', () => {
     assert('foo' === classnames(
       true && 'foo',
-      false && 'bar'
+      false && 'bar',
+      null && 'baz'
     ))
   })
 })
