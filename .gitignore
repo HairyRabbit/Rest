@@ -62,7 +62,6 @@ lib
 build
 dist
 *.map
-*-loader.js
 
 # Flowtype
 flow-typed/

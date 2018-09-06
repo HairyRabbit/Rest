@@ -4,16 +4,17 @@
 
 import fs from 'fs'
 import path from 'path'
-import register from 'ignore-styles'
+import ignoreRegister from 'ignore-styles'
 import postcss from 'postcss'
 
+const exts = ['.css']
 
-function mock(module, filename) {
+function register(module, filename) {
   const ext = path.extname(filename)
-  if(~['.css', '.scss', '.sass', '.less'].indexOf(ext)) {
+  if(~exts.indexOf(ext)) {
     const source = postcss.parse(
-        fs.readFileSync(filename),
-        { from: filename }
+      fs.readFileSync(filename),
+      { from: filename }
     ).nodes
           .filter(node => 'rule' === node.type)
           .map(node => node.selector.substr(1))
@@ -23,7 +24,15 @@ function mock(module, filename) {
   }
 }
 
+function mock() {
+  return {}
+}
+
 
 /// export
 
-export default () => register(undefined, mock)
+export {
+  exts,
+  register
+}
+export default mock

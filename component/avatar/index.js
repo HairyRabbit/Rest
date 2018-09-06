@@ -172,13 +172,13 @@ describe('component <Avatar />', (done) => {
   })
 
   it('helper mapRound()', () => {
-    assert.deepStrictEqual(mapRound(true), [style.circle, null])
-    assert.deepStrictEqual(mapRound(false), [style.rect, null])
-    assert.deepStrictEqual(mapRound('42rem'), [null, { borderRadius: '42rem' }])
+    assert.deepStrictEqual(mapRound(true, style), [style.circle, null])
+    assert.deepStrictEqual(mapRound(false, style), [style.rect, null])
+    assert.deepStrictEqual(mapRound('42rem', style), [null, { borderRadius: '42rem' }])
   })
 
   it('helper mapSize()', () => {
-    assert.deepStrictEqual(mapSize('md'), [style.sizeMD, null])
-    assert.deepStrictEqual(mapSize('42rem'), [null, { width: '42rem', height: '42rem' }])
+    assert.deepStrictEqual(mapSize('md', style), [style.sizeMD, null])
+    assert.deepStrictEqual(mapSize('42rem', style), [null, { width: '42rem', height: '42rem' }])
   })
 })

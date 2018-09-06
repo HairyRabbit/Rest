@@ -13,6 +13,7 @@
 <PROJECT_ROOT>/lang/.*
 <PROJECT_ROOT>/tests/.*
 <PROJECT_ROOT>/.dll/.*
+<PROJECT_ROOT>/docs/.*
 <PROJECT_ROOT>/node_modules/.*
 
 <PROJECT_ROOT>/src/icon/.*
@@ -30,5 +31,11 @@
 
 
 [options]
+module.use_strict=true
+module.file_ext=.css
+module.file_ext=.md
 module.ignore_non_literal_requires=true
+module.name_mapper.extension='md' -> '<PROJECT_ROOT>/script/mock/markdown-mock.js'
+module.name_mapper.extension='css' -> '<PROJECT_ROOT>/script/mock/style-mock.js'
 module.name_mapper='^~component' -> '<PROJECT_ROOT>/component'
+module.name_mapper='^~style' -> '<PROJECT_ROOT>/style'
