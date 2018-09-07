@@ -53,6 +53,7 @@
     "lodash": "^4.17.10",
     "mini-css-extract-plugin": "^0.4.2",
     "mocha": "^5.2.0",
+    "optimize-css-assets-webpack-plugin": "^5.0.1",
     "postcss-loader": "^3.0.0",
     "postcss-preset-env": "^5.3.0",
     "power-assert": "^1.6.0",
@@ -60,6 +61,7 @@
     "react-hot-loader": "^4.0.0",
     "remark": "^9.0.0",
     "style-loader": "^0.23.0",
+    "terser-webpack-plugin": "^1.0.2",
     "webpack": "^4.17.2",
     "webpack-cli": "^3.1.0",
     "webpack-serve": "^2.0.2"

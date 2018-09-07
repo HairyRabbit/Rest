@@ -10,6 +10,8 @@ import fs from 'fs'
 import path from 'path'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import MiniCssExtractPlugin  from 'mini-css-extract-plugin'
+import TerserPlugin from 'terser-webpack-plugin'
+import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin'
 import postcssPresetEnv from 'postcss-preset-env'
 import pkg from '../../package.json'
 
@@ -36,6 +38,12 @@ type Plugins = {
   [name: string]: {
     constructor: *,
     options: Object
+  }
+}
+
+type Libraries = {
+  [name: string]: {
+    name: string
   }
 }
 
@@ -77,7 +85,7 @@ class Builder {
           }
         },
         {
-          name: 'postcss-loader?sourceMap',
+          name: 'postcss-loader',
           options: {
             sourceMap: true,
             plugins: () => [
@@ -135,6 +143,9 @@ class Builder {
       options: {}
     }
 
+    /**
+     * commons default options
+     */
     this.options = {
       mode: env,
       output: {
@@ -145,6 +156,61 @@ class Builder {
       resolve: {
         unsafeCache: true,
         extensions: ['.js']
+      }
+    }
+
+    /**
+     * dev only
+     */
+    if(!isProd) {
+      this.options = {
+        ...this.options,
+
+        /**
+         * server option
+         */
+        serve: {
+          host: '0.0.0.0',
+          port: 8080,
+          hotClient: {
+            host: {
+              server: '0.0.0.0',
+              client: '127.0.0.1'
+            },
+            port: 8081
+          }
+        }
+      }
+    }
+
+    /**
+     * prod only
+     */
+    if(isProd) {
+      this.options = {
+        ...this.options,
+
+        /**
+         * optimization options
+         */
+        optimization: {
+          minimizer: [
+            new TerserPlugin({
+              cache: true,
+              parallel: true,
+              sourceMap: true
+            }),
+            new OptimizeCSSAssetsPlugin({
+              sourceMap: true,
+              cssProcessorOptions: {
+                map: {
+                  inline: false,
+                  annotation: false
+                }
+              }
+            })
+          ]
+        }
       }
     }
 
