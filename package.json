@@ -5,7 +5,7 @@
   "description": "The Rest app framework & scaffold",
   "main": "index.js",
   "scripts": {
-    "test": "npx cross-env NODE_ENV=test npx mocha -r @babel/register -r jsdom-global/register -r esm -r script/mock/index.js component util website --recursive",
+    "test": "npx cross-env NODE_ENV=test npx mocha -r @babel/register -r jsdom-global/register -r esm -r script/mock/index.js component util website script --recursive",
     "type": "npx flow check",
     "prebuild:website": "rm -rf docs/* & cp CNAME docs/",
     "start:website": "npx cross-env NODE_ENV=development npx webpack-serve -r esm --config script/webpack/website.js",

@@ -36,6 +36,5 @@ defaultOptions.resolve.alias = {
 
 
 defaultOptions.context = path.resolve('website')
-console.log(defaultOptions)
 
 export default defaultOptions

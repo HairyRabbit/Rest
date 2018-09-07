@@ -19,7 +19,7 @@
 .header4,
 .header5,
 .header6 {
-  composes: header from '~style/reset.css';
+  /* composes: header from '~style/reset.css'; */
 }
 
 .header1 {
