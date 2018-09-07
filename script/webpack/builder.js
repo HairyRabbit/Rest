@@ -18,8 +18,38 @@ type Loader = {
   options: Object
 }
 
+type Loaders = {
+  [name: string]: {
+    name: string,
+    options: Object
+  }
+}
+
+type Entries = {
+  [name: string]: {
+    path: string,
+    prepends: Array<string>
+  }
+}
+
+type Plugins = {
+  [name: string]: {
+    constructor: *,
+    options: Object
+  }
+}
+
 class Builder {
+  context: string
+  contextSetted: boolean
+  entry: Entries
+  entryCommons: Array<string>
+  loader: Loaders
+  plugin: Plugins
+  isDev: boolean
+
   constructor() {
+    this.contextSetted = false
     this.entry = {}
     this.entryCommons = []
     this.loader = {}
@@ -30,17 +60,26 @@ class Builder {
       .guessContext()
       .guessEntry()
       .setLoader('script', 'js', ['babel-loader?cacheDirectory'])
-      .setLoader('styleWithModule', 'css', [
+      .setLoader('styleModule', 'css', [
         this.isDev ? 'style-loader?sourceMap' : {
-          loader: MiniCssExtractPlugin.loader,
+          name: MiniCssExtractPlugin.loader,
           options: {
             sourceMap: true
           }
         },
-        'css-loader?importLoaders=1&modules&sourceMap',
+        {
+          name: 'css-loader',
+          options: {
+            importLoaders: 1,
+            modules: true,
+            sourceMap: true,
+            localIdentName: '[local]-[hash:base64:5]'
+          }
+        },
         {
           name: 'postcss-loader?sourceMap',
           options: {
+            sourceMap: true,
             plugins: () => [
               postcssPresetEnv()
             ],
@@ -50,17 +89,23 @@ class Builder {
       ], {
         exclude: [/node_modules/]
       })
-      .setLoader('styleWithoutModule', 'css', [
+      .setLoader('styleInclude', 'css', [
         {
           name: MiniCssExtractPlugin.loader,
           options: {
             sourceMap: true
           }
-        },
-        'css-loader?importLoaders=1&sourceMap',
-        {
-          name: 'postcss-loader?sourceMap',
+        },{
+          name: 'css-loader',
           options: {
+            importLoaders: 1,
+            sourceMap: true
+          }
+        },
+        {
+          name: 'postcss-loader',
+          options: {
+            sourceMap: true,
             plugins: () => [
               postcssPresetEnv()
             ],
@@ -91,9 +136,8 @@ class Builder {
     }
 
     this.options = {
-      mode: process.env.NODE_ENV || 'development',
+      mode: env,
       output: {
-        path: !isProd ? convertToAbsolutePath('.') : convertToAbsolutePath('build'),
         filename: !isProd ? '[name].js' : '[name].[chunkhash].js',
         devtoolModuleFilenameTemplate: sourcemapAbsolutePath
       },
@@ -108,7 +152,7 @@ class Builder {
   }
 
   /**
-   * guess context
+   * guess source context at initial
    */
   guessContext() {
     const dirExists = ['src', 'lib', '.']
@@ -118,12 +162,25 @@ class Builder {
     return this
   }
 
+  /**
+   * set options.context
+   */
   setContext(target: string) {
     const targetPath = convertToAbsolutePath(target)
+
     ensureFileOrDir(targetPath, 'dir')
+
     this.context = targetPath
+    this.contextSetted = true
     this.set('context', this.context)
-    return this.guessEntry()
+    this.guessEntry()
+    this.setOutput(
+      this.isDev
+        ? convertToAbsolutePath('.', this.context)
+        : convertToAbsolutePath('build', this.context)
+    )
+
+    return this
   }
 
   guessEntry() {
@@ -429,6 +486,10 @@ class Builder {
     return this
   }
 
+  report() {
+    return this
+  }
+
   export(): Object {
     return this
       .transformEntry()
@@ -447,9 +508,8 @@ function convertToAbsolutePath(target: string, context?: string): string {
 }
 
 
-type Flag = 'file' | 'dir'
 
-function ensureFileOrDir(target: string, flag: Flag = 'file'): void {
+function ensureFileOrDir(target: string, flag: 'file' | 'dir' = 'file'): void {
   if(!fs.existsSync(target)) {
     throw new Error(
       `Target path not exists, "${target}"`
