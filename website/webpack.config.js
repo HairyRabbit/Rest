@@ -1,5 +1,6 @@
 import path from 'path'
 import webpack from '../script/webpack/builder'
+import SPAGithubPagesFallbackPlugin from '../script/webpack/spa-github-pages-fallback-plugin'
 
 export default webpack()
   .setContext(__dirname)
@@ -22,6 +23,7 @@ export default webpack()
       }
     }
   ])
+  .setPlugin('spafallback', SPAGithubPagesFallbackPlugin)
   .set('resolve.alias.~component', path.resolve('component'))
   .set('resolve.alias.~style', path.resolve('style'))
   .set('serve', {
