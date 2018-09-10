@@ -1,6 +1,5 @@
 import path from 'path'
 import webpack from '../script/webpack/builder'
-import SPAGithubPagesFallbackPlugin from '../script/webpack/spa-github-pages-fallback-plugin'
 
 export default webpack()
   .setContext(__dirname)
@@ -26,15 +25,5 @@ export default webpack()
   .setPluginOptions('html', { filename: '404.html' })
   .set('resolve.alias.~component', path.resolve('component'))
   .set('resolve.alias.~style', path.resolve('style'))
-  .set('serve', {
-    host: '0.0.0.0',
-    port: 8080,
-    hotClient: {
-      host: {
-        server: '0.0.0.0',
-        client: '127.0.0.1'
-      },
-      port: 8081
-    }
-  })
+  .setLib('@rabbitcc/faker')
   .export()

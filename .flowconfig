@@ -7,21 +7,10 @@
 <PROJECT_ROOT>/lib/.*
 <PROJECT_ROOT>/bin/.*
 <PROJECT_ROOT>/build/.*
-<PROJECT_ROOT>/script/.*
-<PROJECT_ROOT>/webpack/.*
-<PROJECT_ROOT>/schema/.*
-<PROJECT_ROOT>/lang/.*
 <PROJECT_ROOT>/tests/.*
 <PROJECT_ROOT>/.dll/.*
 <PROJECT_ROOT>/docs/.*
 <PROJECT_ROOT>/node_modules/.*
-
-<PROJECT_ROOT>/src/icon/.*
-<PROJECT_ROOT>/src/image/.*
-<PROJECT_ROOT>/src/mock/.*
-<PROJECT_ROOT>/src/android/.*
-<PROJECT_ROOT>/src/weapp/.*
-# <PROJECT_ROOT>/src/web/.*
 
 
 [include]
@@ -32,6 +21,8 @@
 
 [options]
 module.use_strict=true
+module.file_ext=.js
+module.file_ext=.json
 module.file_ext=.css
 module.file_ext=.md
 module.ignore_non_literal_requires=true

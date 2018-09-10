@@ -53,7 +53,7 @@
               "browsers": ["last 2 versions", "ie >= 9"]
             },
             "modules": false,
-            "loose": true,
+            "loose": false,
             "useBuiltIns": "usage",
             "debug": true
           }
@@ -65,6 +65,9 @@
             "enzyme",
             "enzyme-adapter-react-16"
           ]
+        }],
+        ["@babel/plugin-transform-runtime", {
+          "corejs": 2
         }]
       ]
     }

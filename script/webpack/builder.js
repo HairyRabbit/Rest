@@ -1,19 +1,146 @@
 /**
  * webpack option builder
  *
+ * @link [webpack option schemas](https://github.com/webpack/webpack/blob/master/schemas/WebpackOptions.json)
  * @flow
  */
 
 
-import { set } from 'lodash'
+import { set, isPlainObject, camelCase } from 'lodash'
+import { objectType } from '../../util'
 import fs from 'fs'
 import path from 'path'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
+import HtmlWebpackTemplate from 'html-webpack-template'
 import MiniCssExtractPlugin  from 'mini-css-extract-plugin'
 import TerserPlugin from 'terser-webpack-plugin'
 import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin'
 import postcssPresetEnv from 'postcss-preset-env'
+import exportPath from './module-umd-path'
 import pkg from '../../package.json'
+
+type WebpackOptions = {
+  mode?:
+    | 'development'
+    | 'production'
+    | 'none',
+  target?:
+    | 'async-node'
+    | 'atom'
+    | 'electron'
+    | 'electron-main'
+    | 'electron-renderer'
+    | 'node'
+    | 'node-webkit'
+    | 'web'
+    | 'webworker'
+    | any => void,
+  context?: string,
+  entry?:
+    | string
+    | Array<string>
+    | { [name: string]: string | Array<string> }
+    | any => (string | Array<string> | { [name: string]: string | Array<string> })
+    | any => Promise<(string | Array<string> | { [name: string]: string | Array<string> })>,
+  output?: {
+    path?: string,
+    filename?:
+      | string
+      | () => string,
+    publicPath?:
+      | string
+      | () => string,
+    library?:
+      | string
+      | {
+        root?: string,
+        commonjs?: string,
+        commonjs2?: string,
+        amd?: string
+      },
+    libraryTarget?:
+      | 'umd'
+      | 'umd2'
+      | 'commonjs2'
+      | 'commonjs'
+      | 'amd'
+      | 'this'
+      | 'var'
+      | 'assign'
+      | 'window'
+      | 'global'
+      | 'jsonp',
+    libraryExport?:
+      | string
+      | Array<string>,
+    pathinfo?: boolean,
+    chunkFilename?: string,
+    chunkLoadTimeout?: number,
+    chunkCallbackName?: string,
+    jsonpFunction?: string => string,
+    jsonpScriptType?:
+      | 'text/javascript'
+      | 'module',
+    sourceMapFilename?: string,
+    devtoolModuleFilenameTemplate?:
+      | string
+      | ({
+        absoluteResourcePath: string,
+        allLoaders: string,
+        hash: string,
+        id: string,
+        loaders: string,
+        resource: string,
+        resourcePath: string,
+        namespace: string
+      }) => string,
+    devtoolFallbackModuleFilenameTemplate?:
+      | string
+      | ({
+        absoluteResourcePath: string,
+        allLoaders: string,
+        hash: string,
+        id: string,
+        loaders: string,
+        resource: string,
+        resourcePath: string,
+        namespace: string
+      }) => string,
+    devtoolNamespace?: string,
+    crossOriginLoading?:
+      | 'use-credentials'
+      | 'anonymous'
+      | false,
+    devtoolLineToLine?: {
+      test: RegExp
+    },
+    hotUpdateMainFilename?:
+      | string
+      | () => string,
+    hotUpdateChunkFilename?:
+      | string
+      | () => string,
+    hotUpdateFunction?: string => string,
+    auxiliaryComment?:
+      | string
+      | {
+        root?: string,
+        commonjs?: string,
+        commonjs2?: string,
+        amd?: string
+      },
+    hashDigest?: string,
+    hashDigestLength?: number,
+    hashFunction?:
+      | string
+      | (string) => string,
+    hashSalt?: string,
+    sourceMapFilename?: string,
+    sourcePrefix?: string,
+    strictModuleExceptionHandling: boolean,
+    umdNamedDefine?: boolean,
+  }
+}
 
 type Loader = {
   name: string,
@@ -27,12 +154,14 @@ type Loaders = {
   }
 }
 
-type Entries = {
-  [name: string]: {
-    path: string,
-    prepends: Array<string>
-  }
+
+type EntryProperty = {
+  entry: string | (prepends?: Set<string>) => string,
+  isFunction: boolean,
+  prepends: Set<string>
 }
+
+type Entry = Map<string, EntryProperty>
 
 type Plugins = {
   [name: string]: {
@@ -41,32 +170,45 @@ type Plugins = {
   }
 }
 
-type Libraries = {
-  [name: string]: {
-    name: string
-  }
+type LibProperty = {
+  version: string
 }
 
+type Lib = Map<string, LibProperty>
+
 class Builder {
-  context: string
+  context: ?string
   contextSetted: boolean
-  entry: Entries
-  entryCommons: Array<string>
+  entry: Entry
+  entrySetted: boolean
+  entryCommons: Set<string>
+  output: string
+  outputSetted: boolean
   loader: Loaders
   plugin: Plugins
   isDev: boolean
+  alias: Map<string, string>
+  libs: Lib
+  deps: { [name: string]: string }
+  options: WebpackOptions
 
-  constructor() {
+  constructor(webpackOptions?: WebpackOptions = {}, options?: Options = {}) {
+    this.context = undefined
     this.contextSetted = false
-    this.entry = {}
-    this.entryCommons = []
+    this.entry = new Map()
+    this.entrySetted = false
+    this.entryCommons = new Set()
+    this.output = undefined
+    this.outputSetted = false
     this.loader = {}
     this.plugin = {}
+    this.options = {}
+    this.libs = new Map()
 
     this
-      .setDefaultOptions()
-      .guessContext()
-      .guessEntry()
+      ._parseWebpackOptions(webpackOptions)
+      ._setDefaultOptions()
+      ._guessContext()
       .setLoader('script', 'js', ['babel-loader?cacheDirectory'])
       .setLoader('styleModule', 'css', [
         this.isDev ? 'style-loader?sourceMap' : {
@@ -124,14 +266,164 @@ class Builder {
         include: [/node_modules/]
       })
       .setPlugin('html', HtmlWebpackPlugin, {
-        title: pkg.description
+        title: pkg.description,
+        template: HtmlWebpackTemplate,
+        inject: false,
+        mobile: true
       })
       .setPlugin('style', MiniCssExtractPlugin, {
         filename: this.isDev ? '[name].css' : '[name].[contenthash].css'
       })
   }
 
-  setDefaultOptions() {
+  /**
+   * parse webpack options
+   *
+   * @private
+   */
+  _parseWebpackOptions({ context,
+                         output: { path: output } = {},
+                         entry,
+                         module: { rules } = {},
+                         plugins,
+                         externals }: WebpackOptions = {}) {
+    return this
+      ._parserWebpackEntryOption(entry)
+      ._parseWebpackOutputOption(output)
+      ._parseWebpackContextOption(context)
+      ._parseWebpackExternalsOption(externals)
+      ._parsePkgDependencies()
+  }
+
+  /**
+   * parse webpackOption.entry
+   *
+   * @private
+   */
+  _parserWebpackEntryOption(entry: $PropertyType<WebpackOptions, 'entry'>, name?: string = 'main') {
+    if(!entry) return this
+
+    switch(typeof entry) {
+      case 'string': {
+        this.setEntry(name, {
+          entry
+        })
+
+        break
+      }
+
+      case 'object': {
+        if(Array.isArray(entry)) {
+
+          this.setEntry(name, {
+            prepends: entry.slice(0, -1),
+            entry: entry.slice(-1)
+          })
+
+          break
+
+        } else if(isPlainObject(entry)) {
+
+          for(let key in entry) {
+            this.parseWebpackOptions(entry[key], key)
+          }
+
+          break
+
+        } else {
+          throw new Error(
+            `Unknow webpack entry option type "${objectType(entry)}"`
+          )
+        }
+      }
+
+      case 'function': {
+        this.setEntry(name, {
+          entry,
+          isFunction: true
+        })
+
+        break
+      }
+
+      default: {
+        throw new Error(
+          `Unknow webpack entry option type "${typeof entry}"`
+        )
+      }
+    }
+
+    this.entrySetted = true
+    return this
+  }
+
+  /**
+   * parse webpackOption.output.path
+   *
+   * @private
+   */
+  _parseWebpackOutputOption(output: $PropertyType<$PropertyType<WebpackOptions, 'output'>, 'path'>) {
+    if(!output) return this
+
+    this.setOutput(output)
+    this.outputSetted = true
+
+    return this
+  }
+
+  /**
+   * parse webpackOptions.context
+   *
+   * @private
+   */
+  _parseWebpackContextOption(context: $PropertyType<WebpackOptions, 'context'>) {
+    if(!context) return this
+
+    this.setContext(context)
+    this.contextSetted = true
+
+    return this
+  }
+
+  /**
+   * parse webpackOption.externals
+   *
+   * @private
+   */
+  _parseWebpackExternalsOption(externals) {
+    if(!externals) return this
+
+    return this
+  }
+
+  /**
+   * parse pkg.dependencies
+   *
+   * @private
+   */
+  _parsePkgDependencies() {
+    const { dependencies, peerDependencies, devDependencies } = pkg
+    const deps = {
+      ...dependencies,
+      ...peerDependencies
+    }
+
+    for(let name in deps) {
+      const version = deps[name]
+      if(this.libs.has(name)) continue
+
+      this.setLib(name, { version })
+    }
+
+    this.deps = {
+      ...devDependencies,
+      ...deps
+    }
+
+    return this
+  }
+
+  _setDefaultOptions(webpackOption) {
     const env = process.env.NODE_ENV || 'development'
     const isProd = 'production' === env
     this.isDev = !isProd
@@ -218,125 +510,311 @@ class Builder {
   }
 
   /**
-   * guess source context at initial
+   * guess source context if not set
+   *
+   * @private
    */
-  guessContext() {
-    const dirExists = ['src', 'lib', '.']
+  _guessContext() {
+    if(this.contextSetted) return this
+
+    const context = ['src', 'lib', '.']
           .map(dir => path.resolve(dir))
           .find(dir => fs.existsSync(dir))
-    this.setContext(dirExists)
-    return this
+
+    if(!context) {
+      throw new Error(
+        `The context dir path not exists, you should set \
+context option by build.setContext()`
+      )
+    }
+
+    return this.setContext(context)
   }
 
   /**
    * set options.context
+   *
+   * @public
    */
-  setContext(target: string) {
-    const targetPath = convertToAbsolutePath(target)
+  setContext(context: string) {
+    this.context = context
 
-    ensureFileOrDir(targetPath, 'dir')
-
-    this.context = targetPath
-    this.contextSetted = true
-    this.set('context', this.context)
-    this.guessEntry()
-    this.setOutput(
-      this.isDev
-        ? convertToAbsolutePath('.', this.context)
-        : convertToAbsolutePath('build', this.context)
-    )
-
-    return this
-  }
-
-  guessEntry() {
-    const fileExists = ['boot.js', 'index.js']
-          .map(file => convertToAbsolutePath(file, this.context))
-          .find(file => fs.existsSync(file))
-
-    if(fileExists) {
-      this.setEntry('main', fileExists)
+    if(!this.entrySetted) {
+      this._guessEntry()
     }
 
-    return this
-  }
-
-  setEntry(name: string, target?: string = '', prepends?: Array<string> = []) {
-    if(prepends && !Array.isArray(prepends)) {
-      throw new Error(
-        `Entry prepends should be array`
+    if(!this.outputSetted) {
+      this.setOutput(
+        this.isDev
+          ? convertToAbsolutePath('.', this.context)
+          : convertToAbsolutePath('build', this.context)
       )
     }
 
-    this.entry[name] = {
-      target: target || this.entry[name].target,
-      prepends: prepends || this.entry[name].prepends
+    return this
+  }
+
+  /**
+   * transform context to options
+   *
+   * @private
+   */
+  _transformContext() {
+    return this.set('context', this.context, true)
+  }
+
+  /**
+   * guess possible entry
+   *
+   * @private
+   */
+  _guessEntry() {
+    if(this.entrySetted) return this
+
+    const entry = ['boot.js', 'index.js']
+          .map(file => convertToAbsolutePath(file, this.context))
+          .find(file => fs.existsSync(file))
+
+    if(entry) {
+      this.setEntry('main', { entry })
     }
 
     return this
   }
 
-  setEntryTarget(name: string, target: string) {
-    return this.setEntry(name, target)
-  }
+  /**
+   * set entry
+   *
+   * @public
+   */
+  setEntry(name: string, { entry, isFunction, prepends = [] }: EntryProperty = {}) {
+    if(this.entry.has(name)) {
+      console.warn(
+        `The entry "${name}" already exists, \
+This operator will override the entry.${name}.
 
-  setEntryPrepends(name: string, prepends?: Array<string> = []) {
-    return this.setEntry(name, undefined, prepends)
-  }
+If you want to change entry path, you should call:
 
-  resetEntryPrepends(name: string) {
-    return this.setEntryPrepends(name)
-  }
+  builder.setEntryEntry()
 
-  addEntryPrepends(name: string, prepend: string) {
-    return this.setEntryPrepends(
-      name,
-      this.entry[name].prepends.concat(prepend)
-    )
-  }
+or you want to change entry prepends, should call:
 
-  removeEntryPrepend(name: string, prepend: string) {
-    return this.setEntryPrepends(
-      name,
-      this.entry.name.prepends.filter(pre => prepend !== pre)
-    )
-  }
+  builder.setEntryPrepends()
 
-  setEntryCommonPrepends(prepends?: Array<string> = []) {
-    this.entryCommons = prepends
-    return this
-  }
+`
+      )
+    }
 
-  resetEntryCommonPrepends() {
-    return this.setEntryCommonPrepends()
-  }
+    if(!entry) {
+      throw new Error(
+        `The entry should provide`
+      )
+    } else if(prepends && !Array.isArray(prepends)) {
+      throw new Error(
+        `The entry prepends should be array`
+      )
+    }
 
-  addEntryCommonPrepend(prepend: string) {
-    return this.setEntryCommonPrepends(
-      this.entryCommons.concat(prepend)
-    )
-  }
-
-  removeEntryCommonPrepend(prepend: string) {
-    return this.setEntryCommonPrepends(
-      this.entryCommons.filter(pre => prepend !== pre)
-    )
-  }
-
-  transformEntry() {
-    Object.keys(this.entry).forEach(key => {
-      this.set(`entry.${key}`, [].concat(
-        this.entryCommons,
-        this.entry[key].prepends,
-        this.entry[key].target
-      ).filter(Boolean))
+    this.entry.set(name, {
+      entry,
+      isFunction: isFunction || 'function' === typeof entry,
+      prepends: new Set(prepends)
     })
 
     return this
   }
 
-  setOutput(target: string) {
-    return this.set('output.path', convertToAbsolutePath(target))
+  /**
+   * remove all entry
+   *
+   * @public
+   */
+  clearEntry() {
+    this.entry.clear()
+
+    return this
+  }
+
+  /**
+   * delete entry by name
+   *
+   * @public
+   */
+  deleteEntry(name: string) {
+    this.entry.delete(name)
+
+    return this
+  }
+
+  /**
+   * set entry entry by name
+   *
+   * @public
+   */
+  setEntryEntry(name: string, entry: $PropertyType<EntryProperty, 'entry'>) {
+    if(!entry) {
+      throw new Error(
+        `The entry should provide`
+      )
+    }
+
+    /**
+     * if not have entry, generate one
+     */
+    if(!this.entry.has(name)) {
+      this.setEntry(name, { entry })
+    } else {
+      this.entry.get(name).entry = entry
+      this.entry.get(name).isFunction = 'function' === typeof entry
+    }
+
+    return this
+  }
+
+  /**
+   * set entry prepends by name
+   *
+   * @public
+   */
+  setEntryPrepends(name: string, prepends: Array<string> = []) {
+    if(!prepends || !Array.isArray(prepends)) {
+      throw new Error(
+        `The entry prepends should be array`
+      )
+    }
+
+    this.entry.get(name).prepends = new Set(prepends)
+
+    return this
+  }
+
+  /**
+   * clear entry prepends by name
+   *
+   * @public
+   */
+  clearEntryPrepends(name: string) {
+    this.entry.get(name).prepends.clear()
+
+    return this
+  }
+
+  /**
+   * add entry prepend by name
+   *
+   * @public
+   */
+  addEntryPrepends(name: string, prepend: string) {
+    this.entry.get(name).prepends.add(prepend)
+
+    return this
+  }
+
+  /**
+   * delete entry prepend by name
+   *
+   * @public
+   */
+  removeEntryPrepend(name: string, prepend: string) {
+    this.entry.get(name).prepends.delete(prepend)
+
+    return this
+  }
+
+  /**
+   * set entry commons prepends
+   *
+   * @public
+   */
+  setEntryCommonPrepends(prepends: Array<string> = []) {
+    if(!prepends || !Array.isArray(prepends)) {
+      throw new Error(
+        `The entry prepends should be array`
+      )
+    }
+
+    this.entryCommons = new Set(prepends)
+    return this
+  }
+
+  /**
+   * clear all entry commons prepends
+   *
+   * @public
+   */
+  clearEntryCommonPrepends() {
+    this.entryCommons.clear()
+
+    return this
+  }
+
+  /**
+   * add entry commons prepend
+   *
+   * @public
+   */
+  addEntryCommonPrepend(prepend: string) {
+    this.entryCommons.add(prepend)
+
+    return this
+  }
+
+  /**
+   * delete entry commons prepend
+   *
+   * @public
+   */
+  deleteEntryCommonPrepend(prepend: string) {
+    this.entryCommons.delete(prepend)
+
+    return this
+  }
+
+  /**
+   * transform entry to option
+   *
+   * @private
+   */
+  _transformEntry() {
+    if(!this.entry.size) {
+      throw new Error(
+        `Should have more then one entry`
+      )
+    }
+
+    this.entry.forEach(({ entry, isFunction, prepends }, name) => {
+      const pres = [
+        ...[...this.entryCommons],
+        ...[...prepends]
+      ].filter(Boolean)
+
+      if(isFunction) {
+        this.set(`entry.${name}`, entry(pres), true)
+      } else {
+        this.set(`entry.${name}`, [...pres, entry], true)
+      }
+    })
+
+    return this
+  }
+
+  /**
+   * set output
+   *
+   * @public
+   */
+  setOutput(output: string) {
+    this.output = convertToAbsolutePath(output)
+    return this
+  }
+
+  /**
+   * transform output to options
+   *
+   * @private
+   */
+  _transformOutput() {
+    return this.set('output.path', this.output, true)
   }
 
   setLoader(name: string, exts?: string, loaders?: Array<Loader> = [], options?: Object = {}) {
@@ -499,7 +977,7 @@ class Builder {
       })
     })
 
-    this.set(`module.rules`, rules)
+    this.set(`module.rules`, rules, true)
 
     return this
   }
@@ -536,7 +1014,7 @@ class Builder {
     return this
   }
 
-  transformPlugin() {
+  _transformPlugin() {
     const plugins = []
 
     Object.keys(this.plugin).forEach(key => {
@@ -544,10 +1022,81 @@ class Builder {
       plugins.push(new constructor(options))
     })
 
-    return this.set(`plugins`, plugins)
+    return this.set(`plugins`, plugins, true)
   }
 
-  set(key: string, value: *) {
+  /**
+   * set library
+   *
+   * @public
+   */
+  setLib(name: string, { version, root }: LibProperty = {}) {
+    this.libs.set(name, {
+      version: version || this.deps[name],
+      root: root || suggestLibraryRootName(name)
+    })
+
+    return this
+  }
+
+  /**
+   * transform library to options
+   *
+   * @private
+   */
+  _transformLib() {
+    const scripts = []
+
+    this.libs.forEach(({ version, root }, name) => {
+      this.set(`externals.${name}`, root)
+      scripts.push(`https://unpkg.com/${exportPath(name).replace(/\.\/node_modules\//, '')}`)
+    })
+
+    this.setPluginOptions('html', {
+      scripts
+    })
+
+    console.log(this)
+
+    return this
+  }
+
+  set(key: string, value: *, internal: boolean = false) {
+
+    if(!internal) {
+      if(/^entry/.test(key)) {
+        console.warn(
+          `Maybe you set controlled option "option.entry" \
+by "build.set()" method, It better replaced by "build.setEntry()"`
+        )
+      } else if(/^output\.path/.test(key)) {
+        console.warn(
+          `Maybe you set controlled option "option.output.path" \
+by "build.set()" method, It better replaced by "build.setOutput()"`
+        )
+      } else if(/^context/.test(key)) {
+        console.warn(
+          `Maybe you set controlled option "option.context" \
+by "build.set()" method, It better replaced by "build.setContext()"`
+        )
+      } else if(/^module.rules/.test(key)) {
+        console.warn(
+          `Maybe you set controlled option "option.module.rules" \
+by "build.set()" method, It better replaced by "build.setLoader()"`
+        )
+      } else if(/^plugins/.test(key)) {
+        console.warn(
+          `Maybe you set controlled option "option.plugins" \
+by "build.set()" method, It better replaced by "build.setPlugin()"`
+        )
+      } else if(/^resolve\.alias/.test(key)) {
+        // console.warn(
+//           `Maybe you set controlled option "option.resolve.alias" \
+// by "build.set()" method, It better replaced by "build.setAlias()"`
+//         )
+      }
+    }
+
     set(this.options, key, value)
     return this
   }
@@ -558,9 +1107,12 @@ class Builder {
 
   export(): Object {
     return this
-      .transformEntry()
+      ._transformContext()
+      ._transformOutput()
+      ._transformEntry()
+      ._transformLib()
       .transformLoader()
-      .transformPlugin()
+      ._transformPlugin()
       .options
   }
 }
@@ -623,6 +1175,17 @@ function sourcemapAbsolutePath(info): string {
     : prepend + fmt
 }
 
+function suggestLibraryRootName(input: string): string {
+  return camelCase(input.split(/\//).slice(-1)[0])
+    .replace(/^(\w)/, (_, a) => a.toUpperCase())
+    .replace(/dom/ig, 'DOM')
+}
+
+function suggestLibraryUMDPath(lib: string): string {
+
+}
+
+
 function build() {
   return new Builder()
 }
@@ -637,9 +1200,9 @@ export default build
 
 import assert from 'assert'
 
-describe('script/webpack builder()', () => {
-  it('should export webpack options', () => {
-    console.log(build().export())
-    assert(true)
-  })
-})
+// describe('script/webpack builder()', () => {
+//   it('should parse webpack option', () => {
+//     console.log(build().export())
+//     assert(true)
+//   })
+// })
