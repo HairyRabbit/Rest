@@ -23,7 +23,7 @@ export default webpack()
       }
     }
   ])
-  .setPlugin('spafallback', SPAGithubPagesFallbackPlugin)
+  .setPluginOptions('html', { filename: '404.html' })
   .set('resolve.alias.~component', path.resolve('component'))
   .set('resolve.alias.~style', path.resolve('style'))
   .set('serve', {
