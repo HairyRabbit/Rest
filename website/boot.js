@@ -6,7 +6,7 @@
 
 import * as React from 'react'
 import { render } from 'react-dom'
-import '../style/main.css'
+import Root from './'
 
 
 /**
@@ -31,11 +31,9 @@ function ensureMountNode(id: string): HTMLElement {
   return mount
 }
 
-import Avatar from './pages/components/avatar.md'
-
 function main() {
   const node = ensureMountNode('app')
-  render(<Avatar />, node)
+  render(<Root />, node)
 }
 
 

@@ -22,7 +22,7 @@ export default webpack()
       }
     }
   ])
-  .setPluginOptions('html', { filename: '404.html' })
+  // .setPluginOptions('html', { filename: '404.html' })
   .set('resolve.alias.~component', path.resolve('component'))
   .set('resolve.alias.~style', path.resolve('style'))
   .setLib('@rabbitcc/faker')

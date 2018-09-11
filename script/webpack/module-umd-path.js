@@ -1,7 +1,7 @@
 /**
- * resolve-umd-libpath
+ * module-umd-path
  *
- * Find installed library UMD file path.
+ * find library UMD file path by
  *
  * @module umd-extra/resolveUMDLibpath
  *
@@ -17,111 +17,120 @@
  * @flow
  */
 
-
-/// CODE
-
 import { words, isEqual } from 'lodash'
 import path from 'path'
 import glob from 'glob'
 
 
-export default function exportPath(libname: string, isDev?: boolean, context?: string, log?: boolean = true): Promise<?string> {
-  const dirResolver = makeGlobPatten(['umd', 'dist', 'build', 'js'])
-  const pathPrefix = context ? context.replace(/\\/, '/') + '/' : './'
-  const directoryPath = `${pathPrefix}node_modules/${libname}/`
-  const umdPathName = `${dirResolver}/{${dirResolver}/,}`
+/// code
+
+function exportPath(name: string, isDev?: boolean, context?: string, log?: boolean = true): ?string {
+  const suggests = `+(${['umd', 'dist', 'build', 'js'].join('|')})`
+  const prefix = context
+        ? context.replace(/\\/, '/') + '/'
+        : './'
+
+  const dir = `${prefix}node_modules/${name}/`
+  const umdPath = `${suggests}/{${suggests}/,}`
   const fileName = !isDev
         ? '*([!.])?(.production).min.js'
         : '*([!.])?(.development).js'
-  const libraryUMDPath = directoryPath + umdPathName + fileName
-  const libraries = glob.sync(libraryUMDPath)
-  if(libraries.length === 0) {
+
+  const libs = glob.sync(dir + umdPath + fileName)
+
+  if(!libs.length) {
+
     /**
-     * can't find from libraryUMDPath
+     * can't find file
      *
-     * 1. find same name file 'foo(.min)?.js' in libpath
-     * 2. then find by 'main' field of package.json
+     * 1. find same name file 'foo(.min)?.js'
+     * 2. find file that 'main' field of package.json
      */
-    const dirpath = glob.sync(`${directoryPath}${libname}.min.js`)
+    const dirpath = glob.sync(`${dir}${name}.min.js`)
 
     if(dirpath.length) {
+
+      /**
+       * find name file
+       */
       return dirpath[0]
+
     } else {
+
+      /**
+       * find file by package.json.main
+       */
       let main
       try {
-        main = require(path.resolve(`${pathPrefix}node_modules/${libname}/package.json`)).main
-      } catch(err) {}
+        main = require(path.resolve(`${prefix}node_modules/${name}/package.json`)).main
+      } catch(err) {
+        throw new Error(
+          `The file "${name}" package.json file not exists`
+        )
+      }
 
       if(main) {
-        if(log) {
-          console.warn(`[umd-extra] Can't find ${libname}, resolve by main filed of package.json`)
-        }
-        return `${pathPrefix}node_modules/${libname}/${main}`
+
+        /**
+         * find file by main field
+         */
+        return `${prefix}node_modules/${name}/${main}`
+
       } else {
-        if(log) {
-          console.warn(`[umd-extra] Can't find module path '${libname}'.`)
-        }
+
+        /**
+         * can't define "main" field
+         */
         return null
       }
     }
-  } else if (libraries.length === 1) {
-    return libraries[0]
+  } else if (1 === libs.length) {
+
+    /**
+     * find one file
+     */
+    return libs[0]
+
   } else {
-    return suggest(libname, libraries)
+
+    /**
+     * find more then one files
+     */
+    return suggest(name, libs)
   }
 }
 
-
-/// HELPERS
-
 /**
- * Make glob pattens.
+ * select most matching path name.
  *
- * @private
+ * sort by:
+ *   1. mostly match
+ *   2. deeper path
+ *   3. shorter name
  *
  * @example
- * makeGlobPatten([foo, bar]) //=> "+(foo|bar)"
  *
- * @param {Array<string>} arr
- * @return {string}
- */
-export function makeGlobPatten (arr: Array<string>): string {
-  return `+(${arr.join('|')})`
-}
-
-/**
- * Select most matching path name.
- *
- * @private
- *
- * @example
- * // 1. Most matching
  * suggest('foo', ['foo-bar', 'Foo'])
  *   //=> 'Foo'
  *
- * // 2. Deepest path
  * suggest('foo', ['dist/foo', 'dist/dist/foo'])
- *   //=> 'dost/dist/foo'
+ *   //=> 'dist/dist/foo'
  *
- * // 3. Shortest name
  * suggest('foo', ['fooBar', 'foo-bar-baz'])
  *   //=> 'fooBar'
  *
- * @param {string} libname
- * @param {Array<string>} arr - library paths
- * @return {string}
  */
-export function suggest (libname: string, arr: Array<string>): string {
+function suggest (name: string, arr: Array<string>): string {
   /**
-   * Format libname when name ends with '.js'
+   * format name when name ends with '.js'
    */
-  libname = libname.endsWith('.js') ? libname.slice(0, -3) : libname
-  libname = words(libname)
+  name = name.endsWith('.js') ? name.slice(0, -3) : name
+  name = words(name)
 
   const namecases = arr.filter(name => {
     const basename = path.basename(name)
     const filename = basename.slice(0, basename.indexOf('.'))
-    return isEqual(libname, words(filename))
+    return isEqual(name, words(filename))
   })
 
   const len = namecases.length
@@ -138,3 +147,44 @@ export function suggest (libname: string, arr: Array<string>): string {
     return words(a).length - words(b).length
   }
 }
+
+
+/// export
+
+export default exportPath
+
+
+/// test
+
+import assert from 'assert'
+
+describe('script umdPath()', () => {
+  it('', () => {
+
+  })
+
+  it('suggest(), should matched by name', () => {
+    assert(suggest('foo', ['foo-bar', 'foo']), 'foo')
+  })
+
+  it('suggest(), should matched by deeper path', () => {
+    assert(suggest('foo', ['dist/foo', 'dist/dist/foo']), 'dist/dist/foo')
+  })
+
+  it('suggest(), should matched by deeper path', () => {
+    assert(suggest('foo', ['dist/foo', 'dist/dist/foo']), 'dist/dist/foo')
+  })
+
+  it('suggest(), should matched the first one with same deep path', () => {
+    assert(suggest('foo', ['dist/foo', 'build/foo']), 'dist/foo')
+  })
+
+  it('suggest(), should matched by short one word length', () => {
+    assert(suggest('foo', ['fooBar', 'foo-bar-baz']), 'fooBar')
+    assert(suggest('foo', ['fooBar', 'fooba']), 'fooba')
+  })
+
+  it('suggest(), should matched the first by same word length', () => {
+    assert(suggest('foo', ['fooBar', 'fooBaz']), 'fooBar')
+  })
+})

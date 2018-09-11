@@ -10,6 +10,7 @@ import { set, isPlainObject, camelCase } from 'lodash'
 import { objectType } from '../../util'
 import fs from 'fs'
 import path from 'path'
+import webpack from 'webpack'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import HtmlWebpackTemplate from 'html-webpack-template'
 import MiniCssExtractPlugin  from 'mini-css-extract-plugin'
@@ -271,6 +272,7 @@ class Builder {
         inject: false,
         mobile: true
       })
+      .setPlugin('prefetch', webpack.AutomaticPrefetchPlugin)
       .setPlugin('style', MiniCssExtractPlugin, {
         filename: this.isDev ? '[name].css' : '[name].[contenthash].css'
       })
@@ -1200,9 +1202,9 @@ export default build
 
 import assert from 'assert'
 
-// describe('script/webpack builder()', () => {
-//   it('should parse webpack option', () => {
-//     console.log(build().export())
-//     assert(true)
-//   })
-// })
+describe('script/webpack builder()', () => {
+  it('should parse webpack option', () => {
+    console.log(build().export())
+    assert(true)
+  })
+})

@@ -39,9 +39,9 @@
       ],
       "plugins": [
         "@babel/plugin-transform-modules-commonjs",
-        ["babel-plugin-webpack-alias", {
-          "config": "./script/webpack/website.js"
-        }]
+        // ["babel-plugin-webpack-alias", {
+        //   "config": "./script/webpack/website.js"
+        // }]
       ]
     },
     "production": {
