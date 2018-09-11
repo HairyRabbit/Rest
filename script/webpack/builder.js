@@ -5,7 +5,6 @@
  * @flow
  */
 
-
 import { set, isPlainObject, camelCase } from 'lodash'
 import { objectType } from '../../util'
 import fs from 'fs'
@@ -18,7 +17,13 @@ import TerserPlugin from 'terser-webpack-plugin'
 import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin'
 import postcssPresetEnv from 'postcss-preset-env'
 import exportPath from './module-umd-path'
+import history from 'connect-history-api-fallback'
+import proxy from 'http-proxy-middleware'
+import convert from 'koa-connect'
 import pkg from '../../package.json'
+
+
+/// code
 
 type WebpackOptions = {
   mode?:
@@ -140,7 +145,48 @@ type WebpackOptions = {
     sourcePrefix?: string,
     strictModuleExceptionHandling: boolean,
     umdNamedDefine?: boolean,
-  }
+  },
+  externals?:
+    | string
+    | Array<string>
+    | RegExp
+    | { [name: string]: string }
+    | { [name: string]: {
+      root: string,
+      commonjs2: string,
+      commonjs: string,
+      amd: string
+    } }
+    | (request: any) => string,
+  devtool?:
+    | 'source-map'
+    | 'eval-source-map'
+    | 'hidden-source-map'
+    | 'cheap-source-map'
+    | 'cheap-module-source-map'
+    | 'eval',
+  node?: {
+    console?: boolean | 'mock',
+    global?: boolean | 'mock',
+    process?: boolean,
+    __filename?: boolean | 'mock',
+    __dirname?: boolean | 'mock',
+    Buffer?: boolean | 'mock',
+    setImmediate?: boolean | 'mock' | 'empty'
+  },
+  plugins?: Array<any>,
+  parallelism?: number,
+  profile?: boolean,
+  bail?: boolean,
+  cache?: boolean,
+  watch?: boolean,
+  watchOptions?: {
+    aggregateTimeout?: number,
+    poll?: boolean | number
+  },
+  recordsPath?: string,
+  recordsInputPath?: string,
+  recordsOutputPath?: string
 }
 
 type Loader = {
@@ -446,11 +492,11 @@ class Builder {
         filename: !isProd ? '[name].js' : '[name].[chunkhash].js',
         devtoolModuleFilenameTemplate: sourcemapAbsolutePath
       },
-      devtool: !isProd ? 'inline-source-map' : 'hidden-source-map',
       resolve: {
         unsafeCache: true,
         extensions: ['.js']
-      }
+      },
+      devtool: !isProd ? 'inline-source-map' : 'hidden-source-map'
     }
 
     /**
@@ -459,6 +505,9 @@ class Builder {
     if(!isProd) {
       this.options = {
         ...this.options,
+
+        parallelism: 4,
+        cache: true,
 
         /**
          * server option
@@ -472,6 +521,25 @@ class Builder {
               client: '127.0.0.1'
             },
             port: 8081
+          },
+          content: [],
+          add(app, middleware, options) {
+            app.use(convert(history({
+              rewrites: [{
+                from: /(.*)/,
+                to(context) {
+                  const pathname = context.parsedUrl.pathname
+                  const ext = path.extname(pathname)
+
+                  if(ext) {
+                    return '/' + path.basename(pathname)
+                  }
+
+                  return '/'
+                }
+              }],
+              disableDotRule: true
+            })))
           }
         }
       }
