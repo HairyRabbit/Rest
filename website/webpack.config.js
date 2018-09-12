@@ -1,6 +1,5 @@
 import path from 'path'
 import webpack from '../script/webpack/builder'
-import GithubPagesFallbackPlugin from '../script/webpack/github-pages-fallback-plugin'
 
 export default webpack()
   .setContext(__dirname)
@@ -23,7 +22,7 @@ export default webpack()
       }
     }
   ])
-  .setPlugin('ghfallback', GithubPagesFallbackPlugin)
+  // .setPlugin('ghfallback', GithubPagesFallbackPlugin)
   .set('resolve.alias.~component', path.resolve('component'))
   .set('resolve.alias.~style', path.resolve('style'))
   .setLib('@rabbitcc/faker')
