@@ -490,7 +490,8 @@ class Builder {
       mode: env,
       output: {
         filename: !isProd ? '[name].js' : '[name].[chunkhash].js',
-        devtoolModuleFilenameTemplate: sourcemapAbsolutePath
+        devtoolModuleFilenameTemplate: sourcemapAbsolutePath,
+        publicPath: '/'
       },
       resolve: {
         unsafeCache: true,
