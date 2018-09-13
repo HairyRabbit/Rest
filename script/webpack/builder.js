@@ -5,7 +5,7 @@
  * @flow
  */
 
-import { set, isPlainObject, camelCase } from 'lodash'
+import { set, isPlainObject, camelCase, defaults } from 'lodash'
 import { objectType } from '../../util'
 import fs from 'fs'
 import path from 'path'
@@ -143,7 +143,7 @@ type WebpackOptions = {
     hashSalt?: string,
     sourceMapFilename?: string,
     sourcePrefix?: string,
-    strictModuleExceptionHandling: boolean,
+    strictModuleExceptionHandling?: boolean,
     umdNamedDefine?: boolean,
   },
   externals?:
@@ -159,12 +159,19 @@ type WebpackOptions = {
     } }
     | (request: any) => string,
   devtool?:
-    | 'source-map'
+    | boolean
+    | 'eval'
+    | 'cheap-eval-source-map'
+    | 'cheap-module-eval-source-map'
     | 'eval-source-map'
-    | 'hidden-source-map'
     | 'cheap-source-map'
     | 'cheap-module-source-map'
-    | 'eval',
+    | 'inline-cheap-source-map'
+    | 'inline-cheap-module-source-map'
+    | 'source-map'
+    | 'inline-source-map'
+    | 'hidden-source-map'
+    | 'nosources-source-map',
   node?: {
     console?: boolean | 'mock',
     global?: boolean | 'mock',
@@ -186,7 +193,104 @@ type WebpackOptions = {
   },
   recordsPath?: string,
   recordsInputPath?: string,
-  recordsOutputPath?: string
+  recordsOutputPath?: string,
+  performance?: {
+    hints?:
+      | 'warning'
+      | 'error'
+      | boolean,
+    maxAssetSize?: number,
+    maxEntrypointSize?: number,
+    assetFilter?: string => boolean
+  },
+  stats?:
+    | 'errors-only'
+    | {
+      assets?: boolean,
+      colors?: boolean,
+      errors?: boolean,
+      errorDetails?: boolean,
+      hash?: boolean
+    },
+  module?: {
+    rules?: Array<>,
+    unknownContextRequest?: string,
+    unknownContextRecursive?: boolean,
+    unknownContextRegExp?: RegExp,
+    unknownContextCritical?: boolean,
+    exprContextRequest?: 'string',
+    exprContextRegExp?: RegExp,
+    exprContextRecursive?: boolean,
+    exprContextCritical?: boolean,
+    wrappedContextRegExp?: RegExp,
+    wrappedContextRecursive?: boolean,
+    wrappedContextCritical?: boolean
+  },
+  resolve?: {
+    modules?: Array<string>,
+    extensions?: Array<string>,
+    descriptionFiles?: Array<string>,
+    mainFields?: Array<string>,
+    aliasFields?: Array<string>,
+    enforceExtension?: boolean,
+    moduleExtensions?: Array<string>,
+    enforceModuleExtension?: boolean,
+    unsafeCache?: boolean | {},
+    cachePredicate?: (path: string, request: any) => boolean,
+    plugins?: Array<any>,
+    alias?: {
+      [name: string]: string
+    } | Array<{
+      name: string,
+      alias: string,
+      onluModule: boolean
+    }>
+  },
+  optimization?: {
+    minimize?: boolean,
+    minimizer?: Array<any>,
+    splitChunks?: {
+
+    },
+    runtimeChunk?:
+      | string
+      | boolean
+      | {
+        chunks?: 'async',
+        minSize?: number,
+        maxSize?: number,
+        minChunks?: number,
+        maxAsyncRequests?: number,
+        maxInitialRequests?: number,
+        automaticNameDelimiter?: string,
+        name?: boolean,
+        cacheGroups?: {
+          [name: string]: {
+            test?: RegExp,
+            priority?: number,
+            minChunks: number,
+            reuseExistingChunk?: boolean
+          }
+        }
+      },
+    noEmitOnErrors?: boolean,
+    namedModules?: boolean,
+    namedChunks?: boolean,
+    nodeEnv?: string | boolean,
+    mangleWasmImports?: boolean,
+    removeAvailableModules?: boolean,
+    removeEmptyChunks?: boolean,
+    mergeDuplicateChunks?: boolean,
+    flagIncludedChunks?: boolean,
+    occurrenceOrder?: boolean,
+    providedExports?: boolean,
+    usedExports?: boolean,
+    concatenateModules?: boolean,
+    sideEffects?: boolean,
+
+  },
+  devServer?: {},
+  serve?: {}
 }
 
 type Loader = {
@@ -200,7 +304,6 @@ type Loaders = {
     options: Object
   }
 }
-
 
 type EntryProperty = {
   entry: string | (prepends?: Set<string>) => string,
@@ -223,6 +326,10 @@ type LibProperty = {
 
 type Lib = Map<string, LibProperty>
 
+type Options = {
+  disableDefaultOptions?: boolean
+}
+
 class Builder {
   context: ?string
   contextSetted: boolean
@@ -238,6 +345,7 @@ class Builder {
   libs: Lib
   deps: { [name: string]: string }
   options: WebpackOptions
+  opts: Options
 
   constructor(webpackOptions?: WebpackOptions = {}, options?: Options = {}) {
     this.context = undefined
@@ -250,6 +358,9 @@ class Builder {
     this.loader = {}
     this.plugin = {}
     this.options = {}
+    this.opts = defaults(options, {
+      disableDefaultOptions: false
+    })
     this.libs = new Map()
 
     this
@@ -287,7 +398,7 @@ class Builder {
         exclude: [/node_modules/]
       })
       .setLoader('styleInclude', 'css', [
-        {
+        this.isDev ? 'style-loader?sourceMap' : {
           name: MiniCssExtractPlugin.loader,
           options: {
             sourceMap: true
@@ -471,10 +582,19 @@ class Builder {
     return this
   }
 
-  _setDefaultOptions(webpackOption) {
-    const env = process.env.NODE_ENV || 'development'
+  _setDefaultOptions(webpackOption: WebpackOptions) {
+    const env = process.env && process.env.NODE_ENV || 'development'
+
+    if(!~['development', 'production', 'none'].indexOf(env)) {
+      throw new Error(
+        `The env should be "development", "production" or "none"`
+      )
+    }
+
     const isProd = 'production' === env
     this.isDev = !isProd
+
+    if(this.opts.disableDefaultOptions) return this
 
     const postcssOptions = {
       plugins: () => [

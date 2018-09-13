@@ -1,5 +1,8 @@
 import path from 'path'
 import webpack from '../script/webpack/builder'
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
+import { WebpackBundleSizeAnalyzerPlugin } from 'webpack-bundle-size-analyzer'
+import BundleAnalyzePlugin from '../script/webpack/bundle-analyze-plugin'
 
 export default webpack()
   .setContext(__dirname)
@@ -22,7 +25,7 @@ export default webpack()
       }
     }
   ])
-  // .setPlugin('ghfallback', GithubPagesFallbackPlugin)
+  .setPlugin('bundleAnalyzer', BundleAnalyzePlugin)
   .set('resolve.alias.~component', path.resolve('component'))
   .set('resolve.alias.~style', path.resolve('style'))
   .setLib('@rabbitcc/faker')
