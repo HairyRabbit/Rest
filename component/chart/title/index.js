@@ -13,7 +13,7 @@ import 'echarts/lib/component/title'
 
 /// code
 
-type Props = {
+type TitleOption = {
   id?: string,
   show?: boolean,
   text?: string,
@@ -42,9 +42,15 @@ type Props = {
   shadowOffsetY?: number
 }
 
+type Props = {
+  children?: string
+} & TitleOption
+
 function Title({ ...props}: Props): React.Node {
   return null
 }
+
+Title.id = 'componnet/title'
 
 
 /// export

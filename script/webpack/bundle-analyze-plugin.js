@@ -43,7 +43,20 @@ class BundleAnalyzePlugin {
        */
       // assets.forEach(transformAsset)
       // chunks.forEach(transformChunk)
-      modules.forEach(transformModule)
+      // modules.forEach(transformModule)
+
+      const nodes = []
+      const links = []
+
+      // modules.forEach(({ id, identifier, size, reasons }) => {
+      //   nodes.push({ name: id, value: size })
+      //   reasons.forEach(({ moduleIdentifier: pidentifier, moduleId: pid }) => {
+      //     links.push({ source: id, target: pid })
+      //   })
+      // })
+
+      // console.log(JSON.stringify(nodes))
+      // console.log(JSON.stringify(links))
     })
   }
 }
@@ -95,17 +108,21 @@ function transformChunk({ entry,
                           children,
                           childrenByOrder,
                           ...chunk }) {
-  console.log(
-    entry,
-    files,
-    id,
-    filteredModules,
-    initial,
-    names, origins, parents,
-    rendered,
-    size,
-    chunk
-  )
+  // console.log(
+  //   entry,
+  //   files,
+  //   id,
+  //   filteredModules,
+  //   initial,
+  //   names, origins, parents,
+  //   rendered,
+  //   size,
+  //   chunk
+  // )
+
+  parents.forEach(parent => {
+    console.log(parent)
+  })
 }
 
 /**
@@ -210,7 +227,16 @@ function transformModule({ assets,
                            optimizationBailout,
                            depth,
                            ...module }) {
-  // console.log(source)
+
+  console.log({
+    id,
+    identifier,
+    size,
+    deps: reasons.map(({ moduleIdentifier: identifier, moduleId: id }) => ({
+      id,
+      identifier
+    }))
+  })
 }
 
 function isSourceMapFile({ chunks, name }): boolean %checks {

@@ -26,7 +26,7 @@ function Chart({ className, container, ...props }: Props): React.Node {
   return (
     <div ref={container}
          className={cs(style.main, className)}
-         style={{ height: '200px' }}></div>
+         style={{ width: '1000px', height: '600px' }}></div>
   )
 }
 
