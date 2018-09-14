@@ -327,7 +327,8 @@ type LibProperty = {
 type Lib = Map<string, LibProperty>
 
 type Options = {
-  disableDefaultOptions?: boolean
+  disableDefaultOptions?: boolean,
+  warningOnDyaminEntry?: boolean
 }
 
 class Builder {
@@ -359,7 +360,8 @@ class Builder {
     this.plugin = {}
     this.options = {}
     this.opts = defaults(options, {
-      disableDefaultOptions: false
+      disableDefaultOptions: false,
+      warningOnDyaminEntry: true
     })
     this.libs = new Map()
 
@@ -430,9 +432,9 @@ class Builder {
         mobile: true
       })
       .setPlugin('prefetch', webpack.AutomaticPrefetchPlugin)
-      .setPlugin('style', MiniCssExtractPlugin, {
-        filename: this.isDev ? '[name].css' : '[name].[contenthash].css'
-      })
+      // .setPlugin('style', MiniCssExtractPlugin, {
+      //   filename: this.isDev ? '[name].css' : '[name].[contenthash].css'
+      // })
   }
 
   /**
@@ -459,7 +461,9 @@ class Builder {
    *
    * @private
    */
-  _parserWebpackEntryOption(entry: $PropertyType<WebpackOptions, 'entry'>, name?: string = 'main') {
+  _parserWebpackEntryOption(entry: $PropertyType<WebpackOptions, 'entry'>,
+                            name?: string = 'main',
+                            inArray?: boolean = false) {
     if(!entry) return this
 
     switch(typeof entry) {
@@ -472,19 +476,39 @@ class Builder {
       }
 
       case 'object': {
+        if(inArray) {
+          throw new Error(
+            `Complex entry type should be string or function, \
+but got ${objectType(entry)}`
+          )
+        }
+
         if(Array.isArray(entry)) {
 
-          this.setEntry(name, {
-            prepends: entry.slice(0, -1),
-            entry: entry.slice(-1)
-          })
+          if(1 === entry.length) {
+
+            this._parserWebpackEntryOption(entry[0], name)
+
+          } else {
+
+            if(!entry.every(pre => 'string' === typeof pre)) {
+              throw new Error(
+                `Array element type should be string`
+              )
+            }
+
+            this.setEntry(name, {
+              prepends: entry.slice(0, -1),
+              entry: entry.slice(-1)[0]
+            })
+          }
 
           break
 
         } else if(isPlainObject(entry)) {
 
           for(let key in entry) {
-            this.parseWebpackOptions(entry[key], key)
+            this._parserWebpackEntryOption(entry[key], key)
           }
 
           break
@@ -497,6 +521,24 @@ class Builder {
       }
 
       case 'function': {
+        /**
+         * ooops, a dyamic entry, terrible for set prepends,
+         * you should set it by yourself, now show a warning here.
+         */
+
+        if(this.opts.warningOnDyaminEntry) {
+          console.warn(
+            `The dyamic entry ${name} should add prepends by yourself, e.g.
+
+{
+  entry: function ${entry.name || 'DyamicEntry'}(prepends) {
+    return [...prepends, your entry]
+  }
+}
+`
+          )
+        }
+
         this.setEntry(name, {
           entry,
           isFunction: true
@@ -585,10 +627,12 @@ class Builder {
   _setDefaultOptions(webpackOption: WebpackOptions) {
     const env = process.env && process.env.NODE_ENV || 'development'
 
-    if(!~['development', 'production', 'none'].indexOf(env)) {
-      throw new Error(
-        `The env should be "development", "production" or "none"`
-      )
+    if('test' !== env) {
+      if(!~['development', 'production', 'none'].indexOf(env)) {
+        throw new Error(
+          `The env should be "development", "production" or "none"`
+        )
+      }
     }
 
     const isProd = 'production' === env
@@ -1392,8 +1436,130 @@ export default build
 import assert from 'assert'
 
 describe('script/webpack builder()', () => {
-  it('should parse webpack option', () => {
-    console.log(build().export())
-    assert(true)
+  it('should parse entry, string type', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: 'foo',
+        isFunction: false,
+        prepends: new Set()
+      }]]),
+
+      new Builder({
+        entry: 'foo'
+      }).entry
+    )
+  })
+
+  it('should parse entry, array type', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: 'bar',
+        isFunction: false,
+        prepends: new Set(['foo'])
+      }]]),
+
+      new Builder({
+        entry: ['foo', 'bar']
+      }).entry
+    )
+  })
+
+  it('should parse entry, array type only one element', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: 'foo',
+        isFunction: false,
+        prepends: new Set()
+      }]]),
+
+      new Builder({
+        entry: ['foo']
+      }).entry
+    )
+  })
+
+  it('should parse entry, function type', () => {
+    const ref = () => 'foo'
+
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: ref,
+        isFunction: true,
+        prepends: new Set()
+      }]]),
+
+      new Builder({
+        entry: ref
+      }).entry
+    )
+  })
+
+  it('should parse entry, object type', () => {
+    assert.deepStrictEqual(
+      new Map([['foo', {
+        entry: 'bar',
+        isFunction: false,
+        prepends: new Set()
+      }]]),
+
+      new Builder({
+        entry: {
+          foo: 'bar'
+        }
+      }).entry
+    )
+  })
+
+  it('should parse entry, object type, multi properties', () => {
+    assert.deepStrictEqual(
+      new Map([['foo', {
+        entry: 'bar',
+        isFunction: false,
+        prepends: new Set()
+      }], ['baz', {
+        entry: 'qux',
+        isFunction: false,
+        prepends: new Set()
+      }]]),
+
+      new Builder({
+        entry: {
+          foo: 'bar',
+          baz: 'qux'
+        }
+      }).entry
+    )
+  })
+
+  it('should parse entry, object type with array type element', () => {
+    assert.deepStrictEqual(
+      new Map([['foo', {
+        entry: 'baz',
+        isFunction: false,
+        prepends: new Set(['bar'])
+      }]]),
+
+      new Builder({
+        entry: {
+          foo: ['bar', 'baz']
+        }
+      }).entry
+    )
+  })
+
+  it('should parse entry, object type with array type element, only one element', () => {
+    assert.deepStrictEqual(
+      new Map([['foo', {
+        entry: 'bar',
+        isFunction: false,
+        prepends: new Set()
+      }]]),
+
+      new Builder({
+        entry: {
+          foo: ['bar']
+        }
+      }).entry
+    )
   })
 })
