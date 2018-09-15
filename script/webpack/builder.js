@@ -1,11 +1,13 @@
 /**
  * webpack option builder
  *
+ * a builder helper to build webpack options for easy way
+ *
  * @link [webpack option schemas](https://github.com/webpack/webpack/blob/master/schemas/WebpackOptions.json)
  * @flow
  */
 
-import { set, isPlainObject, camelCase, defaults } from 'lodash'
+import { set, isFunction, isPlainObject, camelCase, defaults } from 'lodash'
 import { objectType } from '../../util'
 import fs from 'fs'
 import path from 'path'
@@ -306,8 +308,7 @@ type Loaders = {
 }
 
 type EntryProperty = {
-  entry: string | (prepends?: Set<string>) => string,
-  isFunction: boolean,
+  entry: ?(string | (prepends?: Array<string>) => string),
   prepends: Set<string>
 }
 
@@ -326,9 +327,18 @@ type LibProperty = {
 
 type Lib = Map<string, LibProperty>
 
+type Hint =
+  | boolean
+  | 'warning'
+  | 'warn'
+  | 'error'
+  | 'err'
+  | 'none'
+
 type Options = {
   disableDefaultOptions?: boolean,
-  warningOnDyaminEntry?: boolean
+  assertFunctionTypeEntry?: Hint,
+  assertEntryNotRegister?: Hint
 }
 
 class Builder {
@@ -361,13 +371,14 @@ class Builder {
     this.options = {}
     this.opts = defaults(options, {
       disableDefaultOptions: false,
-      warningOnDyaminEntry: true
+      assertFunctionTypeEntry: true,
+      assertEntryNotRegister: false
     })
     this.libs = new Map()
 
     this
       ._parseWebpackOptions(webpackOptions)
-      ._setDefaultOptions()
+      ._setDefaultOptions(webpackOptions)
       ._guessContext()
       .setLoader('script', 'js', ['babel-loader?cacheDirectory'])
       .setLoader('styleModule', 'css', [
@@ -449,7 +460,7 @@ class Builder {
                          plugins,
                          externals }: WebpackOptions = {}) {
     return this
-      ._parserWebpackEntryOption(entry)
+      ._parseWebpackEntryOption(entry)
       ._parseWebpackOutputOption(output)
       ._parseWebpackContextOption(context)
       ._parseWebpackExternalsOption(externals)
@@ -461,9 +472,8 @@ class Builder {
    *
    * @private
    */
-  _parserWebpackEntryOption(entry: $PropertyType<WebpackOptions, 'entry'>,
-                            name?: string = 'main',
-                            inArray?: boolean = false) {
+  _parseWebpackEntryOption(entry: $PropertyType<WebpackOptions, 'entry'>,
+                            name?: string = 'main') {
     if(!entry) return this
 
     switch(typeof entry) {
@@ -476,18 +486,12 @@ class Builder {
       }
 
       case 'object': {
-        if(inArray) {
-          throw new Error(
-            `Complex entry type should be string or function, \
-but got ${objectType(entry)}`
-          )
-        }
 
         if(Array.isArray(entry)) {
 
           if(1 === entry.length) {
 
-            this._parserWebpackEntryOption(entry[0], name)
+            this._parseWebpackEntryOption(entry[0], name)
 
           } else {
 
@@ -508,7 +512,7 @@ but got ${objectType(entry)}`
         } else if(isPlainObject(entry)) {
 
           for(let key in entry) {
-            this._parserWebpackEntryOption(entry[key], key)
+            this._parseWebpackEntryOption(entry[key], key)
           }
 
           break
@@ -525,23 +529,19 @@ but got ${objectType(entry)}`
          * ooops, a dyamic entry, terrible for set prepends,
          * you should set it by yourself, now show a warning here.
          */
-
-        if(this.opts.warningOnDyaminEntry) {
-          console.warn(
-            `The dyamic entry ${name} should add prepends by yourself, e.g.
+        hint(this.opts.assertFunctionTypeEntry)(
+          `The dyamic entry ${name} should add prepends by yourself, e.g.
 
 {
   entry: function ${entry.name || 'DyamicEntry'}(prepends) {
-    return [...prepends, your entry]
+    return [...prepends, "your entry"]
   }
 }
 `
-          )
-        }
+        )
 
         this.setEntry(name, {
-          entry,
-          isFunction: true
+          entry
         })
 
         break
@@ -841,10 +841,12 @@ or you want to change entry prepends, should call:
     }
 
     if(!entry) {
-      throw new Error(
-        `The entry should provide`
+      console.warn(
+        `The entry "${name}" can't set property "entry"`
       )
-    } else if(prepends && !Array.isArray(prepends)) {
+    }
+
+    if(prepends && !Array.isArray(prepends)) {
       throw new Error(
         `The entry prepends should be array`
       )
@@ -852,7 +854,6 @@ or you want to change entry prepends, should call:
 
     this.entry.set(name, {
       entry,
-      isFunction: isFunction || 'function' === typeof entry,
       prepends: new Set(prepends)
     })
 
@@ -894,15 +895,15 @@ or you want to change entry prepends, should call:
     }
 
     /**
-     * if not have entry, generate one
+     * if not have entry, generate a new one
      */
     if(!this.entry.has(name)) {
       this.setEntry(name, { entry })
-    } else {
-      this.entry.get(name).entry = entry
-      this.entry.get(name).isFunction = 'function' === typeof entry
+      return this
     }
 
+
+    this.entry.get(name).entry = entry
     return this
   }
 
@@ -1017,13 +1018,13 @@ or you want to change entry prepends, should call:
       )
     }
 
-    this.entry.forEach(({ entry, isFunction, prepends }, name) => {
+    this.entry.forEach(({ entry, prepends }, name) => {
       const pres = [
         ...[...this.entryCommons],
         ...[...prepends]
       ].filter(Boolean)
 
-      if(isFunction) {
+      if(isFunction(entry)) {
         this.set(`entry.${name}`, entry(pres), true)
       } else {
         this.set(`entry.${name}`, [...pres, entry], true)
@@ -1416,8 +1417,20 @@ function suggestLibraryRootName(input: string): string {
     .replace(/dom/ig, 'DOM')
 }
 
-function suggestLibraryUMDPath(lib: string): string {
-
+function hint(flag: Hint): Function {
+  switch(flag) {
+    case true:
+    case 'warn':
+    case 'warngin':
+      return console.warn
+    case 'err':
+    case 'error':
+      return err => { throw new Error(err) }
+    case false:
+    case 'none':
+    default:
+      return () => {}
+  }
 }
 
 
@@ -1434,13 +1447,22 @@ export default build
 /// test
 
 import assert from 'assert'
+import sinon from 'sinon'
 
 describe('script/webpack builder()', () => {
-  it('should parse entry, string type', () => {
+
+  afterEach(() => {
+    sinon.restore()
+  })
+
+  /**
+   * test parse webpackOptions.entry
+   */
+
+  it('builder._parseWebpackEntryOption(), should parse entry, string type', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: 'foo',
-        isFunction: false,
         prepends: new Set()
       }]]),
 
@@ -1450,11 +1472,10 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('should parse entry, array type', () => {
+  it('builder._parseWebpackEntryOption(), should parse entry, array type', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: 'bar',
-        isFunction: false,
         prepends: new Set(['foo'])
       }]]),
 
@@ -1464,11 +1485,10 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('should parse entry, array type only one element', () => {
+  it('builder._parseWebpackEntryOption(), should parse entry, array type only one element', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: 'foo',
-        isFunction: false,
         prepends: new Set()
       }]]),
 
@@ -1478,13 +1498,11 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('should parse entry, function type', () => {
+  it('builder._parseWebpackEntryOption(), should parse entry, function type', () => {
     const ref = () => 'foo'
-
     assert.deepStrictEqual(
       new Map([['main', {
         entry: ref,
-        isFunction: true,
         prepends: new Set()
       }]]),
 
@@ -1494,11 +1512,17 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('should parse entry, object type', () => {
+  it('builder._parseWebpackEntryOption(), should parse entry, function type got a warning', () => {
+    const ref = () => 'foo'
+    const mock = sinon.mock(console).expects('warn').once()
+    new Builder({ entry: ref })
+    assert(mock.verify())
+  })
+
+  it('builder._parseWebpackEntryOption(), should parse entry, object type', () => {
     assert.deepStrictEqual(
       new Map([['foo', {
         entry: 'bar',
-        isFunction: false,
         prepends: new Set()
       }]]),
 
@@ -1510,15 +1534,13 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('should parse entry, object type, multi properties', () => {
+  it('builder._parseWebpackEntryOption(), should parse entry, object type, multi properties', () => {
     assert.deepStrictEqual(
       new Map([['foo', {
         entry: 'bar',
-        isFunction: false,
         prepends: new Set()
       }], ['baz', {
         entry: 'qux',
-        isFunction: false,
         prepends: new Set()
       }]]),
 
@@ -1531,11 +1553,10 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('should parse entry, object type with array type element', () => {
+  it('builder._parseWebpackEntryOption(), should parse entry, object type with array type element', () => {
     assert.deepStrictEqual(
       new Map([['foo', {
         entry: 'baz',
-        isFunction: false,
         prepends: new Set(['bar'])
       }]]),
 
@@ -1547,11 +1568,10 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('should parse entry, object type with array type element, only one element', () => {
+  it('builder._parseWebpackEntryOption(), should parse entry, object type with array type element, only one element', () => {
     assert.deepStrictEqual(
       new Map([['foo', {
         entry: 'bar',
-        isFunction: false,
         prepends: new Set()
       }]]),
 
@@ -1560,6 +1580,93 @@ describe('script/webpack builder()', () => {
           foo: ['bar']
         }
       }).entry
+    )
+  })
+
+  it('builder._parseWebpackEntryOption(), should parse entry, object type when some prepends type not string', () => {
+    assert.throws(
+      () => new Builder({
+        entry: {
+          foo: [new Date(), 'bar']
+        }
+      }),
+      /Array element type should be string/
+    )
+  })
+
+  it('builder._parseWebpackEntryOption(), should parse entry, null or undefined should pass', () => {
+    assert.deepStrictEqual(
+      new Map([]),
+      new Builder({ }).entry
+    )
+  })
+
+  it('builder._parseWebpackEntryOption(), should parse entry, invaild type throw a error', () => {
+    assert.throws(
+      () => new Builder({
+        entry: new Date()
+      }),
+      /Unknow webpack entry option type/
+    )
+  })
+
+  /**
+   * test entry operator
+   */
+
+  it('builder.setEntry(), should set entry', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: undefined,
+        prepends: new Set()
+      }]]),
+
+      new Builder().setEntry('main').entry
+    )
+  })
+
+  it('builder.setEntry(), should set entry show warning when not set entry property', () => {
+    const mock = sinon.mock(console).expects('warn').once()
+    new Builder().setEntry('main')
+    assert(mock.verify())
+  })
+
+  it('builder.setEntry(), should set entry with entry property', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: 'foo',
+        prepends: new Set()
+      }]]),
+
+      new Builder().setEntry('main', {
+        entry: 'foo'
+      }).entry
+    )
+  })
+
+  it('builder.setEntry(), should set entry with prepends property', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: undefined,
+        prepends: new Set(['foo'])
+      }]]),
+
+      new Builder().setEntry('main', {
+        prepends: ['foo']
+      }).entry
+    )
+  })
+
+  it('builder.setEntryEntry(), should set entry.entry', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: 'bar',
+        prepends: new Set([])
+      }]]),
+
+      new Builder({
+        entry: 'foo'
+      }).setEntryEntry('main', 'bar').entry
     )
   })
 })
