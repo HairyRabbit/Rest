@@ -473,7 +473,7 @@ class Builder {
    * @private
    */
   _parseWebpackEntryOption(entry: $PropertyType<WebpackOptions, 'entry'>,
-                            name?: string = 'main') {
+                           name?: string = 'main') {
     if(!entry) return this
 
     switch(typeof entry) {
@@ -822,13 +822,13 @@ context option by build.setContext()`
    *
    * @public
    */
-  setEntry(name: string, { entry, isFunction, prepends = [] }: EntryProperty = {}) {
+  setEntry(name: string, { entry, prepends = [] }: EntryProperty = {}, internal?: boolean = false) {
     if(this.entry.has(name)) {
       console.warn(
         `The entry "${name}" already exists, \
 This operator will override the entry.${name}.
 
-If you want to change entry path, you should call:
+If you want to change entry path, should call:
 
   builder.setEntryEntry()
 
@@ -840,7 +840,7 @@ or you want to change entry prepends, should call:
       )
     }
 
-    if(!entry) {
+    if(!entry && !internal) {
       console.warn(
         `The entry "${name}" can't set property "entry"`
       )
@@ -919,8 +919,18 @@ or you want to change entry prepends, should call:
       )
     }
 
-    this.entry.get(name).prepends = new Set(prepends)
+    if(!prepends.every(pre => 'string' === typeof pre)) {
+      throw new Error(
+        `The entry prepends element type should be string`
+      )
+    }
 
+    if(!this.entry.has(name)) {
+      this.setEntry(name, { prepends }, true)
+      return this
+    }
+
+    this.entry.get(name).prepends = new Set(prepends)
     return this
   }
 
@@ -930,8 +940,11 @@ or you want to change entry prepends, should call:
    * @public
    */
   clearEntryPrepends(name: string) {
-    this.entry.get(name).prepends.clear()
+    if(!this.entry.has(name)) {
+      this.setEntry(name, {}, true)
+    }
 
+    this.entry.get(name).prepends.clear()
     return this
   }
 
@@ -940,9 +953,12 @@ or you want to change entry prepends, should call:
    *
    * @public
    */
-  addEntryPrepends(name: string, prepend: string) {
-    this.entry.get(name).prepends.add(prepend)
+  addEntryPrepend(name: string, prepend: string) {
+    if(!this.entry.has(name)) {
+      this.setEntry(name, {}, true)
+    }
 
+    this.entry.get(name).prepends.add(prepend)
     return this
   }
 
@@ -952,8 +968,11 @@ or you want to change entry prepends, should call:
    * @public
    */
   removeEntryPrepend(name: string, prepend: string) {
-    this.entry.get(name).prepends.delete(prepend)
+    if(!this.entry.has(name)) {
+      this.setEntry(name, {}, true)
+    }
 
+    this.entry.get(name).prepends.delete(prepend)
     return this
   }
 
@@ -1019,15 +1038,17 @@ or you want to change entry prepends, should call:
     }
 
     this.entry.forEach(({ entry, prepends }, name) => {
+      if(!entry) return
+
       const pres = [
-        ...[...this.entryCommons],
-        ...[...prepends]
+        ...Array.from(this.entryCommons),
+        ...Array.from(prepends)
       ].filter(Boolean)
 
       if(isFunction(entry)) {
-        this.set(`entry.${name}`, entry(pres), true)
+        this.set(`entry.${name}`, () => entry(pres), true)
       } else {
-        this.set(`entry.${name}`, [...pres, entry], true)
+        this.set(`entry.${name}`, pres.length ? [...pres, entry] : entry, true)
       }
     })
 
@@ -1292,7 +1313,7 @@ or you want to change entry prepends, should call:
       scripts
     })
 
-    console.log(this)
+    // console.log(this)
 
     return this
   }
@@ -1456,10 +1477,10 @@ describe('script/webpack builder()', () => {
   })
 
   /**
-   * test parse webpackOptions.entry
+   * Builder._parseWebpackEntryOption()
    */
 
-  it('builder._parseWebpackEntryOption(), should parse entry, string type', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, string type', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: 'foo',
@@ -1472,7 +1493,7 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, array type', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, array type', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: 'bar',
@@ -1485,7 +1506,7 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, array type only one element', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, array type only one element', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: 'foo',
@@ -1498,7 +1519,7 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, function type', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, function type', () => {
     const ref = () => 'foo'
     assert.deepStrictEqual(
       new Map([['main', {
@@ -1512,14 +1533,14 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, function type got a warning', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, function type got a warning', () => {
     const ref = () => 'foo'
     const mock = sinon.mock(console).expects('warn').once()
     new Builder({ entry: ref })
     assert(mock.verify())
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, object type', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, object type', () => {
     assert.deepStrictEqual(
       new Map([['foo', {
         entry: 'bar',
@@ -1534,7 +1555,7 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, object type, multi properties', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, object type, multi properties', () => {
     assert.deepStrictEqual(
       new Map([['foo', {
         entry: 'bar',
@@ -1553,7 +1574,7 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, object type with array type element', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, object type with array type element', () => {
     assert.deepStrictEqual(
       new Map([['foo', {
         entry: 'baz',
@@ -1568,7 +1589,7 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, object type with array type element, only one element', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, object type with array type element, only one element', () => {
     assert.deepStrictEqual(
       new Map([['foo', {
         entry: 'bar',
@@ -1583,7 +1604,7 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, object type when some prepends type not string', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, object type when some prepends type not string', () => {
     assert.throws(
       () => new Builder({
         entry: {
@@ -1594,14 +1615,14 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, null or undefined should pass', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, null or undefined should pass', () => {
     assert.deepStrictEqual(
       new Map([]),
       new Builder({ }).entry
     )
   })
 
-  it('builder._parseWebpackEntryOption(), should parse entry, invaild type throw a error', () => {
+  it('Builder._parseWebpackEntryOption(), should parse entry, invaild type throw a error', () => {
     assert.throws(
       () => new Builder({
         entry: new Date()
@@ -1611,10 +1632,10 @@ describe('script/webpack builder()', () => {
   })
 
   /**
-   * test entry operator
+   * builer.setEntry()
    */
 
-  it('builder.setEntry(), should set entry', () => {
+  it('Builder.setEntry(), should set entry', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: undefined,
@@ -1625,13 +1646,13 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder.setEntry(), should set entry show warning when not set entry property', () => {
+  it('Builder.setEntry(), should set entry show warning when not set entry property', () => {
     const mock = sinon.mock(console).expects('warn').once()
     new Builder().setEntry('main')
     assert(mock.verify())
   })
 
-  it('builder.setEntry(), should set entry with entry property', () => {
+  it('Builder.setEntry(), should set entry with entry property', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: 'foo',
@@ -1644,7 +1665,7 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder.setEntry(), should set entry with prepends property', () => {
+  it('Builder.setEntry(), should set entry with prepends property', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: undefined,
@@ -1657,7 +1678,45 @@ describe('script/webpack builder()', () => {
     )
   })
 
-  it('builder.setEntryEntry(), should set entry.entry', () => {
+  /**
+   * Builder.clearEntry()
+   */
+
+  it('Builder.clearEntry(), should clear entry', () => {
+    assert.deepStrictEqual(
+      new Map([]),
+
+      new Builder({
+        entry: 'foo'
+      }).clearEntry().entry
+    )
+  })
+
+  /**
+   * Builder.deleteEntry()
+   */
+
+  it('Builder.deleteEntry(), should remove entry by name', () => {
+    assert.deepStrictEqual(
+      new Map([['foo', {
+        entry: 'foo',
+        prepends: new Set()
+      }]]),
+
+      new Builder({
+        entry: {
+          foo: 'foo',
+          bar: 'bar'
+        }
+      }).deleteEntry('bar').entry
+    )
+  })
+
+  /**
+   * Builder.setEntryEntry()
+   */
+
+  it('Builder.setEntryEntry(), should set entry.entry', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: 'bar',
@@ -1667,6 +1726,158 @@ describe('script/webpack builder()', () => {
       new Builder({
         entry: 'foo'
       }).setEntryEntry('main', 'bar').entry
+    )
+  })
+
+  it('Builder.setEntryEntry(), should set entry.entry when not found name', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: 'bar',
+        prepends: new Set([])
+      }]]),
+
+      new Builder().setEntryEntry('main', 'bar').entry
+    )
+  })
+
+  /**
+   * Builder.setEntryPrepends()
+   */
+
+  it('Builder.setEntryPrepends(), should override entry.prepends', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: 'qux',
+        prepends: new Set(['foo', 'bar'])
+      }]]),
+
+      new Builder({
+        entry: ['foo', 'bar', 'baz', 'qux']
+      }).setEntryPrepends('main', ['foo', 'bar']).entry
+    )
+  })
+
+  it('Builder.setEntryPrepends(), should set entry.prepends when name not found', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: undefined,
+        prepends: new Set(['foo', 'bar'])
+      }]]),
+
+      new Builder().setEntryPrepends('main', ['foo', 'bar']).entry
+    )
+  })
+
+  /**
+   * Builder.clearEntryPrepend()
+   */
+  it('Builder.clearEntryPrepends(), should clear entry.prepends', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: 'bar',
+        prepends: new Set()
+      }]]),
+
+      new Builder({
+        entry: ['foo', 'bar']
+      }).clearEntryPrepends('main').entry
+    )
+  })
+
+
+  /**
+   * Builder.addEntryPrepend()
+   */
+
+  it('Builder.addEntryPrepend(), should add entry.prepends', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: undefined,
+        prepends: new Set(['foo'])
+      }]]),
+
+      new Builder().addEntryPrepend('main', 'foo').entry
+    )
+  })
+
+  /**
+   * Builder.removeEntryPrepend()
+   */
+
+  it('Builder.removeEntryPrepend(), should remove entry.prepends', () => {
+    assert.deepStrictEqual(
+      new Map([['main', {
+        entry: undefined,
+        prepends: new Set([])
+      }]]),
+
+      new Builder().removeEntryPrepend('main', 'foo').entry
+    )
+  })
+
+  /**
+   * Builder._transformEntry()
+   */
+
+  it('Builder._transformEntry(), should transform entry, without prepends', () => {
+    assert.deepStrictEqual(
+      {
+        main: 'foo'
+      },
+
+      new Builder({
+        entry: 'foo'
+      })._transformEntry().export().entry
+    )
+  })
+
+  it('Builder._transformEntry(), should transform entry, with prepends', () => {
+    assert.deepStrictEqual(
+      {
+        main: ['foo', 'bar']
+      },
+
+      new Builder({
+        entry: ['foo', 'bar']
+      })
+        ._transformEntry().export().entry
+    )
+  })
+
+  it('Builder._transformEntry(), should transform entry, ignore empty entry', () => {
+    assert.deepStrictEqual(
+      {
+        foo: 'foo'
+      },
+
+      new Builder()
+        .setEntry('foo', { entry: 'foo' })
+        .setEntry('bar')
+        ._transformEntry().export().entry
+    )
+  })
+
+  it('Builder._transformEntry(), should transform entry, multi entry', () => {
+    assert.deepStrictEqual(
+      {
+        foo: 'foo',
+        bar: 'bar'
+      },
+
+      new Builder()
+        .setEntry('foo', { entry: 'foo' })
+        .setEntry('bar', { entry: 'bar' })
+        ._transformEntry().export().entry
+    )
+  })
+
+  it('Builder._transformEntry(), should transform entry, dyamic entry', () => {
+    assert.deepStrictEqual(
+      ['bar', 'baz'],
+
+      new Builder()
+        .setEntry('foo', { entry: a => a, prepends: ['bar', 'baz'] })
+        ._transformEntry().export().entry.foo()
     )
   })
 })
