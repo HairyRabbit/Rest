@@ -64,7 +64,7 @@ function mapSize(value) {
 
 const nodess = nodes.map(node => ({ ...node, symbolSize: mapSize(node.value), symbol: 'circle' }))
 
-console.log(nodess)
+console.log(nodess, 42)
 
 function Demo() {
   return (

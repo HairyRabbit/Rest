@@ -295,17 +295,21 @@ type WebpackOptions = {
   serve?: {}
 }
 
+
 type Loader = {
-  name: string,
-  options: Object
+  loader: string,
+  options: Map<string, any>
 }
 
-type Loaders = {
-  [name: string]: {
-    name: string,
-    options: Object
-  }
+type RuleProperty = {
+  files: string | Array<string>,
+  loaders: Set<Map<string, Loader>>,
+  options: Map<string, any>
 }
+
+type Rule = Map<string, RuleProperty>
+
+type File = Map<string, string>
 
 type EntryProperty = {
   entry: ?(string | (prepends?: Array<string>) => string),
@@ -349,7 +353,8 @@ class Builder {
   entryCommons: Set<string>
   output: string
   outputSetted: boolean
-  loader: Loaders
+  loader: Rule
+  files: File
   plugin: Plugins
   isDev: boolean
   alias: Map<string, string>
@@ -366,7 +371,8 @@ class Builder {
     this.entryCommons = new Set()
     this.output = undefined
     this.outputSetted = false
-    this.loader = {}
+    this.loader = new Map()
+    this.files = new Map()
     this.plugin = {}
     this.options = {}
     this.opts = defaults(options, {
@@ -397,16 +403,16 @@ class Builder {
             localIdentName: '[local]-[hash:base64:5]'
           }
         },
-        {
-          name: 'postcss-loader',
-          options: {
-            sourceMap: true,
-            plugins: () => [
-              postcssPresetEnv()
-            ],
-            options: {}
-          }
-        }
+        // {
+        //   name: 'postcss-loader',
+        //   options: {
+        //     sourceMap: true,
+        //     plugins: () => [
+        //       postcssPresetEnv()
+        //     ],
+        //     options: {}
+        //   }
+        // }
       ], {
         exclude: [/node_modules/]
       })
@@ -423,16 +429,16 @@ class Builder {
             sourceMap: true
           }
         },
-        {
-          name: 'postcss-loader',
-          options: {
-            sourceMap: true,
-            plugins: () => [
-              postcssPresetEnv()
-            ],
-            options: {}
-          }
-        }
+        // {
+        //   name: 'postcss-loader',
+        //   options: {
+        //     sourceMap: true,
+        //     plugins: () => [
+        //       postcssPresetEnv()
+        //     ],
+        //     options: {}
+        //   }
+        // }
       ], {
         include: [/node_modules/]
       })
@@ -659,7 +665,7 @@ class Builder {
       },
       resolve: {
         unsafeCache: true,
-        extensions: ['.js']
+        // extensions: ['.js']
       },
       devtool: !isProd ? 'inline-source-map' : 'hidden-source-map'
     }
@@ -967,7 +973,7 @@ or you want to change entry prepends, should call:
    *
    * @public
    */
-  removeEntryPrepend(name: string, prepend: string) {
+  deleteEntryPrepend(name: string, prepend: string) {
     if(!this.entry.has(name)) {
       this.setEntry(name, {}, true)
     }
@@ -1074,165 +1080,428 @@ or you want to change entry prepends, should call:
     return this.set('output.path', this.output, true)
   }
 
-  setLoader(name: string, exts?: string, loaders?: Array<Loader> = [], options?: Object = {}) {
-    this.loader[name] = {
-      ext: exts || name
-    }
-
-    this.setLoaderLoaders(name, loaders)
-    this.setLoaderOptions(name, options)
-
-    return this
-  }
-
-  deleteLoader(name: string) {
-    delete this.loader[name]
-    return this
-  }
-
-  setLoaderOptions(name: string, options: Object = {}) {
-    this.loader[name].options = options
-    return this
-  }
-
-  deleteLoaderOptions(name: string) {
-    delete this.loader[name].options
-    return this
-  }
-
-  setLoaderOption(name: string, key: string, value: *) {
-    this.loader[name].options[key] = value
-    return this
-  }
-
-  deleteLoaderOption(name: string, key: string) {
-    delete this.loader[name].options[key]
-    return this
-  }
-
-  setLoaderLoaders(name: string, loaders: Array<Loader> = []) {
-    this.loader[name].loaders = []
-    for(let i = 0; i < loaders.length; i++) {
-      this.addLoaderLoader(name, loaders[i])
-    }
-    return this
-  }
-
-  deleteLoaderLoaders(name: string) {
-    delete this.loader[name].loaders
-    return this
-  }
-
-  addLoaderLoader(name: string, loader: Loader) {
-    this.loader[name].loaders.push(
-      'string' === typeof loader
-          ? { name: loader, options: {} }
-          : loader
-    )
-    return this
-  }
-
-  removeLoaderLoader(name: string, loader: string) {
-    return this.setLoader(
-      name,
-      undefined,
-      this.loader[name].filter(
-        ({ name: loaderName }) => loader !== loaderName
+  /**
+   * set loader
+   *
+   * @public
+   */
+  setLoader(name: string, { files, loaders, options }: RuleProperty = {}) {
+    if(!name) {
+      throw new Error(
+        `Loader name was required`
       )
-    )
+    }
+
+    if(this.loader.has(name)) {
+      console.warn(
+        `The loader "${name}", was exists`
+      )
+    }
+
+    const opts = new Map()
+
+    for(let key in options) {
+      const item = options[key]
+      opts.set(key, item)
+    }
+
+    this.loader.set(name, null)
+
+    files && this.setLoaderFiles(name, files)
+    loaders && this.setLoaderLoaders(name, loaders)
+    options && this.setLoaderOptions(name, options)
+
+    return this
   }
 
-  setLoaderLoaderOptions(name: string, loaderName: string, options: Object = {}) {
-    return this.setLoader(
-      name,
-      undefined,
-      /**
-       * @TODO: should provide id or apply function to select loader
-       */
-      this.loader[name].map(loader => {
-        if(loader.name !== loaderName) {
-          return loader
-        }
-
-        loader.options = {
-          ...loader.options,
-          ...options
-        }
-
-        return loader
-      })
-    )
+  /**
+   * clear all the loader
+   *
+   * @public
+   */
+  clearLoader() {
+    this.loader.clear()
+    return this
   }
 
-  resetLoaderLoaderOptions(name: string, loaderName: string, options: Object = {}) {
-    return this.setLoader(
-      name,
-      undefined,
-      this.loader[name].map(loader => {
-        if(loader.name !== loaderName) {
-          return loader
-        }
-
-        loader.options = {}
-
-        return loader
-      })
-    )
+  /**
+   * delete loader by name
+   *
+   * @public
+   */
+  deleteLoader(name: string) {
+    this.loader.delete(name)
+    return this
   }
 
-  setLoaderLoaderOption(name: string, loaderName: string, key: string, value: *) {
-    return this.setLoader(
-      name,
-      undefined,
-      this.loader[name].map(loader => {
-        if(loader.name !== loaderName) {
-          return loader
-        }
+  /**
+   * set loader files
+   *
+   * @public
+   */
+  setLoaderFiles(name: string, files: string | Array<string>) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
 
-        loader.options[key] = value
+    if(!this.loader.get(name).files) {
+      this.loader.get(name).files = new Set()
+    }
 
-        return loader
-      })
-    )
+    [...files].forEach(file => this.addLoaderFile(name, file))
+    return this
   }
 
-  deleteLoaderLoaderOption(name: string, loaderName: string, key: string) {
-    return this.setLoader(
-      name,
-      undefined,
-      this.loader[name].map(loader => {
-        if(loader.name !== loaderName) {
-          return loader
-        }
+  /**
+   * clear loader files
+   *
+   * @public
+   */
+  clearLoaderFiles(name: string) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
 
-        delete loader.options[key]
+    if(!this.loader.get(name).files) {
+      this.loader.get(name).files = new Set()
+    }
 
-        return loader
-      })
-    )
+    this.loader.get(name).files.clear()
+    return this
   }
 
-  transformLoader() {
+  /**
+   * add loader file
+   *
+   * @public
+   */
+  addLoaderFile(name: string, file: string) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).files) {
+      this.loader.get(name).files = new Set()
+    }
+
+    /**
+     * hint for used file
+     */
+    if(this.files.has(file)) {
+      console.warn(
+        `The loader "${this.files.get(file)}" already defined the file loader "${file}"`
+      )
+    }
+
+    this.files.set(file, name)
+    this.loader.get(name).files.add(file)
+    return this
+  }
+
+  /**
+   * delete loader file
+   *
+   * @public
+   */
+  deleteLoaderFile(name: string, file: string) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).files) {
+      this.loader.get(name).files = new Set()
+    }
+
+    this.loader.get(name).files.delete(file)
+    return this
+  }
+
+  /**
+   * set loader options
+   *
+   * @public
+   */
+  setLoaderOptions(name: string, options: Object = {}) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).options) {
+      this.loader.get(name).options = new Map()
+    }
+
+    for(let key in options) {
+      this.setLoaderOption(key, options[key])
+    }
+
+    return this
+  }
+
+  /**
+   * clear loader options
+   *
+   * @public
+   */
+  clearLoaderOptions(name: string) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).options) {
+      this.loader.get(name).options = new Map()
+    }
+
+    this.loader.get(name).options.clear()
+    return this
+  }
+
+  /**
+   * set loader option by key&value
+   *
+   * @public
+   */
+  setLoaderOption(name: string, key: string, value: *) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).options) {
+      this.loader.get(name).options = new Map()
+    }
+
+    this.loader.get(name).options.set(key, value)
+    return this
+  }
+
+  /**
+   * delete loader option by key
+   *
+   * @public
+   */
+  deleteLoaderOption(name: string, key: string) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).options) {
+      this.loader.get(name).options = new Map()
+    }
+
+    this.loader.get(name).options.delete(key)
+    return this
+  }
+
+  /**
+   * set loader loaders
+   *
+   * @public
+   */
+  setLoaderLoaders(name: string, loaders: string | Loader | Array<string | Loader> = []) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).loaders) {
+      this.loader.get(name).loaders = new Map()
+    }
+
+    [...loaders].forEach(loader => {
+      if('string' === loader) {
+        this.addLoaderLoader(name, loader)
+      } else {
+        this.addLoaderLoader(name, loader.loader, loader.options)
+      }
+    })
+    return this
+  }
+
+  /**
+   * clear loader loaders
+   *
+   * @public
+   */
+  clearLoaderLoaders(name: string) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).loaders) {
+      this.loader.get(name).loaders = new Map()
+    }
+
+    this.loader.get(name).loaders.clear()
+    return this
+  }
+
+  /**
+   * add loader loader
+   *
+   * @public
+   */
+  addLoaderLoader(name: string, loader: string, options?: Object) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).loaders) {
+      this.loader.get(name).loaders = new Map()
+    }
+
+    this.loader.get(name).loaders.set(loader, new Map())
+
+    if(options) {
+      this.setLoaderLoaderOptions(name, loader, options)
+    }
+
+    return this
+  }
+
+  /**
+   * delete loader's loader by loader name
+   *
+   * @public
+   */
+  deleteLoaderLoader(name: stirng, loader: string) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).loaders) {
+      this.loader.get(name).loaders = new Map()
+    }
+
+    this.loader.get(name).loaders.delete(loader)
+    return this
+  }
+
+  /**
+   * set loader's loader options
+   *
+   * @public
+   */
+  setLoaderLoaderOptions(name: string, loader: string, options: Object) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).loaders) {
+      this.loader.get(name).loaders = new Map()
+    }
+
+    if(!this.loader.get(name).loaders.has(loader)) {
+      this.loader.get(name).loaders.set(loader, new Map())
+    }
+
+    for(let key in options) {
+      const item = options[key]
+      this.setLoaderLoaderOption(name, loader, key, item)
+    }
+
+    return this
+  }
+
+  /**
+   * clear all loader's loader options
+   *
+   * @public
+   */
+  clearLoaderLoaderOptions(name: string, loader: string) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).loaders) {
+      this.loader.get(name).loaders = new Map()
+    }
+
+    if(!this.loader.get(name).loaders.has(loader)) {
+      this.loader.get(name).loaders.set(loader, new Map())
+    }
+
+    this.loader.get(name).loaders.get(loader).clear()
+    return this
+  }
+
+  /**
+   * set loader's loader option by key/value
+   *
+   * @public
+   */
+  setLoaderLoaderOption(name: string, loader: string, key: string, value: *) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).loaders) {
+      this.loader.get(name).loaders = new Set()
+    }
+
+    if(!this.loader.get(name).loaders.has(loader)) {
+      this.loader.get(name).loaders.set(loader, new Map())
+    }
+
+    this.loader.get(name).loaders.get(loader).set(key, value)
+    return this
+  }
+
+  /**
+   * delete loader's loader option by key
+   *
+   * @public
+   */
+  deleteLoaderLoaderOption(name: string, loader: string, key: string) {
+    if(!this.loader.has(name)) {
+      this.setLoader(name)
+    }
+
+    if(!this.loader.get(name).loaders) {
+      this.loader.get(name).loaders = new Set()
+    }
+
+    if(!this.loader.get(name).loaders.has(loader)) {
+      this.loader.get(name).loaders.set(loader, new Map())
+    }
+
+    this.loader.get(name).loaders.get(loader).delete(key)
+    return this
+  }
+
+
+  /**
+   * transform this.loader to webpack.module.rules
+   *
+   * @private
+   */
+  _transformLoader() {
     const rules = []
 
-    Object.keys(this.loader).forEach(key => {
-      const { ext, loaders, options } = this.loader[key]
-      const use = []
+    //Object.keys(this.loader).forEach(key => {
+    this.loader.forEach(({ files, loaders, options }, name) => {
+      const test = new RegExp(`\\.(${Array.from(files).join('|')})$`)
 
-      loaders.forEach(({ name, options }) => {
-        use.push(
-          options && Object.keys(options)
-            ? { loader: name, options }
-            : name
-        )
+      const opts = {}
+      options.forEach((value, key) => {
+        opts[key] = value
+      })
+
+      const use = []
+      loaders.forEach((loaderOptions, loaderName) => {
+        const loaderOpts = {}
+        loaderOptions.forEach((value, key) => {
+          loaderOpts[key] = value
+        })
+
+        use.push({ loader: loaderName, options: loaderOptions })
       })
 
       rules.push({
-        test: new RegExp(`\\.${ext}$`),
+        test,
         use,
-        ...options
+        ...opts
       })
     })
+
+    console.log(rules)
 
     this.set(`module.rules`, rules, true)
 
@@ -1358,7 +1627,33 @@ by "build.set()" method, It better replaced by "build.setPlugin()"`
     return this
   }
 
-  report() {
+  inspect() {
+    const entries = []
+
+    this.entry.forEach(({ entry, prepends }, id) => {
+      entries.push({ id, entry, prepends: Array.from(prepends) })
+    })
+
+    const loaders = []
+
+    Object.keys(this.loader).forEach(key => {
+      const { ext, loaders: lods, options } = this.loader[key]
+      loaders.push({ id: key, ext, loaders: lods, options })
+    })
+
+    console.log(`
+context
+  ${this.context}
+
+entry(${entries.length})
+${entries.map(({ id, entry, prepends }) => `  ${id} => { entry: ${entry}, pres: ${prepends.toString()}}`).join('\n')}
+
+output
+  ${this.output}
+
+rule(${loaders.length})
+${loaders.map(({ id, ext, loaders: lods, options }) => `  ${id} => { ext: ${ext}, lods: ${lods.map(({ name, options: loaderOptions }) => `${name}, ${loaderOptions}`)}, options: ${options} }`).join('\n')}
+`)
     return this
   }
 
@@ -1368,7 +1663,7 @@ by "build.set()" method, It better replaced by "build.setPlugin()"`
       ._transformOutput()
       ._transformEntry()
       ._transformLib()
-      .transformLoader()
+      // ._transformLoader()
       ._transformPlugin()
       .options
   }
@@ -1811,7 +2106,7 @@ describe('script/webpack builder()', () => {
         prepends: new Set([])
       }]]),
 
-      new Builder().removeEntryPrepend('main', 'foo').entry
+      new Builder().deleteEntryPrepend('main', 'foo').entry
     )
   })
 
