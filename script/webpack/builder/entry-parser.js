@@ -50,10 +50,23 @@ function parse(entry: Entry, name? = 'main', subtype?: boolean = false): Array<R
 
           default:
 
+            const prepends = entry.slice(0, -1)
+
+            const idx = prepends.findIndex(pre => 'string' !== typeof pre)
+            if(~idx) {
+              const elem = prepends[idx]
+              throw new Error(
+                `\
+The entry prepends should be string type, but \
+the entry${subtype ? `["${name}"]` : ''} prepends[${idx}] type was \
+${'object' === typeof elem ? typeof elem : objectType(elem)}`
+              )
+            }
+
             return [{
               name,
               entry: entry.slice(-1)[0],
-              prepends: entry.slice(0, -1)
+              prepends
             }]
 
         }
@@ -61,7 +74,7 @@ function parse(entry: Entry, name? = 'main', subtype?: boolean = false): Array<R
 
         throw new Error(
           `\
-Unknow webpack option.entry[${name}] type "${objectType(entry)}"
+Unknow webpack option.entry["${name}"] type "${objectType(entry)}"
 The entry[name] type should one of:
 
   * string
@@ -111,7 +124,7 @@ The entry type should one of:
 
       throw new Error(
         `\
-Unknow webpack option.entry${subtype ? `[${name}]` : ''} type "${typeof entry}"
+Unknow webpack option.entry${subtype ? `["${name}"]` : ''} type "${typeof entry}"
 The entry type should one of:
 
   * string
@@ -162,6 +175,20 @@ describe('entryOptionParse()', () => {
       }],
 
       parse(['foo', 'bar'])
+    )
+  })
+
+  it('should throw when parse empty array', () => {
+    assert.throws(
+      () => parse([]),
+      /The entry should include more then one element/
+    )
+  })
+
+  it('should parse array when some prepends type not string', () => {
+    assert.throws(
+      () => parse([null, 'bar']),
+      /The entry prepends should be string type/
     )
   })
 
@@ -251,24 +278,6 @@ describe('entryOptionParse()', () => {
     )
   })
 
-  // it('should parse object type when some prepends type not string', () => {
-  //   assert.throws(
-  //     () => new Builder({
-  //       entry: {
-  //         foo: [new Date(), 'bar']
-  //       }
-  //     }),
-  //     /Array element type should be string/
-  //   )
-  // })
-
-  // it('should parse entry, null or undefined should pass', () => {
-  //   assert.deepStrictEqual(
-  //     new Map([]),
-  //     new Builder({ }).entry
-  //   )
-  // })
-
   it('should throw when parse invaild type', () => {
     assert.throws(
       () => parse(undefined),
@@ -276,10 +285,17 @@ describe('entryOptionParse()', () => {
     )
   })
 
+  it('should throw when parse invaild type with subtype', () => {
+    assert.throws(
+      () => parse(undefined, 'foo', true),
+      /Unknow webpack option.entry\["foo"\] type "undefined"/
+    )
+  })
+
   it('should throw when parse invaild object type', () => {
     assert.throws(
-      () => parse(new Date()),
-      /Unknow webpack option.entry type "date"/
+      () => parse(null),
+      /Unknow webpack option.entry type "null"/
     )
   })
 })
