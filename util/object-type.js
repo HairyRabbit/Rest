@@ -41,6 +41,10 @@ describe('util objectType()', () => {
     assert('promise' === objectType(Promise.resolve()))
   })
 
+  it('should be null', () => {
+    assert('null' === objectType(null))
+  })
+
   it('should throw when expected not a object', () => {
     assert.throws(() => {
       objectType()
