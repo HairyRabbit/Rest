@@ -19,13 +19,15 @@ type Result = {
 
 function parse(entry: Entry, name? = 'main', subtype?: boolean = false): Array<Result> {
   switch(typeof entry) {
-    case 'string': {
+    case 'string':
+    case 'function': {
 
       return [{
         name,
         entry,
         prepends: []
       }]
+
     }
 
     case 'object': {
@@ -33,14 +35,15 @@ function parse(entry: Entry, name? = 'main', subtype?: boolean = false): Array<R
       if(Array.isArray(entry)) {
 
         switch(entry.length) {
-
-          case 0:
+          case 0: {
 
             throw new Error(
               `The entry should include more then one element`
             )
 
-          case 1:
+          }
+
+          case 1: {
 
             return [{
               name,
@@ -48,16 +51,16 @@ function parse(entry: Entry, name? = 'main', subtype?: boolean = false): Array<R
               prepends: []
             }]
 
-          default:
+          }
 
-            const prepends = entry.slice(0, -1)
+          default: {
 
-            const idx = prepends.findIndex(pre => 'string' !== typeof pre)
+            const idx = entry.findIndex(pre => 'string' !== typeof pre)
             if(~idx) {
-              const elem = prepends[idx]
+              const elem = entry[idx]
               throw new Error(
                 `\
-The entry prepends should be string type, but \
+The entry array should be all the element was string type, but \
 the entry${subtype ? `["${name}"]` : ''} prepends[${idx}] type was \
 ${'object' === typeof elem ? typeof elem : objectType(elem)}`
               )
@@ -66,9 +69,10 @@ ${'object' === typeof elem ? typeof elem : objectType(elem)}`
             return [{
               name,
               entry: entry.slice(-1)[0],
-              prepends
+              prepends: entry.slice(0, -1)
             }]
 
+          }
         }
       } else if(subtype) {
 
@@ -110,16 +114,6 @@ The entry type should one of:
       }
     }
 
-    case 'function': {
-
-      return [{
-        name,
-        entry,
-        prepends: []
-      }]
-
-    }
-
     default: {
 
       throw new Error(
@@ -149,7 +143,7 @@ export default parse
 import assert from 'assert'
 import sinon from 'sinon'
 
-describe('entryOptionParse()', () => {
+describe('Function entryOptionParse()', () => {
   afterEach(() => {
     sinon.restore()
   })
@@ -188,7 +182,7 @@ describe('entryOptionParse()', () => {
   it('should parse array when some prepends type not string', () => {
     assert.throws(
       () => parse([null, 'bar']),
-      /The entry prepends should be string type/
+      /The entry array should be all the element was string type/
     )
   })
 
