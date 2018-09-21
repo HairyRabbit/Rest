@@ -4,7 +4,7 @@
  * @flow
  */
 
-import { set, isFunction, isPlainObject, camelCase, defaults } from 'lodash'
+import { set, isFunction, camelCase, defaults } from 'lodash'
 import Entry from './entry'
 import readEnv from './read-env'
 import type {
@@ -30,6 +30,9 @@ class Builder {
     this.entry = new Entry(webpackOptions.entry)
 
     this
+      .export(this, [
+        'set'
+      ])
       .export(this.entry, [
         'setEntry',
         'deleteEntry',

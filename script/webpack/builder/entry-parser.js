@@ -1,4 +1,6 @@
 /**
+ * entry parser
+ *
  * parse webpackOptions.entry
  *
  * @flow

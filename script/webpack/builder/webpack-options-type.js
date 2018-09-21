@@ -14,11 +14,16 @@ export type Entry =
   | any => Entry$Base | Entry$Complex
   | any => Promise<Entry$Base | Entry$Complex>
 
+export type Mode =
+  | 'development'
+  | 'production'
+  | 'none'
+
+type Plugin = { apply: Function }
+export type Plugins = Array<Plugin>
+
 export type WebpackOptions = {
-  mode?:
-    | 'development'
-    | 'production'
-    | 'none',
+  mode?: Mode,
   target?:
     | 'async-node'
     | 'atom'
@@ -165,7 +170,7 @@ export type WebpackOptions = {
     Buffer?: boolean | 'mock',
     setImmediate?: boolean | 'mock' | 'empty'
   },
-  plugins?: Array<any>,
+  plugins?: Plugins,
   parallelism?: number,
   profile?: boolean,
   bail?: boolean,
