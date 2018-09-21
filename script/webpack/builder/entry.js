@@ -5,7 +5,7 @@
  */
 
 import parse from './entry-parser'
-import type { Entry as WebpackEntry } from './webpack-option-type'
+import type { Entry as WebpackEntry } from './webpack-options-type'
 
 
 /// code
@@ -101,14 +101,18 @@ class Entry {
     const options = {}
 
     this.value.forEach(({ entry, prepends }, name) => {
+      if(!entry) return
+
+      const pre = Array.from(prepends)
+
       switch(typeof entry) {
         case 'string': {
-          options[name] = prepends ? [...Array.from(prepends), entry] : entry
+          options[name] = [...pre, entry]
           return
         }
 
         case 'function': {
-          options[name] = entry(prepends)
+          options[name] = () => entry(pre)
           return
         }
 
@@ -367,6 +371,35 @@ describe('Class Entry', () => {
       }]]),
 
       new Entry(['foo', 'bar']).deleteEntryPrepend('foo', 'baz').value
+    )
+  })
+
+  it('Entry.transfrom', () => {
+    assert.deepStrictEqual(
+      {
+        main: ['foo']
+      },
+
+      new Entry('foo').transform()
+    )
+  })
+
+  it('Entry.transfrom with prepends', () => {
+    assert.deepStrictEqual(
+      {
+        main: ['foo', 'bar']
+      },
+
+      new Entry(['foo', 'bar']).transform()
+    )
+  })
+
+  it('Entry.transfrom with dyamic entry', () => {
+    const ref = a => a
+    assert.deepStrictEqual(
+      ['foo'],
+
+      new Entry(ref).setEntryPrepends(['foo']).transform().main()
     )
   })
 })

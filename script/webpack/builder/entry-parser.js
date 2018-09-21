@@ -6,7 +6,7 @@
 
 import { isPlainObject } from 'lodash'
 import { objectType } from '../../../util'
-import type { Entry } from 'webpack-option-type'
+import type { Entry } from 'webpack-options-type'
 
 
 /// code
@@ -123,13 +123,8 @@ export default parse
 /// test
 
 import assert from 'assert'
-import sinon from 'sinon'
 
 describe('Function entryOptionParse()', () => {
-  afterEach(() => {
-    sinon.restore()
-  })
-
   it('should parse string', () => {
     assert.deepStrictEqual(
       [{

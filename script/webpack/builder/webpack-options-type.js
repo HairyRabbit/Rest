@@ -14,7 +14,7 @@ export type Entry =
   | any => Entry$Base | Entry$Complex
   | any => Promise<Entry$Base | Entry$Complex>
 
-export type WebpackOption = {
+export type WebpackOptions = {
   mode?:
     | 'development'
     | 'production'
