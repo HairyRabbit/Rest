@@ -4,9 +4,14 @@
  * @flow
  */
 
-import { set, noop, isFunction, isPlainObject, camelCase, defaults } from 'lodash'
+import { set, isFunction, isPlainObject, camelCase, defaults } from 'lodash'
 import Entry from './entry'
-import type { WebpackOptions, Mode as WebpackMode } from './webpack-options-type'
+import readEnv from './read-env'
+import type {
+  WebpackOptions,
+  Mode as WebpackMode,
+  Entry as WebpackEntry
+} from './webpack-options-type'
 
 
 /// code
@@ -16,63 +21,81 @@ type Options = {
 }
 
 class Builder {
-  mode: WebpackMode
+  webpackOptions: WebpackOptions
+  mode: ?WebpackMode
+  entry: Entry
 
   constructor(webpackOptions: webpackOptions = {}) {
     this.webpackOptions = webpackOptions
-    this.mode = webpackOptions.mode || Builder.readEnv('NODE_ENV') || 'development'
     this.entry = new Entry(webpackOptions.entry)
 
-    this.transform = this.transform.bind(this)
-
-    this.export(this.entry, [
-      'setEntry',
-      'deleteEntry',
-      'clearEntry',
-      'setEntryEntry',
-      'setEntryPrepends',
-      'clearEntryPrepends',
-      'addEntryPrepend',
-      'deleteEntryPrepend'
-    ])
+    this
+      .export(this.entry, [
+        'setEntry',
+        'deleteEntry',
+        'clearEntry',
+        'setEntryEntry',
+        'setEntryPrepends',
+        'clearEntryPrepends',
+        'addEntryPrepend',
+        'deleteEntryPrepend'
+      ])
   }
 
-  static readEnv(name: string): ?string {
-    if(!process.env) return null
-
-    return process.env[name]
+  setMode(mode: WebpackMode) {
+    this.mode = mode
+    return this
   }
 
-  callWithMode(mode: string, fn: Function): Function {
-    if(mode !== this.mode) {
-      return noop
+  resetMode() {
+    this.mode = undefined
+    return this
+  }
+
+  guessMode(): WebpackMode {
+    return readEnv('NODE_ENV') || 'development'
+  }
+
+  guessEntry(): WebpackEntry {
+
+  }
+
+  /**
+   * @private
+   */
+  callWithMode(fn: Function, mode?: string): () => any {
+    return () => {
+      if(mode !== this.mode) {
+        return void 0
+      }
+
+      return fn()
     }
-
-    return fn
   }
 
+  /**
+   * @private
+   */
   export(entity: any, fns: Array<string>) {
     fns.forEach(name => {
       const fn = entity[name].bind(entity)
 
-      this[name] = fn
-      this[name + 'Dev'] = this.callWithMode('development', fn)
-      this[name + 'Prod'] = this.callWithMode('production', fn)
+      this[name] = this.callWithMode(fn)
+      this[name + 'Dev'] = this.callWithMode(fn, 'development')
+      this[name + 'Prod'] = this.callWithMode(fn, 'production')
     })
 
     return this
   }
 
-  transform(): WebpackOptions {
-    set(this.webpackOptions, 'mode', this.mode)
-    set(this.webpackOptions, 'entry', this.entry.transform())
+  set(key: string, value: *) {
+    set(this.webpackOptions, key, value)
+    return this
+  }
 
-    if(!this.webpackOptions.mode ||
-       !Object.keys(this.webpackOptions.entry).length) {
-      throw new Error(
-        `The webpack options "mode" and "entry" was required`
-      )
-    }
+  transform(): WebpackOptions {
+    this.set('mode', this.webpackOptions.mode || this.guessMode())
+    this.set('entry', this.entry.transform() || this.guessEntry())
 
     return this.webpackOptions
   }
@@ -98,45 +121,60 @@ describe('Class Builder', () => {
     assert(new Builder().transform)
   })
 
-  it('Builder#readEnv', () => {
-    process.env.FOO = 'foo'
-
+  it('Builder.setMode', () => {
     assert.deepStrictEqual(
-      'foo',
-      Builder.readEnv('FOO')
+      'development',
+      new Builder()
+        .setMode('development')
+        .mode
+    )
+  })
+
+  it('Builder.resetMode', () => {
+    assert.deepStrictEqual(
+      undefined,
+      new Builder()
+        .setMode('development')
+        .resetMode()
+        .mode
     )
   })
 
   it('Builder.callWithMode', () => {
-    const ref = () => {}
-
     assert.deepStrictEqual(
-      ref,
-      new Builder({ mode: 'development' }).callWithMode('development', ref)
+      42,
+      new Builder()
+        .callWithMode(() => 42)()
+    )
+  })
+
+  it('Builder.callWithMode', () => {
+    assert.deepStrictEqual(
+      42,
+      new Builder()
+        .setMode('development')
+        .callWithMode(() => 42, 'development')()
     )
   })
 
   it('Builder.callWithMode not match Builder.mode', () => {
-    const ref = () => {}
-
     assert.deepStrictEqual(
-      noop,
-      new Builder().callWithMode('production', ref)
+      undefined,
+      new Builder()
+        .callWithMode(() => 42, 'production')()
     )
   })
 
-  it('Builder.transform', () => {
-    assert.deepStrictEqual(
-      {
-        mode: 'test',
-        entry: {
-          main: ['foo']
-        }
-      },
+  // it('Builder.transform', () => {
+  //   console.log(new Builder({
+  //       entry: 'foo'
+  //     }).transform())
+  //   assert.deepStrictEqual(
+  //     {
+  //       mode: 'test'
+  //     },
 
-      new Builder({
-        entry: 'foo'
-      }).transform()
-    )
-  })
+  //     new Builder().transform()
+  //   )
+  // })
 })

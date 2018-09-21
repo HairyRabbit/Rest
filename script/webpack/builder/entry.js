@@ -4,6 +4,7 @@
  * @flow
  */
 
+import { isEmpty } from 'lodash'
 import parse from './entry-parser'
 import type { Entry as WebpackEntry } from './webpack-options-type'
 
@@ -97,7 +98,7 @@ class Entry {
     return this
   }
 
-  transform(): WebpackEntry {
+  transform(): ?WebpackEntry {
     const options = {}
 
     this.value.forEach(({ entry, prepends }, name) => {
@@ -121,6 +122,8 @@ class Entry {
         }
       }
     })
+
+    if(isEmpty(options)) return null
 
     return options
   }
@@ -386,9 +389,7 @@ describe('Class Entry', () => {
 
   it('Entry.transfrom filter null entry', () => {
     assert.deepStrictEqual(
-      {
-      },
-
+      null,
       new Entry('foo').clearEntry().transform()
     )
   })
@@ -411,4 +412,6 @@ describe('Class Entry', () => {
       new Entry(ref).setEntryPrepends(['foo']).transform().main()
     )
   })
+
+
 })
