@@ -21,40 +21,31 @@ function parse(entry: Entry, name? = 'main', subtype?: boolean = false): Array<R
   switch(typeof entry) {
     case 'string':
     case 'function': {
-
       return [{
         name,
         entry,
         prepends: []
       }]
-
     }
 
     case 'object': {
-
       if(Array.isArray(entry)) {
-
         switch(entry.length) {
           case 0: {
-
             throw new Error(
               `The entry should include more then one element`
             )
-
           }
 
           case 1: {
-
             return [{
               name,
               entry: entry[0],
               prepends: []
             }]
-
           }
 
           default: {
-
             const idx = entry.findIndex(pre => 'string' !== typeof pre)
             if(~idx) {
               const elem = entry[idx]
@@ -71,11 +62,9 @@ ${'object' === typeof elem ? typeof elem : objectType(elem)}`
               entry: entry.slice(-1)[0],
               prepends: entry.slice(0, -1)
             }]
-
           }
         }
       } else if(subtype) {
-
         throw new Error(
           `\
 Unknow webpack option.entry["${name}"] type "${objectType(entry)}"
@@ -86,9 +75,7 @@ The entry[name] type should one of:
   * Function
 `
         )
-
       } else if(isPlainObject(entry)) {
-
         const acc = []
 
         for(let key in entry) {
@@ -96,9 +83,7 @@ The entry[name] type should one of:
         }
 
         return acc
-
       } else {
-
         throw new Error(
           `\
 Unknow webpack option.entry type "${objectType(entry)}"
@@ -110,12 +95,10 @@ The entry type should one of:
   * Function
 `
         )
-
       }
     }
 
     default: {
-
       throw new Error(
         `\
 Unknow webpack option.entry${subtype ? `["${name}"]` : ''} type "${typeof entry}"
@@ -127,7 +110,6 @@ The entry type should one of:
   * Function
 `
       )
-
     }
   }
 }
