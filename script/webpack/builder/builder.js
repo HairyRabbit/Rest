@@ -24,14 +24,25 @@ class Builder {
 
 
     this.transform = this.transform.bind(this)
-    this.setEntry = this.entry.setEntry.bind(this.entry)
-    this.clearEntry = this.entry.clearEntry.bind(this.entry)
-    this.deleteEntry = this.entry.deleteEntry.bind(this.entry)
-    this.setEntryEntry = this.entry.setEntryEntry.bind(this.entry)
-    this.setEntryPrepends = this.entry.setEntryPrepends.bind(this.entry)
-    this.clearEntryPrepends = this.entry.clearEntryPrepends.bind(this.entry)
-    this.addEntryPrepend = this.entry.addEntryPrepend.bind(this.entry)
-    this.deleteEntryPrepend = this.entry.deleteEntryPrepend.bind(this.entry)
+
+    [
+      'setEntry',
+      'deleteEntry',
+      'clearEntry',
+      'setEntryEntry',
+      'setEntryPrepends',
+      'clearEntryPrepends',
+      'addEntryPrepend',
+      'deleteEntryPrepend'
+    ].forEach(name => {
+      this[name] = this.entry[name].bind(this.entry)
+      this[name + 'Dev'] = this.entry[name].bind(this.entry)
+      this[name + 'Prod'] = this.entry[name].bind(this.entry)
+    })
+  }
+
+  _export() {
+
   }
 
   transform(): WebpackOptions {

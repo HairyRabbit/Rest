@@ -384,6 +384,15 @@ describe('Class Entry', () => {
     )
   })
 
+  it('Entry.transfrom filter null entry', () => {
+    assert.deepStrictEqual(
+      {
+      },
+
+      new Entry('foo').clearEntry().transform()
+    )
+  })
+
   it('Entry.transfrom with prepends', () => {
     assert.deepStrictEqual(
       {
