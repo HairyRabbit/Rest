@@ -122,6 +122,15 @@ class Rule {
     return this
   }
 
+  clearLoaders(name: string) {
+    this
+      .ensure(name)
+      .value.get(name).loaders
+      .clear()
+
+    return this
+  }
+
   setLoader(name: string, loader: string, { name: loaderName, options } = {}) {
     this
       .ensure(name)
@@ -143,7 +152,7 @@ class Rule {
     return this
   }
 
-  setLoaderOptions(name: string, loader: string, options: Object) {
+  setLoaderOptions(name: string, loader: string, options?: Object) {
     this
       .ensureLoadersLoader(name, loader)
       .value.get(name).loaders.get(loader)
@@ -268,6 +277,289 @@ describe('Class Rule', () => {
       new Map(),
 
       new Rule()
+        .value
+    )
+  })
+
+  it('Rule.setRule', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          loaders: new Map([
+            ['babel-loader', {
+              name: undefined,
+              options: new Map([
+                ['foo', 42]
+              ])
+            }]
+          ]),
+          options: new Map([
+            ['exclude', /node_modules/]
+          ]),
+          type: new Set()
+        }]
+      ]),
+
+      new Rule()
+        .setRule(
+          'js',
+          [{
+            loader: 'babel-loader',
+            options: {
+              foo: 42
+            }
+          }],
+          {
+            exclude: /node_modules/
+          }
+        )
+        .value
+    )
+  })
+
+  it('Rule.deleteRule', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['css', {
+          loaders: new Map(),
+          options: new Map(),
+          type: new Set()
+        }]
+      ]),
+
+      new Rule()
+        .setRule('js')
+        .setRule('css')
+        .deleteRule('js')
+        .value
+    )
+  })
+
+  it('Rule.clearRule', () => {
+    assert.deepStrictEqual(
+      new Map(),
+
+      new Rule()
+        .setRule('js')
+        .setRule('css')
+        .clearRule()
+        .value
+    )
+  })
+
+  it('Rule.setLoaders', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          options: new Map(),
+          type: new Set(),
+          loaders: new Map([
+            ['foo', {
+              name: undefined,
+              options: new Map()
+            }],
+            ['bar', {
+              name: undefined,
+              options: new Map()
+            }]
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setLoaders('js', [{
+          loader: 'foo'
+        },{
+          loader: 'bar'
+        }])
+        .value
+    )
+  })
+
+  it('Rule.clearLoaders', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          options: new Map(),
+          type: new Set(),
+          loaders: new Map()
+        }]
+      ]),
+
+      new Rule()
+        .setLoaders('js', [{
+          loader: 'foo'
+        }])
+        .clearLoaders('js')
+        .value
+    )
+  })
+
+  it('Rule.setLoader', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          options: new Map(),
+          type: new Set(),
+          loaders: new Map([
+            ['babel-loader', {
+              name: undefined,
+              options: new Map()
+            }]
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setLoader('js', 'babel-loader')
+        .value
+    )
+  })
+
+  it('Rule.setLoader with options', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          options: new Map(),
+          type: new Set(),
+          loaders: new Map([
+            ['babel-loader', {
+              name: 'foo',
+              options: new Map([
+                ['bar', 42]
+              ])
+            }]
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setLoader('js', 'babel-loader', {
+          name: 'foo',
+          options: {
+            bar: 42
+          }
+        })
+        .value
+    )
+  })
+
+  it('Rule.deleteLoader', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          options: new Map(),
+          type: new Set(),
+          loaders: new Map([
+            ['foo', {
+              name: undefined,
+              options: new Map()
+            }]
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setLoaders('js', [{
+          loader: 'foo'
+        },{
+          loader: 'bar'
+        }])
+        .deleteLoader('js', 'bar')
+        .value
+    )
+  })
+
+  it('Rule.setLoaderOptions', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          options: new Map(),
+          type: new Set(),
+          loaders: new Map([
+            ['foo', {
+              name: undefined,
+              options: new Map([
+                ['bar', 42]
+              ])
+            }]
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setLoaderOptions('js', 'foo', {
+          bar: 42
+        })
+        .value
+    )
+  })
+
+  it('Rule.clearLoaderOptions', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          options: new Map(),
+          type: new Set(),
+          loaders: new Map([
+            ['foo', {
+              name: undefined,
+              options: new Map()
+            }]
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setLoaderOptions('js', 'foo', {
+          bar: 42
+        })
+        .clearLoaderOptions('js', 'foo')
+        .value
+    )
+  })
+
+  it('Rule.setLoaderOption', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          options: new Map(),
+          type: new Set(),
+          loaders: new Map([
+            ['foo', {
+              name: undefined,
+              options: new Map([
+                ['bar', 42]
+              ])
+            }]
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setLoaderOption('js', 'foo', 'bar', 42)
+        .value
+    )
+  })
+
+  it('Rule.deleteLoaderOption', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          options: new Map(),
+          type: new Set(),
+          loaders: new Map([
+            ['foo', {
+              name: undefined,
+              options: new Map()
+            }]
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setLoaderOptions('js', 'foo', { bar: 42 })
+        .deleteLoaderOption('js', 'foo', 'bar')
         .value
     )
   })
