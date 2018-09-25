@@ -6,6 +6,7 @@
 
 import { set, isFunction, camelCase, defaults } from 'lodash'
 import Entry from './entry'
+import Plugin from './plugin'
 import readEnv from './read-env'
 import type {
   WebpackOptions,
@@ -28,6 +29,7 @@ class Builder {
   constructor(webpackOptions: webpackOptions = {}) {
     this.webpackOptions = webpackOptions
     this.entry = new Entry(webpackOptions.entry)
+    this.plugin = new Plugin(webpackOptions.plugin)
 
     this
       .export(this, [
@@ -42,6 +44,15 @@ class Builder {
         'clearEntryPrepends',
         'addEntryPrepend',
         'deleteEntryPrepend'
+      ])
+      .export(this.plugin, [
+        'setPlugin',
+        'deletePlugin',
+        'clearPlugin',
+        'setPluginOptions',
+        'clearPluginOptions',
+        'setPluginOption',
+        'deletePluginOption'
       ])
   }
 
@@ -99,6 +110,7 @@ class Builder {
   transform(): WebpackOptions {
     this.set('mode', this.webpackOptions.mode || this.guessMode())
     this.set('entry', this.entry.transform() || this.guessEntry())
+    this.set('plugin', this.plugin.transform())
 
     return this.webpackOptions
   }
