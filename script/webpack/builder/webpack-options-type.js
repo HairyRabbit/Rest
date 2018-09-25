@@ -22,6 +22,70 @@ export type Mode =
 type Plugin = { apply: Function }
 export type Plugins = Array<Plugin>
 
+type Node$Value =
+  | boolean
+  | 'mock'
+  | 'empty'
+
+type Node =
+  | boolean
+  | {
+    console?: Node$Value,
+    global?: Node$Value,
+    process?: Node$Value,
+    __filename?: Node$Value,
+    __dirname?: Node$Value,
+    Buffer?: Node$Value,
+    setImmediate: Node$Value
+  }
+
+type Condition$Base =
+  | string
+  | RegExp
+  | (request: string) => boolean
+
+type Condition =
+  | Condition$Base
+  | Array<Condition$Base>
+  | {
+    [string]: Condition$Base
+  }
+
+type Rule$UseEntry =
+  | string
+  | {
+    loader?: string,
+    options?: string | Object
+  }
+
+export type Rule = {
+  use?: Array<Rule$UseEntry>,
+  loader?: string | Object,
+  options?: string | Object,
+  enforce?: 'pre' | 'post',
+  parser?: boolean | {
+    amd?: boolean,
+    commonjs?: boolean,
+    system?: boolean,
+    harmony?: boolean,
+    requireInclude?: boolean,
+    requireEnsure?: boolean,
+    requireContext?: boolean,
+    browserify?: boolean,
+    requireJs?: boolean,
+    node?: boolean | Node
+  },
+  issuer?: Condition,
+  resource?: Condition,
+  resourceQuery?: Condition,
+  sideEffects?: false | Array<string>,
+  rules?: Array<Rule>,
+  oneOf?: Array<Rule>,
+  test?: Condition,
+  exclude?: Condition,
+  include?: Condition
+}
+
 export type WebpackOptions = {
   mode?: Mode,
   target?:
@@ -202,7 +266,7 @@ export type WebpackOptions = {
       hash?: boolean
     },
   module?: {
-    rules?: Array<>,
+    rules?: Array<Rule>,
     unknownContextRequest?: string,
     unknownContextRecursive?: boolean,
     unknownContextRegExp?: RegExp,

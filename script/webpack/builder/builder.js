@@ -25,6 +25,7 @@ class Builder {
   webpackOptions: WebpackOptions
   mode: ?WebpackMode
   entry: Entry
+  plugin: Plugin
 
   constructor(webpackOptions: webpackOptions = {}) {
     this.webpackOptions = webpackOptions
