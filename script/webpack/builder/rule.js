@@ -54,7 +54,7 @@ class Rule {
 
     this.setLoaders(name, loaders)
     this.setOptions(name, options)
-    this.setFileType(name, type)
+    this.setFileTypes(name, type)
     return this
   }
 
@@ -68,7 +68,7 @@ class Rule {
     return this
   }
 
-  setFileType(name: string, type?: string | Array<string> = []) {
+  setFileTypes(name: string, type?: string | Array<string> = []) {
     this
       .ensure(name)
       .value.get(name)
@@ -77,7 +77,7 @@ class Rule {
     return this
   }
 
-  clearFileType(name: string) {
+  clearFileTypes(name: string) {
     this
       .ensure(name)
       .value.get(name)
@@ -560,6 +560,148 @@ describe('Class Rule', () => {
       new Rule()
         .setLoaderOptions('js', 'foo', { bar: 42 })
         .deleteLoaderOption('js', 'foo', 'bar')
+        .value
+    )
+  })
+
+  it('Rule.setOptions', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          loaders: new Map(),
+          type: new Set(),
+          options: new Map([
+            ['bar', 42]
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setOptions('js', { bar: 42 })
+        .value
+    )
+  })
+
+  it('Rule.clearOptions', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          loaders: new Map(),
+          type: new Set(),
+          options: new Map()
+        }]
+      ]),
+
+      new Rule()
+        .setOptions('js', { bar: 42 })
+        .clearOptions('js')
+        .value
+    )
+  })
+
+  it('Rule.setOption', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          loaders: new Map(),
+          type: new Set(),
+          options: new Map([
+            ['bar', 42]
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setOption('js', 'bar', 42)
+        .value
+    )
+  })
+
+  it('Rule.deleteOption', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          loaders: new Map(),
+          type: new Set(),
+          options: new Map([
+            ['bar', 'baz']
+          ])
+        }]
+      ]),
+
+      new Rule()
+        .setOptions('js', {
+          foo: 42,
+          bar: 'baz'
+        })
+        .deleteOption('js', 'foo')
+        .value
+    )
+  })
+
+  it('Rule.setFileTypes', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          loaders: new Map(),
+          options: new Map(),
+          type: new Set(['foo', 'bar'])
+        }]
+      ]),
+
+      new Rule()
+        .setFileTypes('js', ['foo', 'bar'])
+        .value
+    )
+  })
+
+  it('Rule.clearFileTypes', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          loaders: new Map(),
+          options: new Map(),
+          type: new Set()
+        }]
+      ]),
+
+      new Rule()
+        .setFileTypes('js', ['foo', 'bar'])
+        .clearFileTypes('js')
+        .value
+    )
+  })
+
+  it('Rule.setFileTypes', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          loaders: new Map(),
+          options: new Map(),
+          type: new Set(['foo', 'bar', 'baz'])
+        }]
+      ]),
+
+      new Rule()
+        .setFileTypes('js', ['foo', 'bar'])
+        .addFileType('js', 'baz')
+        .value
+    )
+  })
+
+  it('Rule.deleteFileTypes', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['js', {
+          loaders: new Map(),
+          options: new Map(),
+          type: new Set(['foo'])
+        }]
+      ]),
+
+      new Rule()
+        .setFileTypes('js', ['foo', 'bar'])
+        .deleteFileType('js', 'bar')
         .value
     )
   })
