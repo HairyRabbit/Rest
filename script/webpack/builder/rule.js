@@ -5,6 +5,7 @@
  */
 
 import { isEmpty } from 'lodash'
+import parse from './rule-parser'
 import type { Rule as WebpackRule } from './webpack-options-type'
 
 
@@ -23,8 +24,25 @@ class Rule {
     options: Map<string, any>
   }>
 
-  constructor() {
+  constructor(rules?: WebpackRule) {
     this.value = new Map()
+
+    if(rules) {
+      this.noParsed = []
+
+      const parsed = parse(rules)
+      for(let i = 0; i < parsed.length; i++) {
+        const { check, rule, ...loader } = parsed[i]
+
+        if(!check) {
+          this.noParsed.push(rule)
+          return
+        }
+
+        const { loaders, options, type } = loader
+        this.setRule(type, loaders, options)
+      }
+    }
   }
 
   ensure(name: string) {
@@ -249,6 +267,12 @@ class Rule {
       })
     })
 
+    if(this.noParsed) {
+      for(let i = 0; i < this.noParsed.length; i++) {
+        acc.push(this.noParsed[i])
+      }
+    }
+
     return acc
   }
 }
@@ -269,6 +293,34 @@ describe('Class Rule', () => {
       new Map(),
 
       new Rule()
+        .value
+    )
+  })
+
+  it('Rule.constructor parse rules', () => {
+    assert.deepStrictEqual(
+      new Map([
+        ['foo', {
+          loaders: new Map(),
+          options: new Map(),
+          type: new Set()
+        }],
+        ['bar', {
+          loaders: new Map([
+            ['baz-loader', {
+              name: undefined,
+              options: new Map()
+            }]
+          ]),
+          options: new Map(),
+          type: new Set()
+        }]
+      ]),
+
+      new Rule([
+        { test: /\.foo$/ },
+        { test: /\.bar$/, use: 'baz-loader' },
+      ])
         .value
     )
   })
@@ -769,6 +821,17 @@ describe('Class Rule', () => {
 
       new Rule()
         .setRule('foo', undefined, undefined, ['jpg', 'png'])
+        .transform()
+    )
+  })
+
+  it('Rule.transform append no parsed', () => {
+    assert.deepStrictEqual(
+      [{
+        test: 'foo'
+      }],
+
+      new Rule([{ test: 'foo' }])
         .transform()
     )
   })

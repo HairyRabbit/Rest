@@ -29,7 +29,15 @@ function parse(rules: Array<Rule>): Array<Result> {
     const [_, maf, maq] = ma
     const type = maq ? maf.slice(0, -1) : maf
 
-    if('string' === typeof use) {
+    if(!use) {
+      return {
+        check: true,
+        rule,
+        type,
+        loaders: [],
+        options: rest
+      }
+    } else if('string' === typeof use) {
       return {
         check: true,
         rule,
@@ -111,6 +119,24 @@ describe('Function parseRule()', () => {
 
       parse([
         { test: /\.foo$/, use: {} }
+      ])
+    )
+  })
+
+  it('should parse rules without use', () => {
+    assert.deepStrictEqual(
+      [
+        {
+          check: true,
+          rule: { test: /\.foo$/ },
+          type: 'foo',
+          loaders: [],
+          options: {}
+        }
+      ],
+
+      parse([
+        { test: /\.foo$/ }
       ])
     )
   })
