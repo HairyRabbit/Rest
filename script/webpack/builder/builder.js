@@ -109,7 +109,7 @@ class Builder {
    */
   callWithMode(fn: Function, entity?: any, mode?: string): () => any {
     return (...args) => {
-      if(mode !== this.mode) return this
+      if(mode && mode !== this.mode) return this
       fn.apply(entity || this, args)
       return this
     }
@@ -170,7 +170,7 @@ class Builder {
     !isEmpty(transformEntry) && this.set('entry', transformEntry)
 
     const transformPlugin = this.plugin.transform()
-    !isEmpty(transformPlugin) && this.set('plugin', transformPlugin)
+    !isEmpty(transformPlugin) && this.set('plugins', transformPlugin)
 
     const transformRule = this.rule.transform()
     !isEmpty(transformRule) && this.set('module.rules', transformRule)
@@ -179,8 +179,8 @@ class Builder {
   }
 }
 
-function builder(options): Builder {
-  return new Builder(options)
+function builder(webpackOptions, options): Builder {
+  return new Builder(webpackOptions, options)
 }
 
 
