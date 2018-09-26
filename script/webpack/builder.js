@@ -677,41 +677,18 @@ class Builder {
       this.options = {
         ...this.options,
 
-        parallelism: 4,
-        cache: true,
+        // parallelism: 4,
+        // cache: true,
 
         /**
          * server option
          */
-        serve: {
+        devServer: {
           host: '0.0.0.0',
           port: 8080,
-          hotClient: {
-            host: {
-              server: '0.0.0.0',
-              client: '127.0.0.1'
-            },
-            port: 8081
-          },
-          content: [],
-          add(app, middleware, options) {
-            app.use(convert(history({
-              rewrites: [{
-                from: /(.*)/,
-                to(context) {
-                  const pathname = context.parsedUrl.pathname
-                  const ext = path.extname(pathname)
-
-                  if(ext) {
-                    return '/' + path.basename(pathname)
-                  }
-
-                  return '/'
-                }
-              }],
-              disableDotRule: true
-            })))
-          }
+          hot: true,
+          historyApiFallback: true,
+          publicPath: '/'
         }
       }
     }

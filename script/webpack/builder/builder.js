@@ -4,8 +4,11 @@
  * @flow
  */
 
-import { set, isFunction, camelCase, defaults } from 'lodash'
+import fs from 'fs'
+import path from 'path'
+import { set, isEmpty, isFunction, camelCase, defaults } from 'lodash'
 import Entry from './entry'
+import Rule from './rule'
 import Plugin from './plugin'
 import readEnv from './read-env'
 import type {
@@ -18,23 +21,28 @@ import type {
 /// code
 
 type Options = {
-  webpackOptions?: webpackOptions
+  disableGuess?: boolean
 }
 
 class Builder {
   webpackOptions: WebpackOptions
   mode: ?WebpackMode
+  context: ?string
   entry: Entry
   plugin: Plugin
 
-  constructor(webpackOptions: webpackOptions = {}) {
-    this.webpackOptions = webpackOptions
-    this.entry = new Entry(webpackOptions.entry)
-    this.plugin = new Plugin(webpackOptions.plugin)
+  constructor(webpackOptions: webpackOptions, options: Options) {
+    this.webpackOptions = webpackOptions || {}
+    this.options = options || {}
+    this.context = undefined
+    this.entry = new Entry(this.webpackOptions.entry)
+    this.plugin = new Plugin(this.webpackOptions.plugin)
+    this.rule = new Rule(this.webpackOptions.module && this.webpackOptions.module.rules)
 
     this
       .export(this, [
-        'set'
+        'set',
+        'setContext'
       ])
       .export(this.entry, [
         'setEntry',
@@ -55,6 +63,31 @@ class Builder {
         'setPluginOption',
         'deletePluginOption'
       ])
+      .export(this.rule, [
+        'setRule',
+        'deleteRule',
+        'clearRule',
+        'setRuleTypes',
+        'clearRuleTypes',
+        'addRuleType',
+        'deleteRuleType',
+        'setRuleLoaders',
+        'clearRuleLoaders',
+        'setRuleLoader',
+        'deleteRuleLoader',
+        'setRuleLoaderOptions',
+        'clearRuleLoaderOptions',
+        'setRuleLoaderOption',
+        'deleteRuleLoaderOption',
+        'setRuleOptions',
+        'clearRuleOptions',
+        'setRuleOption',
+        'deleteRuleOption'
+      ])
+
+    if(!this.options.disableGuess) {
+      this.guessContext()
+    }
   }
 
   setMode(mode: WebpackMode) {
@@ -71,20 +104,14 @@ class Builder {
     return readEnv('NODE_ENV') || 'development'
   }
 
-  guessEntry(): WebpackEntry {
-
-  }
-
   /**
    * @private
    */
-  callWithMode(fn: Function, mode?: string): () => any {
-    return () => {
-      if(mode !== this.mode) {
-        return void 0
-      }
-
-      return fn()
+  callWithMode(fn: Function, entity?: any, mode?: string): () => any {
+    return (...args) => {
+      if(mode !== this.mode) return this
+      fn.apply(entity || this, args)
+      return this
     }
   }
 
@@ -94,10 +121,9 @@ class Builder {
   export(entity: any, fns: Array<string>) {
     fns.forEach(name => {
       const fn = entity[name].bind(entity)
-
-      this[name] = this.callWithMode(fn)
-      this[name + 'Dev'] = this.callWithMode(fn, 'development')
-      this[name + 'Prod'] = this.callWithMode(fn, 'production')
+      this[name] = this.callWithMode(fn, entity)
+      this[name + 'Dev'] = this.callWithMode(fn, entity, 'development')
+      this[name + 'Prod'] = this.callWithMode(fn, entity, 'production')
     })
 
     return this
@@ -108,10 +134,46 @@ class Builder {
     return this
   }
 
+  setContext(context: string) {
+    this.context = path.isAbsolute(context) ? context : path.resolve(context)
+    return this.guessEntry()
+  }
+
+  guessContext() {
+    const context = ['src', 'lib', '.']
+          .map(dir => path.resolve(dir))
+          .find(dir => fs.existsSync(dir))
+
+    if(!context) return this
+    return this.setContext(context)
+  }
+
+  guessEntry() {
+    if(!isEmpty(this.entry.value)) return this
+
+    const entry = ['boot.js', 'index.js']
+          .map(file => this.context
+               ? path.resolve(this.context, file)
+               : path.resolve(file))
+          .find(file => fs.existsSync(file))
+
+    if(!entry) return this
+    return this.setEntryEntry(entry)
+  }
+
   transform(): WebpackOptions {
     this.set('mode', this.webpackOptions.mode || this.guessMode())
-    this.set('entry', this.entry.transform() || this.guessEntry())
-    this.set('plugin', this.plugin.transform())
+
+    this.context && this.set('context', this.context)
+
+    const transformEntry = this.entry.transform()
+    !isEmpty(transformEntry) && this.set('entry', transformEntry)
+
+    const transformPlugin = this.plugin.transform()
+    !isEmpty(transformPlugin) && this.set('plugin', transformPlugin)
+
+    const transformRule = this.rule.transform()
+    !isEmpty(transformRule) && this.set('module.rules', transformRule)
 
     return this.webpackOptions
   }
@@ -130,6 +192,7 @@ export default builder
 /// test
 
 import assert from 'assert'
+import sinon from 'sinon'
 
 describe('Class Builder', () => {
   it('Builder.constructor', () => {
@@ -157,40 +220,83 @@ describe('Class Builder', () => {
   })
 
   it('Builder.callWithMode', () => {
-    assert.deepStrictEqual(
-      42,
-      new Builder()
-        .callWithMode(() => 42)()
-    )
+    const fake = sinon.fake()
+    new Builder()
+        .callWithMode(fake)()
+
+    assert(1 === fake.callCount)
   })
 
   it('Builder.callWithMode', () => {
-    assert.deepStrictEqual(
-      42,
-      new Builder()
-        .setMode('development')
-        .callWithMode(() => 42, 'development')()
-    )
+    const fake = sinon.fake()
+    new Builder()
+      .setMode('development')
+      .callWithMode(fake, undefined, 'development')()
+
+    assert(1 === fake.callCount)
   })
 
   it('Builder.callWithMode not match Builder.mode', () => {
+    const builder = new Builder()
     assert.deepStrictEqual(
-      undefined,
-      new Builder()
+      builder,
+
+      builder
         .callWithMode(() => 42, 'production')()
     )
   })
 
-  // it('Builder.transform', () => {
-  //   console.log(new Builder({
-  //       entry: 'foo'
-  //     }).transform())
-  //   assert.deepStrictEqual(
-  //     {
-  //       mode: 'test'
-  //     },
+  it('Builder.transform', () => {
+    assert.deepStrictEqual(
+      {
+        mode: 'test'
+      },
 
-  //     new Builder().transform()
-  //   )
-  // })
+      new Builder(null, { disableGuess: true })
+        .transform()
+    )
+  })
+
+  it('Builder.set', () => {
+    assert.deepStrictEqual(
+      {
+        mode: 'test',
+        foo: 42
+      },
+
+      new Builder(null, { disableGuess: true })
+        .set('foo', 42)
+        .transform()
+    )
+  })
+
+  it('Builder.set nest path', () => {
+    assert.deepStrictEqual(
+      {
+        mode: 'test',
+        foo: {
+          bar: 42
+        }
+      },
+
+      new Builder(null, { disableGuess: true })
+        .set('foo.bar', 42)
+        .transform()
+    )
+  })
+
+  it('Builder.setEntryEntry', () => {
+    assert.deepStrictEqual(
+      {
+        mode: 'test',
+        entry: {
+          main: ['foo']
+        }
+      },
+
+      new Builder(null, { disableGuess: true })
+        .setEntryEntry('foo')
+        .transform()
+    )
+  })
 })

@@ -10,7 +10,7 @@
     "type": "npx flow check",
     "test:website": "npx cross-env NODE_ENV=test npx mocha -r @babel/register -r jsdom-global/register -r esm -r script/mock/index.js website --recursive",
     "prebuild:website": "rm -rf docs/*",
-    "start:website": "npx cross-env NODE_ENV=development npx webpack-serve -r @babel/register -r esm --config website/webpack.config.js",
+    "start:website": "npx cross-env NODE_ENV=development npx webpack-dev-server -r @babel/register -r esm --config website/webpack.config.js",
     "build:website": "npx cross-env NODE_ENV=production npx webpack -r @babel/register -r esm --config website/webpack.config.js",
     "postbuild:website": "cp CNAME docs/ & cp docs/index.html docs/404.html & touch docs/.nojekyll"
   },
@@ -75,7 +75,7 @@
     "sinon": "^6.3.3",
     "style-loader": "^0.23.0",
     "terser-webpack-plugin": "^1.0.2",
-    "webpack": "^4.17.2",
+    "webpack": "^4.20.2",
     "webpack-bundle-analyzer": "^3.0.1",
     "webpack-bundle-size-analyzer": "^2.7.0",
     "webpack-cli": "^3.1.0",

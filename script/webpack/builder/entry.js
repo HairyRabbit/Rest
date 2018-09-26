@@ -412,6 +412,4 @@ describe('Class Entry', () => {
       new Entry(ref).setEntryPrepends(['foo']).transform().main()
     )
   })
-
-
 })

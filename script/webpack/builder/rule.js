@@ -39,7 +39,7 @@ class Rule {
     this.ensure(name)
 
     if(loader && !this.value.get(name).loaders.get(loader)) {
-      this.setLoader(name, loader)
+      this.setRuleLoader(name, loader)
     }
 
     return this
@@ -52,9 +52,9 @@ class Rule {
       type: new Set()
     })
 
-    this.setLoaders(name, loaders)
-    this.setOptions(name, options)
-    this.setFileTypes(name, type)
+    this.setRuleLoaders(name, loaders)
+    this.setRuleOptions(name, options)
+    this.setRuleTypes(name, type)
     return this
   }
 
@@ -68,7 +68,7 @@ class Rule {
     return this
   }
 
-  setFileTypes(name: string, type?: string | Array<string> = []) {
+  setRuleTypes(name: string, type?: string | Array<string> = []) {
     this
       .ensure(name)
       .value.get(name)
@@ -77,7 +77,7 @@ class Rule {
     return this
   }
 
-  clearFileTypes(name: string) {
+  clearRuleTypes(name: string) {
     this
       .ensure(name)
       .value.get(name)
@@ -86,7 +86,7 @@ class Rule {
     return this
   }
 
-  addFileType(name: string, type: string) {
+  addRuleType(name: string, type: string) {
     this
       .ensure(name)
       .value.get(name)
@@ -95,7 +95,7 @@ class Rule {
     return this
   }
 
-  deleteFileType(name: string, type: string) {
+  deleteRuleType(name: string, type: string) {
     this
       .ensure(name)
       .value.get(name)
@@ -104,17 +104,9 @@ class Rule {
     return this
   }
 
-  setRuleType(name: string, type: string | Array<string>) {
-    this
-      .ensure(name)
-      .type = type
-
-    return this
-  }
-
-  setLoaders(name: string, loaders?: Array<Loader> = []) {
+  setRuleLoaders(name: string, loaders?: Array<Loader> = []) {
     loaders.forEach(({ loader, name: loaderName, options }) => {
-      this.setLoader(name, loader, {
+      this.setRuleLoader(name, loader, {
         name: loaderName,
         options
       })
@@ -122,7 +114,7 @@ class Rule {
     return this
   }
 
-  clearLoaders(name: string) {
+  clearRuleLoaders(name: string) {
     this
       .ensure(name)
       .value.get(name).loaders
@@ -131,7 +123,7 @@ class Rule {
     return this
   }
 
-  setLoader(name: string, loader: string, { name: loaderName, options } = {}) {
+  setRuleLoader(name: string, loader: string, { name: loaderName, options } = {}) {
     this
       .ensure(name)
       .value.get(name).loaders
@@ -143,7 +135,7 @@ class Rule {
     return this
   }
 
-  deleteLoader(name: string, loader: string) {
+  deleteRuleLoader(name: string, loader: string) {
     this
       .ensure(name)
       .value.get(name).loaders
@@ -152,7 +144,7 @@ class Rule {
     return this
   }
 
-  setLoaderOptions(name: string, loader: string, options?: Object) {
+  setRuleLoaderOptions(name: string, loader: string, options?: Object) {
     this
       .ensureLoadersLoader(name, loader)
       .value.get(name).loaders.get(loader)
@@ -161,7 +153,7 @@ class Rule {
     return this
   }
 
-  clearLoaderOptions(name: string, loader: string) {
+  clearRuleLoaderOptions(name: string, loader: string) {
     this
       .ensureLoadersLoader(name, loader)
       .value.get(name).loaders.get(loader)
@@ -170,7 +162,7 @@ class Rule {
     return this
   }
 
-  setLoaderOption(name: string, loader: string, key: string, value: *) {
+  setRuleLoaderOption(name: string, loader: string, key: string, value: *) {
     this
       .ensureLoadersLoader(name, loader)
       .value.get(name).loaders.get(loader)
@@ -179,7 +171,7 @@ class Rule {
     return this
   }
 
-  deleteLoaderOption(name: string, loader: string, key: string) {
+  deleteRuleLoaderOption(name: string, loader: string, key: string) {
     this
       .ensureLoadersLoader(name, loader)
       .value.get(name).loaders.get(loader)
@@ -188,7 +180,7 @@ class Rule {
     return this
   }
 
-  setOptions(name: string, options: Object) {
+  setRuleOptions(name: string, options: Object) {
     this
       .ensure(name)
       .value.get(name)
@@ -197,7 +189,7 @@ class Rule {
     return this
   }
 
-  clearOptions(name: string) {
+  clearRuleOptions(name: string) {
     this
       .ensure(name)
       .value.get(name)
@@ -206,7 +198,7 @@ class Rule {
     return this
   }
 
-  setOption(name: string, key: string, value: *) {
+  setRuleOption(name: string, key: string, value: *) {
     this
       .ensure(name)
       .value.get(name)
@@ -215,7 +207,7 @@ class Rule {
     return this
   }
 
-  deleteOption(name: string, key: string) {
+  deleteRuleOption(name: string, key: string) {
     this
       .ensure(name)
       .value.get(name)
@@ -347,7 +339,7 @@ describe('Class Rule', () => {
     )
   })
 
-  it('Rule.setLoaders', () => {
+  it('Rule.setRuleLoaders', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -367,7 +359,7 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setLoaders('js', [{
+        .setRuleLoaders('js', [{
           loader: 'foo'
         },{
           loader: 'bar'
@@ -376,7 +368,7 @@ describe('Class Rule', () => {
     )
   })
 
-  it('Rule.clearLoaders', () => {
+  it('Rule.clearRuleLoaders', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -387,15 +379,15 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setLoaders('js', [{
+        .setRuleLoaders('js', [{
           loader: 'foo'
         }])
-        .clearLoaders('js')
+        .clearRuleLoaders('js')
         .value
     )
   })
 
-  it('Rule.setLoader', () => {
+  it('Rule.setRuleLoader', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -411,12 +403,12 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setLoader('js', 'babel-loader')
+        .setRuleLoader('js', 'babel-loader')
         .value
     )
   })
 
-  it('Rule.setLoader with options', () => {
+  it('Rule.setRuleLoader with options', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -434,7 +426,7 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setLoader('js', 'babel-loader', {
+        .setRuleLoader('js', 'babel-loader', {
           name: 'foo',
           options: {
             bar: 42
@@ -444,7 +436,7 @@ describe('Class Rule', () => {
     )
   })
 
-  it('Rule.deleteLoader', () => {
+  it('Rule.deleteRuleLoader', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -460,17 +452,17 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setLoaders('js', [{
+        .setRuleLoaders('js', [{
           loader: 'foo'
         },{
           loader: 'bar'
         }])
-        .deleteLoader('js', 'bar')
+        .deleteRuleLoader('js', 'bar')
         .value
     )
   })
 
-  it('Rule.setLoaderOptions', () => {
+  it('Rule.setRuleLoaderOptions', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -488,14 +480,14 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setLoaderOptions('js', 'foo', {
+        .setRuleLoaderOptions('js', 'foo', {
           bar: 42
         })
         .value
     )
   })
 
-  it('Rule.clearLoaderOptions', () => {
+  it('Rule.clearRuleLoaderOptions', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -511,15 +503,15 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setLoaderOptions('js', 'foo', {
+        .setRuleLoaderOptions('js', 'foo', {
           bar: 42
         })
-        .clearLoaderOptions('js', 'foo')
+        .clearRuleLoaderOptions('js', 'foo')
         .value
     )
   })
 
-  it('Rule.setLoaderOption', () => {
+  it('Rule.setRuleLoaderOption', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -537,12 +529,12 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setLoaderOption('js', 'foo', 'bar', 42)
+        .setRuleLoaderOption('js', 'foo', 'bar', 42)
         .value
     )
   })
 
-  it('Rule.deleteLoaderOption', () => {
+  it('Rule.deleteRuleLoaderOption', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -558,13 +550,13 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setLoaderOptions('js', 'foo', { bar: 42 })
-        .deleteLoaderOption('js', 'foo', 'bar')
+        .setRuleLoaderOptions('js', 'foo', { bar: 42 })
+        .deleteRuleLoaderOption('js', 'foo', 'bar')
         .value
     )
   })
 
-  it('Rule.setOptions', () => {
+  it('Rule.setRuleOptions', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -577,12 +569,12 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setOptions('js', { bar: 42 })
+        .setRuleOptions('js', { bar: 42 })
         .value
     )
   })
 
-  it('Rule.clearOptions', () => {
+  it('Rule.clearRuleOptions', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -593,13 +585,13 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setOptions('js', { bar: 42 })
-        .clearOptions('js')
+        .setRuleOptions('js', { bar: 42 })
+        .clearRuleOptions('js')
         .value
     )
   })
 
-  it('Rule.setOption', () => {
+  it('Rule.setRuleOption', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -612,12 +604,12 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setOption('js', 'bar', 42)
+        .setRuleOption('js', 'bar', 42)
         .value
     )
   })
 
-  it('Rule.deleteOption', () => {
+  it('Rule.deleteRuleOption', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -630,16 +622,16 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setOptions('js', {
+        .setRuleOptions('js', {
           foo: 42,
           bar: 'baz'
         })
-        .deleteOption('js', 'foo')
+        .deleteRuleOption('js', 'foo')
         .value
     )
   })
 
-  it('Rule.setFileTypes', () => {
+  it('Rule.setRuleTypes', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -650,12 +642,12 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setFileTypes('js', ['foo', 'bar'])
+        .setRuleTypes('js', ['foo', 'bar'])
         .value
     )
   })
 
-  it('Rule.clearFileTypes', () => {
+  it('Rule.clearRuleTypes', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -666,13 +658,13 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setFileTypes('js', ['foo', 'bar'])
-        .clearFileTypes('js')
+        .setRuleTypes('js', ['foo', 'bar'])
+        .clearRuleTypes('js')
         .value
     )
   })
 
-  it('Rule.setFileTypes', () => {
+  it('Rule.setRuleTypes', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -683,13 +675,13 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setFileTypes('js', ['foo', 'bar'])
-        .addFileType('js', 'baz')
+        .setRuleTypes('js', ['foo', 'bar'])
+        .addRuleType('js', 'baz')
         .value
     )
   })
 
-  it('Rule.deleteFileTypes', () => {
+  it('Rule.deleteRuleTypes', () => {
     assert.deepStrictEqual(
       new Map([
         ['js', {
@@ -700,8 +692,8 @@ describe('Class Rule', () => {
       ]),
 
       new Rule()
-        .setFileTypes('js', ['foo', 'bar'])
-        .deleteFileType('js', 'bar')
+        .setRuleTypes('js', ['foo', 'bar'])
+        .deleteRuleType('js', 'bar')
         .value
     )
   })

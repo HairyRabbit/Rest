@@ -36,7 +36,7 @@ type Node =
     __filename?: Node$Value,
     __dirname?: Node$Value,
     Buffer?: Node$Value,
-    setImmediate: Node$Value
+    setImmediate?: Node$Value
   }
 
 type Condition$Base =
@@ -225,15 +225,7 @@ export type WebpackOptions = {
     | 'inline-source-map'
     | 'hidden-source-map'
     | 'nosources-source-map',
-  node?: {
-    console?: boolean | 'mock',
-    global?: boolean | 'mock',
-    process?: boolean,
-    __filename?: boolean | 'mock',
-    __dirname?: boolean | 'mock',
-    Buffer?: boolean | 'mock',
-    setImmediate?: boolean | 'mock' | 'empty'
-  },
+  node?: Node,
   plugins?: Plugins,
   parallelism?: number,
   profile?: boolean,
