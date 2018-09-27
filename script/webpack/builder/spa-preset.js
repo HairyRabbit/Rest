@@ -18,7 +18,9 @@ import smPathFmt from './sourcemap-path-formatter'
 /// code
 
 function preset(builder) {
-  return builder
+  const { gcssEntry } = builder.options
+
+  builder
     .set('target', 'web')
     .set('output.publicPath', '/')
     .set('output.devtoolModuleFilenameTemplate', smPathFmt)
@@ -38,6 +40,7 @@ function preset(builder) {
     .setRuleLoaderOption('css', 'css-loader', 'importLoaders', 1)
     .setRuleLoaderOptionDev('css', 'css-loader', 'localIdentName', '[local]-[hash:base64:5]')
     .setRuleLoaderOption('css', 'postcss-loader', 'sourceMap', true)
+    .setRuleLoaderOption('css', 'postcss-loader', 'options', {})
     .setPlugin('html', HtmlWebpackPlugin, {
       template: HtmlWebpackTemplate,
       inject: false,
@@ -64,20 +67,27 @@ function preset(builder) {
     .setDev('devServer.port', '23333')
     .setDev('devServer.publicPath', '/')
     .setDev('devServer.historyApiFallback', true)
-    // .setDev('devServer.contentBase', builder.context)
-    // .setRuleLoaderDev('gcss', 'style-loader')
-    // .setRuleLoaderProd('gcss', 'style-loader', {
-    //   name: MiniCssExtractPlugin.loader
-    // })
-    // .setRuleLoader('gcss', 'css-loader')
-    // .setRuleLoader('gcss', 'postcss-loader')
-    // .setRuleLoaderOption('gcss', 'css-loader', 'sourceMap', true)
-    // .setRuleLoaderOption('gcss', 'css-loader', 'importLoaders', 1)
-    // .setRuleLoaderOption('gcss', 'postcss-loader', 'sourceMap', true)
-    // .setRuleTypes('gcss', 'css')
-    // .setRuleOptions('gcss', {
-    //   include: /node_modules/
-    // })
+
+  if(gcssEntry) {
+    builder
+      .setRuleOption('css', 'exclude', gcssEntry)
+      .setRuleOption('gcss', 'include', gcssEntry)
+      .setRuleTypes('gcss', ['css'])
+      .setRuleLoaderDev('gcss', 'style-loader')
+      .setRuleLoaderProd('gcss', 'style-loader', {
+        name: MiniCssExtractPlugin.loader
+      })
+      .setRuleLoader('gcss', 'css-loader')
+      .setRuleLoader('gcss', 'postcss-loader')
+      .setRuleLoaderOption('gcss', 'style-loader', 'sourceMap', true)
+      .setRuleLoaderOption('gcss', 'css-loader', 'sourceMap', true)
+      .setRuleLoaderOption('gcss', 'css-loader', 'importLoaders', 1)
+      .setRuleLoaderOptionDev('gcss', 'css-loader', 'localIdentName', '[local]-[hash:base64:5]')
+      .setRuleLoaderOption('gcss', 'postcss-loader', 'sourceMap', true)
+      .setRuleLoaderOption('gcss', 'postcss-loader', 'options', {})
+  }
+
+  return builder
 }
 
 

@@ -74,10 +74,11 @@ function createTransformer({ components, preload = '' } = {}) {
           }
 
           default: {
+            // console.log(highlight(value, languages[lang], lang))
             const hl = highlight(value, languages[lang], lang)
                   .replace(/class/g, 'className')
                   .replace(/(\{|\})/g, '{"$1"}')
-                  .replace(/>(\s+)</g, '>{`$1`}<')
+                  .replace(/>(\s+)/g, '>{`$1`}')
 
             return comps.code(`<code className='language-${lang}'>${hl}</code>`)
           }

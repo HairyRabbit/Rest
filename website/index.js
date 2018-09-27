@@ -11,23 +11,23 @@ import Loadable from 'react-loadable'
 import { hot } from 'react-hot-loader'
 import '../style/main.css'
 // import Avatar from './pages/components/avatar.md'
-// import Builder from './pages/scripts/webpack.md'
+// import WebpackBuilder from './pages/scripts/webpack/builder.md'
 
-// const Avatar = Loadable({
-//   loader: () => import(
-//     /* webpackChunkName: "component-avatar" */
-//     './pages/components/avatar.md'
-//   ),
-//   loading: () => null
-// })
+const Avatar = Loadable({
+  loader: () => import(
+    /* webpackChunkName: "component-avatar" */
+    './pages/components/avatar.md'
+  ),
+  loading: () => null
+})
 
-// const Builder = Loadable({
-//   loader: () => import(
-//     /* webpackChunkName: "script-webpack" */
-//     './pages/scripts/webpack.md'
-//   ),
-//   loading: () => null
-// })
+const WebpackBuilder = Loadable({
+  loader: () => import(
+    /* webpackChunkName: "webpack-builder" */
+    './pages/scripts/webpack/builder.md'
+  ),
+  loading: () => null
+})
 
 import Graph from '~component/chart/graph'
 import Title from '~component/chart/title'
@@ -81,15 +81,14 @@ function Demo() {
   )
 }
 
-// <Route path="/avatar" component={Avatar} />
-//           <Route path="/scripts/webpack" component={Builder} />
-
 function Root(): React.Node {
   return (
     <Provider>
       <BrowserRouter>
         <Switch>
-          <Route component={Demo} />
+           <Route path="/component/avatar" component={Avatar} />
+           <Route path="/webpack/builder" component={WebpackBuilder} />
+           <Route component={Demo}/>
         </Switch>
       </BrowserRouter>
     </Provider>

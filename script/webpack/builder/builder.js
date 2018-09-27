@@ -25,16 +25,23 @@ type Options = {
 }
 
 class Builder {
-  webpackOptions: WebpackOptions
+  webpackOptions: string | WebpackOptions
+  option: Option
   mode: ?WebpackMode
   context: ?string
+  output: ?string
   entry: Entry
   plugin: Plugin
+  rule: Rule
 
   constructor(webpackOptions: webpackOptions, options: Options) {
-    this.webpackOptions = webpackOptions || {}
+    this.webpackOptions = 'string' === typeof webpackOptions
+      ? {}
+      : (webpackOptions || {})
     this.options = options || {}
+    this.mode = this.webpackOptions.mode || this.guessMode()
     this.context = undefined
+    this.output = undefined
     this.entry = new Entry(this.webpackOptions.entry)
     this.plugin = new Plugin(this.webpackOptions.plugin)
     this.rule = new Rule(this.webpackOptions.module && this.webpackOptions.module.rules)
@@ -42,7 +49,8 @@ class Builder {
     this
       .export(this, [
         'set',
-        'setContext'
+        'setContext',
+        'setOutput'
       ])
       .export(this.entry, [
         'setEntry',
@@ -87,6 +95,11 @@ class Builder {
 
     if(!this.options.disableGuess) {
       this.guessContext()
+    }
+
+    if('string' === typeof webpackOptions) {
+      require(`./${webpackOptions}-preset`).default(this)
+      this.resetMode()
     }
   }
 
@@ -134,6 +147,11 @@ class Builder {
     return this
   }
 
+  setOutput(output: string) {
+    this.output = output
+    return this
+  }
+
   setContext(context: string) {
     this.context = path.isAbsolute(context) ? context : path.resolve(context)
     return this.guessEntry()
@@ -165,6 +183,7 @@ class Builder {
     this.set('mode', this.webpackOptions.mode || this.guessMode())
 
     this.context && this.set('context', this.context)
+    this.output && this.set('output.path', this.output)
 
     const transformEntry = this.entry.transform()
     !isEmpty(transformEntry) && this.set('entry', transformEntry)
