@@ -62,6 +62,7 @@
       "plugins": [
         ["@rabbitcc/babel/remove-test", {
           "include": [
+            "sinon",
             "enzyme",
             "enzyme-adapter-react-16"
           ]

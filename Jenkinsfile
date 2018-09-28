@@ -3,19 +3,26 @@ pipeline {
     docker {
       image 'node:latest'
     }
-
   }
+
+  environment {
+    CI = 'true'
+    NODE_ENV = 'test'
+  }
+
   stages {
     stage('BUILD') {
       steps {
         sh 'npm ci --verbose'
       }
     }
+
     stage('TEST') {
       steps {
         sh 'npm test'
       }
     }
+
     stage('DEPLOY_WEBSITE') {
       steps {
         sh 'npm run build:website'
@@ -24,9 +31,5 @@ pipeline {
         sh 'git push origin master'
       }
     }
-  }
-  environment {
-    CI = 'true'
-    NODE_ENV = 'test'
   }
 }

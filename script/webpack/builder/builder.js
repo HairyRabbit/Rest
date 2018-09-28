@@ -6,7 +6,8 @@
 
 import fs from 'fs'
 import path from 'path'
-import { set, isEmpty, isFunction, camelCase, defaults } from 'lodash'
+import { set, isEmpty, uniq } from 'lodash'
+import { modulePath } from '../../../util'
 import Entry from './entry'
 import Rule from './rule'
 import Plugin from './plugin'
@@ -102,8 +103,15 @@ class Builder {
     }
 
     if('string' === typeof webpackOptions) {
-      require(`./preset/${webpackOptions}`).default(this)
-      this.resetMode()
+      uniq(webpackOptions.split('-')).forEach(preset => {
+        const name = modulePath(
+          path.resolve(__dirname, `./preset/${preset}`)
+        ) || modulePath(preset)
+
+        if(!name) throw new Error(`Preset path not found`)
+
+        require(name).default(this)
+      })
     }
   }
 
@@ -117,6 +125,11 @@ class Builder {
     return this
   }
 
+  /**
+   * guess which mode should be use
+   *
+   * @private
+   */
   guessMode(): WebpackMode {
     return readEnv('NODE_ENV') || 'development'
   }
@@ -221,6 +234,14 @@ describe('Class Builder', () => {
   it('Builder.constructor', () => {
     assert(new Builder())
     assert(new Builder().transform)
+  })
+
+  it('Builder.constructor set preset', () => {
+    assert(new Builder('spa'))
+  })
+
+  it('Builder.constructor set multi presets', () => {
+    assert(new Builder('spa-spa'))
   })
 
   it('Builder.setMode', () => {
