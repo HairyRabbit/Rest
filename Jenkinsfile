@@ -1,33 +1,25 @@
 pipeline {
-  agent any
+  agent {
+    docker {
+      image 'node:latest'
+    }
+  }
+  environment {
+    CI = 'true'
+    NODE_ENV = 'test'
+  }
   stages {
-    stage('Install') {
-      agent {
-        docker {
-          image 'node:latest'
-        }
-
-      }
-      environment {
-        NODE_ENV = 'test'
-      }
+    stage('BUILD') {
       steps {
-        sh 'npm ci'
+        sh 'npm ci --verbose'
       }
     }
-    stage('Test') {
-      agent {
-        docker {
-          image 'node:latest'
-        }
 
-      }
-      environment {
-        NODE_ENV = 'test'
-      }
+    stage('TEST') {
       steps {
-        sh 'npm run test'
+        sh 'npm test'
       }
     }
+
   }
 }
