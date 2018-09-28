@@ -4,10 +4,12 @@ pipeline {
       image 'node:latest'
     }
   }
+
   environment {
     CI = 'true'
     NODE_ENV = 'test'
   }
+
   stages {
     stage('BUILD') {
       steps {
@@ -21,5 +23,13 @@ pipeline {
       }
     }
 
+    stage('DEPLOY_WEBSITE') {
+      steps {
+        sh 'npm run build:website'
+        sh 'git add docs'
+        sh 'git commit -m "Deploy website"'
+        sh 'git push origin master'
+      }
+    }
   }
 }
