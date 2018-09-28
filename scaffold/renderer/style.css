@@ -1,0 +1,8 @@
+@import '~normalize.css';
+
+html,
+body,
+:global(#app) {
+  -webkit-app-region: drag;
+  height: 100%;
+}

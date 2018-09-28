@@ -1,3 +1,7 @@
+/**
+ * webpack config
+ */
+
 import path from 'path'
 import webpack from '../script/webpack/builder/index.js'
 import markdownLoader from '../script/webpack/markdown-loader'
