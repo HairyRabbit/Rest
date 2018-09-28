@@ -1,5 +1,5 @@
 /**
- * spa-preset
+ * spa
  *
  * configure spa project
  *
@@ -11,8 +11,8 @@ import HtmlWebpackTemplate from 'html-webpack-template'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import TerserPlugin from 'terser-webpack-plugin'
 import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin'
-import Builder from './builder'
-import smPathFmt from './sourcemap-path-formatter'
+import Builder from '../builder'
+import smPathFmt from '../sourcemap-path-formatter'
 
 
 /// code
@@ -22,6 +22,8 @@ function preset(builder) {
 
   builder
     .set('target', 'web')
+    .setDev('output.filename', '[name].js')
+    .setProd('output.filename', '[name].[contenthash].js')
     .set('output.publicPath', '/')
     .set('output.devtoolModuleFilenameTemplate', smPathFmt)
     .setDev('devtool', 'inline-source-map')
@@ -39,6 +41,7 @@ function preset(builder) {
     .setRuleLoaderOption('css', 'css-loader', 'modules', true)
     .setRuleLoaderOption('css', 'css-loader', 'importLoaders', 1)
     .setRuleLoaderOptionDev('css', 'css-loader', 'localIdentName', '[local]-[hash:base64:5]')
+    .setRuleLoaderOptionProd('css', 'css-loader', 'localIdentName', '[hash:base64:5]')
     .setRuleLoaderOption('css', 'postcss-loader', 'sourceMap', true)
     .setRuleLoaderOption('css', 'postcss-loader', 'options', {})
     .setPlugin('html', HtmlWebpackPlugin, {

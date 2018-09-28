@@ -98,7 +98,7 @@ class Builder {
     }
 
     if('string' === typeof webpackOptions) {
-      require(`./${webpackOptions}-preset`).default(this)
+      require(`./preset/${webpackOptions}`).default(this)
       this.resetMode()
     }
   }
@@ -198,8 +198,8 @@ class Builder {
   }
 }
 
-function builder(webpackOptions, options): Builder {
-  return new Builder(webpackOptions, options)
+function builder(...args): Builder {
+  return new Builder(...args)
 }
 
 
