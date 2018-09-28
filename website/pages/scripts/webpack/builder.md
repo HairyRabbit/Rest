@@ -71,7 +71,9 @@ Builder()
 // 转换为
 
 {
-  main: [ path.resolve('index.js') ]
+  entry: {
+    main: [ path.resolve('index.js') ]
+  }
 }
 ```
 
@@ -89,15 +91,17 @@ Builder()
 // 转换为
 
 {
-  main: [
-    'some-devtools',
-    '@babel/polyfill',
-    path.resolve('index.js')
-  ],
-  foo: [
-    'some-devtools',
-    path.resolve('foo/index.js')
-  ]
+  entry: {
+    main: [
+      'some-devtools',
+      '@babel/polyfill',
+      path.resolve('index.js')
+    ],
+    foo: [
+      'some-devtools',
+      path.resolve('foo/index.js')
+    ]
+  }
 }
 ```
 

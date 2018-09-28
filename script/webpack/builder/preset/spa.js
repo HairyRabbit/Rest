@@ -112,6 +112,7 @@ describe('spa-preset', () => {
         target: 'web',
         devtool: 'inline-source-map',
         output: {
+          filename: '[name].js',
           publicPath: '/',
           devtoolModuleFilenameTemplate: smPathFmt
         },
@@ -142,6 +143,7 @@ describe('spa-preset', () => {
             },{
               loader: 'postcss-loader',
               options: {
+                options: {},
                 sourceMap: true
               }
             }]
@@ -176,6 +178,7 @@ describe('spa-preset', () => {
         target: 'web',
         devtool: 'hidden-source-map',
         output: {
+          filename: '[name].[contenthash].js',
           publicPath: '/',
           devtoolModuleFilenameTemplate: smPathFmt
         },
@@ -205,6 +208,7 @@ describe('spa-preset', () => {
             },{
               loader: 'postcss-loader',
               options: {
+                options: {},
                 sourceMap: true
               }
             }]

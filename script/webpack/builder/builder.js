@@ -60,7 +60,11 @@ class Builder {
         'setEntryPrepends',
         'clearEntryPrepends',
         'addEntryPrepend',
-        'deleteEntryPrepend'
+        'deleteEntryPrepend',
+        'setEntryCommonPrepends',
+        'clearEntryCommonPrepends',
+        'addEntryCommonPrepend',
+        'deleteEntryCommonPrepend'
       ])
       .export(this.plugin, [
         'setPlugin',

@@ -12,8 +12,12 @@ import type { Entry as WebpackEntry } from './webpack-options-type'
 /// code
 
 class Entry {
+  value: Map<string, { entry: string | Function, prepends: Set<string>}>
+  commons: Set<string>
+
   constructor(entry?: WebpackEntry) {
     this.value = new Map()
+    this.commons = new Set()
 
     if(entry) {
       const parsed = parse(entry)
@@ -98,13 +102,40 @@ class Entry {
     return this
   }
 
+  setEntryCommonPrepends(prepends: Array<string> = []) {
+    if(!Array.isArray(prepends)) {
+      throw new Error(
+        `Entry.setEntry prepends argument should be array`
+      )
+    }
+
+    this.commons = new Set(prepends)
+    return this
+  }
+
+  clearEntryCommonPrepends() {
+    this.commons.clear()
+    return this
+  }
+
+  addEntryCommonPrepend(prepend: string) {
+    this.commons.add(prepend)
+    return this
+  }
+
+  deleteEntryCommonPrepend(prepend: string) {
+    this.commons.delete(prepend)
+    return this
+  }
+
   transform(): ?WebpackEntry {
     const options = {}
+    const commons = Array.from(this.commons)
 
     this.value.forEach(({ entry, prepends }, name) => {
       if(!entry) return
 
-      const pre = Array.from(prepends)
+      const pre = [...commons, ...Array.from(prepends)]
 
       switch(typeof entry) {
         case 'string': {
@@ -377,6 +408,49 @@ describe('Class Entry', () => {
     )
   })
 
+  it('Entry.setEntryCommonPrepends', () => {
+    assert.deepStrictEqual(
+      new Set(['foo', 'bar']),
+
+      new Entry()
+        .setEntryCommonPrepends(['foo', 'bar'])
+        .commons
+    )
+  })
+
+  it('Entry.clearEntryCommonPrepends', () => {
+    assert.deepStrictEqual(
+      new Set(),
+
+      new Entry()
+        .setEntryCommonPrepends(['foo', 'bar'])
+        .clearEntryCommonPrepends()
+        .commons
+    )
+  })
+
+  it('Entry.addEntryCommonPrepends', () => {
+    assert.deepStrictEqual(
+      new Set(['foo', 'bar', 'baz']),
+
+      new Entry()
+        .setEntryCommonPrepends(['foo', 'bar'])
+        .addEntryCommonPrepend('baz')
+        .commons
+    )
+  })
+
+  it('Entry.deleteEntryCommonPrepends', () => {
+    assert.deepStrictEqual(
+      new Set(['foo']),
+
+      new Entry()
+        .setEntryCommonPrepends(['foo', 'bar'])
+        .deleteEntryCommonPrepend('bar')
+        .commons
+    )
+  })
+
   it('Entry.transfrom', () => {
     assert.deepStrictEqual(
       {
@@ -410,6 +484,16 @@ describe('Class Entry', () => {
       ['foo'],
 
       new Entry(ref).setEntryPrepends(['foo']).transform().main()
+    )
+  })
+
+  it('Entry.transform with common prepends', () => {
+    assert.deepStrictEqual(
+      {
+        main: ['bar', 'foo']
+      },
+
+      new Entry('foo').setEntryCommonPrepends(['bar']).transform()
     )
   })
 })
