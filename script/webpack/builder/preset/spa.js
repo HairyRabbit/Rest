@@ -36,14 +36,17 @@ function preset(builder) {
     })
     .setRuleLoader('css', 'css-loader')
     .setRuleLoader('css', 'postcss-loader')
+    .setRuleLoader('css', 'sass-loader')
     .setRuleLoaderOption('css', 'style-loader', 'sourceMap', true)
     .setRuleLoaderOption('css', 'css-loader', 'sourceMap', true)
     .setRuleLoaderOption('css', 'css-loader', 'modules', true)
-    .setRuleLoaderOption('css', 'css-loader', 'importLoaders', 1)
+    .setRuleLoaderOption('css', 'css-loader', 'importLoaders', 2)
     .setRuleLoaderOptionDev('css', 'css-loader', 'localIdentName', '[local]-[hash:base64:5]')
     .setRuleLoaderOptionProd('css', 'css-loader', 'localIdentName', '[hash:base64:5]')
     .setRuleLoaderOption('css', 'postcss-loader', 'sourceMap', true)
     .setRuleLoaderOption('css', 'postcss-loader', 'options', {})
+    .setRuleLoaderOption('css', 'sass-loader', 'sourceMap', true)
+    .setRuleLoaderOption('css', 'sass-loader', 'data', `$env: ${process.env.NODE_ENV};`)
     .setPlugin('html', HtmlWebpackPlugin, {
       template: HtmlWebpackTemplate,
       inject: false,
@@ -82,12 +85,15 @@ function preset(builder) {
       })
       .setRuleLoader('gcss', 'css-loader')
       .setRuleLoader('gcss', 'postcss-loader')
+      .setRuleLoader('gcss', 'sass-loader')
       .setRuleLoaderOption('gcss', 'style-loader', 'sourceMap', true)
       .setRuleLoaderOption('gcss', 'css-loader', 'sourceMap', true)
       .setRuleLoaderOption('gcss', 'css-loader', 'importLoaders', 1)
       .setRuleLoaderOptionDev('gcss', 'css-loader', 'localIdentName', '[local]-[hash:base64:5]')
       .setRuleLoaderOption('gcss', 'postcss-loader', 'sourceMap', true)
       .setRuleLoaderOption('gcss', 'postcss-loader', 'options', {})
+      .setRuleLoaderOption('gcss', 'sass-loader', 'sourceMap', true)
+      .setRuleLoaderOption('gcss', 'sass-loader', 'data', `$env: ${process.env.NODE_ENV};`)
   }
 
   return builder

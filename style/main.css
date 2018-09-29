@@ -3,10 +3,12 @@
  */
 
 @import "~normalize.css";
+@import '~sanitize.css';
 
 html,
 body,
 #app {
+  @debug 10em + 12em;
   height: 100%;
 }
 
