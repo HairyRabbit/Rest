@@ -21,6 +21,14 @@ const Avatar = Loadable({
   loading: () => null
 })
 
+const ComponentLayout = Loadable({
+  loader: () => import(
+    /* webpackChunkName: "component-avatar" */
+    './pages/components/layout.md'
+  ),
+  loading: () => null
+})
+
 const WebpackBuilder = Loadable({
   loader: () => import(
     /* webpackChunkName: "webpack-builder" */
@@ -86,9 +94,10 @@ function Root(): React.Node {
     <Provider>
       <BrowserRouter>
         <Switch>
-           <Route path="/component/avatar" component={Avatar} />
-           <Route path="/webpack/builder" component={WebpackBuilder} />
-           <Route component={Demo}/>
+          <Route path="/component/avatar" component={Avatar} />
+          <Route path="/component/layout" component={ComponentLayout} />
+          <Route path="/webpack/builder" component={WebpackBuilder} />
+          <Route component={Demo}/>
         </Switch>
       </BrowserRouter>
     </Provider>

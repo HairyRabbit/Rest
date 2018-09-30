@@ -1,0 +1,49 @@
+/**
+ * <Layout />
+ *
+ * layout grid styles
+ */
+
+$gutter: (
+  xs: 0.5rem,
+  sm: 1rem,
+  md: 1.5rem,
+  lg: 2rem,
+  xl: 2.5rem
+);
+
+.base {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.vertical {
+  composes: base;
+  flex-direction: column;
+}
+
+.mono {
+  flex: 1 0 auto;
+}
+
+@each $size, $value in $gutter {
+  .row_#{$size} {
+    margin-left: ($value / -2);
+    margin-right: ($value / -2);
+  }
+
+  .col_#{$size} {
+    padding-left: ($value / 2);
+    padding-right: ($value / 2);
+  }
+
+  .row_v_#{$size} {
+    margin-top: ($value / -2);
+    margin-bottom: ($value / -2);
+  }
+
+  .col_v_#{$size} {
+    padding-top: ($value / 2);
+    padding-bottom: ($value / 2);
+  }
+}

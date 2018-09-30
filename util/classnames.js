@@ -11,13 +11,24 @@ import { flattenDeep } from 'lodash'
  * @pure
  */
 function classnames(...args: Array<?(boolean | string | Array<string>)>): string {
+  return args.filter(Boolean).join(' ')
+}
+
+/**
+ * @pure
+ */
+function classnamesDeep(...args: Array<?(boolean | string | Array<string>)>): string {
   return flattenDeep(args).filter(Boolean).join(' ')
 }
+
 
 
 /// export
 
 export default classnames
+export {
+  classnamesDeep
+}
 
 
 /// test
