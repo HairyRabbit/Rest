@@ -49,8 +49,8 @@ describe('util classnames()', () => {
     assert('foo' === classnames('foo', undefined))
   })
 
-  it('should include array item', () => {
-    assert('foo bar baz' === classnames(
+  it('should include array item use deep', () => {
+    assert('foo bar baz' === classnamesDeep(
       'foo',
       ['bar', 'baz']
     ))

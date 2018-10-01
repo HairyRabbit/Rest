@@ -141,7 +141,7 @@ describe('spa-preset', () => {
             },{
               loader: 'css-loader',
               options: {
-                importLoaders: 1,
+                importLoaders: 2,
                 modules: true,
                 localIdentName: '[local]-[hash:base64:5]',
                 sourceMap: true
@@ -150,6 +150,12 @@ describe('spa-preset', () => {
               loader: 'postcss-loader',
               options: {
                 options: {},
+                sourceMap: true
+              }
+            },{
+              loader: 'sass-loader',
+              options: {
+                data: '$env: test;',
                 sourceMap: true
               }
             }]
@@ -207,7 +213,7 @@ describe('spa-preset', () => {
             },{
               loader: 'css-loader',
               options: {
-                importLoaders: 1,
+                importLoaders: 2,
                 modules: true,
                 sourceMap: true
               }
@@ -215,6 +221,12 @@ describe('spa-preset', () => {
               loader: 'postcss-loader',
               options: {
                 options: {},
+                sourceMap: true
+              }
+            },{
+              loader: 'sass-loader',
+              options: {
+                data: '$env: test;',
                 sourceMap: true
               }
             }]

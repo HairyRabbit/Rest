@@ -1,76 +1,86 @@
 /**
  * <Layout />
  *
+ * follow bootstrap grid system
+ *
  * @flow
  */
 
 import * as React from 'react'
 import style from './style.css'
 import { classnames as cs } from '../../util'
+import prs, { type GutterSize } from './gutter-parser'
+import tos from './style-computer'
 
 
 /// code
 
-type GutterSize =
-  | 'xs'
-  | 'sm'
-  | 'md'
-  | 'lg'
-  | 'xl'
-
 type Props = {
-  gutter?: boolean | GutterSize,
+  gutter?: boolean | string | GutterSize,
+  nogutter?: boolean,
   vertical?: boolean,
   size?: string,
-  clssName?: string,
+  clssNames?: {
+    row: string,
+    col: Array<string>
+  },
+  styles?: {
+    row?: Object,
+    col?: Array<Object>
+  },
   children?: React.Node
 }
 
-function Layout({ gutter = 'md', vertical = false, size, children, className, ...props }: Props = {}): React.Node {
-  const gutterSize = parseGutter(gutter)
-  const direction = vertical ? '_v' : ''
-  const [ rowGutterClass, colGutterClass ] = [
-    style[`row${direction}_${gutterSize}`],
-    style[`col${direction}_${gutterSize}`]
+function Layout({ gutter = 'md', nogutter = false, vertical = false, size, children, classNames = {}, styles = {}, ...props }: Props = {}): React.Node {
+  const [ gutterFlag, gutterSize ] = prs(nogutter ? false : gutter)
+  const [ rowGutter, colGutter ] = gutterFlag ? [
+    style[`row${vertical ? '_v' : ''}_${gutterSize}`],
+    style[`col${vertical ? '_v' : ''}_${gutterSize}`]
+  ] : [
+    !vertical
+      ? tos(gutterSize, true, 'marginLeft', 'marginRight')
+      : tos(gutterSize, true, 'marginTop', 'marginBottom'),
+    !vertical
+      ? tos(gutterSize, true, 'paddingLeft', 'paddingRight')
+      : tos(gutterSize, true, 'paddingTop', 'paddingBottom')
   ]
 
-  if(size) console.log(parseSize(size))
+  const rowClass = cs(
+    vertical ? style.vertical : style.base,
+    gutterFlag && rowGutter,
+    classNames.row
+  )
+
+  const rowStyle = {
+    ...(!gutterFlag ? rowGutter : {}),
+    ...(styles.row || {})
+  }
+
+  const colClass = idx => cs(
+    !size && style.mono,
+    gutterFlag && colGutter,
+    classNames.col && classNames.col[idx]
+  )
+
+  const colStyle = idx => ({
+    ...(size ? parseSize(size)[idx] : {}),
+    ...(!gutterFlag ? colGutter : {}),
+    ...(styles.col && styles.col[idx] || {})
+  })
 
   return (
-    <div className={cs(vertical ? style.vertical : style.base, rowGutterClass)}>
+    <div className={rowClass}
+         style={rowStyle}
+         {...props}>
       {React.Children.toArray(children).map((child, idx) => (
-        <div className={cs(colGutterClass, !size && style.mono)}
-             style={size ? parseSize(size)[idx] : {}}
+        <div className={colClass(idx)}
+             style={colStyle(idx)}
              key={idx}>
           {child}
         </div>
       ))}
     </div>
   )
-}
-
-/**
- * parse gutter value
- *
- * @pure
- */
-function parseGutter(gutter: $PropertyType<Props, 'gutter'>): ?GutterSize {
-  switch(gutter) {
-    case true:
-      return 'md'
-    case false:
-      return null
-    case 'xs':
-    case 'sm':
-    case 'md':
-    case 'lg':
-    case 'xl':
-      return gutter
-    default:
-      throw new Error(
-        `Property gutter invalid: "${gutter}"`
-      )
-  }
 }
 
 /**
@@ -95,19 +105,10 @@ export default Layout
 /// test
 
 import assert from 'assert'
+import Enzyme, { shallow } from 'enzyme'
+import Adapter from 'enzyme-adapter-react-16'
 
 describe('Component <Layout />', () => {
-  it('Function parseGutter(), style type', () => {
-    assert.deepStrictEqual('md', parseGutter('md'))
-    assert.deepStrictEqual('xl', parseGutter('xl'))
-  })
+  Enzyme.configure({ adapter: new Adapter() })
 
-  it('Function parseGutter(), boolean type', () => {
-    assert.deepStrictEqual('md', parseGutter(true))
-    assert.deepStrictEqual(null, parseGutter(false))
-  })
-
-  it('Function parseGutter(), throw when value invalid', () => {
-    assert.throws(() => parseGutter('foo'), /Property gutter invalid/)
-  })
 })
