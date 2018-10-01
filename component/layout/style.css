@@ -47,3 +47,37 @@ $gutter: (
     padding-bottom: ($value / 2);
   }
 }
+
+/**
+ * flex property "justify-content"
+ */
+
+$justifycontent: (
+  start: flex-start,
+  end: flex-end,
+  center: center,
+  around: space-around,
+  between: space-between
+);
+
+@each $name, $value in $justifycontent {
+  .justifycontent_#{$name} {
+    justify-content: $value;
+  }
+}
+
+/**
+ * flex property "align-items"
+ */
+
+$alignitems: (
+  start: flex-start,
+  end: flex-end,
+  center: center
+);
+
+@each $name, $value in $alignitems {
+  .alignitems_#{$name} {
+    align-items: $value;
+  }
+}

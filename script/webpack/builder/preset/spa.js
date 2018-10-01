@@ -17,7 +17,7 @@ import smPathFmt from '../sourcemap-path-formatter'
 
 /// code
 
-function preset(builder) {
+function preset(builder: Builder): Builder {
   const { gcssEntry } = builder.options
 
   builder

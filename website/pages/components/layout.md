@@ -11,6 +11,12 @@ const placeholderStyle = {
   fontSize: '12px',
   textAlign: 'center'
 }
+
+const containerStyle = {
+  border: '1px solid #eee',
+  borderRadius: '2px',
+  minHeight: '12rem'
+}
 ```
 
 # <Layout />
@@ -92,9 +98,45 @@ const placeholderStyle = {
   <div style={placeholderStyle}>GRID</div>
 </Layout>
 
+
 ## 对齐方式
 
-TODO
+使用 align 属性来对齐栅格。align 的值是一个用 "," 分割的字符串，分别对应 justify-content 与 align-items：
+
+```jsx
+<Layout align="between">
+  <div>GRID</div>
+</Layout>
+```
+
+<Layout align="between" size="0.3:0.3" style={containerStyle}>
+  <div style={placeholderStyle}>GRID</div>
+  <div style={placeholderStyle}>GRID</div>
+</Layout>
+
+```jsx
+<Layout align=",center">
+  <div>GRID</div>
+</Layout>
+```
+
+<Layout align=",center" size="0.3" style={containerStyle}>
+  <div style={placeholderStyle}>GRID</div>
+</Layout>
+
+
+可以使用 center 来快速居中，与 align="center,center" 相同：
+
+```jsx
+<Layout center>
+  <div>GRID</div>
+</Layout>
+```
+
+<Layout center size="0.3" style={containerStyle}>
+  <div style={placeholderStyle}>GRID</div>
+</Layout>
+
 
 ## 栅栏偏移
 

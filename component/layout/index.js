@@ -9,8 +9,9 @@
 import * as React from 'react'
 import style from './style.css'
 import { classnames as cs } from '../../util'
-import prs, { type GutterSize } from './gutter-parser'
-import tos from './style-computer'
+import parseGutter, { type GutterSize } from './gutter-parser'
+import parseAlign from './align-parser'
+import computeStyle from './style-computer'
 
 
 /// code
@@ -19,6 +20,8 @@ type Props = {
   gutter?: boolean | string | GutterSize,
   nogutter?: boolean,
   vertical?: boolean,
+  align?: string,
+  center?: boolean,
   size?: string,
   clssNames?: {
     row: string,
@@ -28,32 +31,40 @@ type Props = {
     row?: Object,
     col?: Array<Object>
   },
-  children?: React.Node
+  children?: React.Node,
+  className?: string,
+  style?: Object
 }
 
-function Layout({ gutter = 'md', nogutter = false, vertical = false, size, children, classNames = {}, styles = {}, ...props }: Props = {}): React.Node {
-  const [ gutterFlag, gutterSize ] = prs(nogutter ? false : gutter)
-  const [ rowGutter, colGutter ] = gutterFlag ? [
-    style[`row${vertical ? '_v' : ''}_${gutterSize}`],
-    style[`col${vertical ? '_v' : ''}_${gutterSize}`]
-  ] : [
-    !vertical
-      ? tos(gutterSize, true, 'marginLeft', 'marginRight')
-      : tos(gutterSize, true, 'marginTop', 'marginBottom'),
-    !vertical
-      ? tos(gutterSize, true, 'paddingLeft', 'paddingRight')
-      : tos(gutterSize, true, 'paddingTop', 'paddingBottom')
-  ]
+function Layout({ gutter = 'md', nogutter = false, vertical = false, size, align, center, children, classNames = {}, styles = {}, className, style: cstyle, ...props }: Props = {}): React.Node {
+  const [ gutterFlag, gutterSize ] = parseGutter(nogutter ? false : gutter)
+  const [ rowGutter, colGutter ] = gutterFlag
+        ? [
+          style[`row${vertical ? '_v' : ''}_${gutterSize}`],
+          style[`col${vertical ? '_v' : ''}_${gutterSize}`]
+        ]
+        : [
+          !vertical
+            ? computeStyle(gutterSize, true, 'marginLeft', 'marginRight')
+            : computeStyle(gutterSize, true, 'marginTop', 'marginBottom'),
+          !vertical
+            ? computeStyle(gutterSize, false, 'paddingLeft', 'paddingRight')
+            : computeStyle(gutterSize, false, 'paddingTop', 'paddingBottom')
+        ]
 
   const rowClass = cs(
     vertical ? style.vertical : style.base,
     gutterFlag && rowGutter,
-    classNames.row
+    center && cs.apply(null, parseAlign('center, center')),
+    !center && align && cs.apply(null, parseAlign(align)),
+    classNames.row,
+    className
   )
 
   const rowStyle = {
     ...(!gutterFlag ? rowGutter : {}),
-    ...(styles.row || {})
+    ...styles.row,
+    ...cstyle
   }
 
   const colClass = idx => cs(
