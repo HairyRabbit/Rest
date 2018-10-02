@@ -274,17 +274,29 @@ Layout 可以相互嵌套
   <div>GRID</div>
   <div>GRID</div>
 </Layout>
+
+
+// 转换成
+
+<ul>
+  <li><div>GRID</div></li>
+  <li><div>GRID</div></li>
+  <li><div>GRID</div></li>
+</ul>
 ```
 
 ```code
 const tags={ row: 'ul', col: 'li' }
+const list = {listStyleType: 'none'}
 ```
 
-<Layout tags={tags}>
+<Layout tags={tags} style={list}>
   <div style={placeholderStyle}>GRID</div>
   <div style={placeholderStyle}>GRID</div>
   <div style={placeholderStyle}>GRID</div>
 </Layout>
+
+就像上面演示的，可以用来做横向导航。
 
 
 ## 垂直方向放置
