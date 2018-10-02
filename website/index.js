@@ -13,7 +13,7 @@ import '../style/main.css'
 // import Avatar from './pages/components/avatar.md'
 // import WebpackBuilder from './pages/scripts/webpack/builder.md'
 
-const Avatar = Loadable({
+const ComponentAvatar = Loadable({
   loader: () => import(
     /* webpackChunkName: "component-avatar" */
     './pages/components/avatar.md'
@@ -23,7 +23,7 @@ const Avatar = Loadable({
 
 const ComponentLayout = Loadable({
   loader: () => import(
-    /* webpackChunkName: "component-avatar" */
+    /* webpackChunkName: "component-layout" */
     './pages/components/layout.md'
   ),
   loading: () => null
@@ -94,7 +94,7 @@ function Root(): React.Node {
     <Provider>
       <BrowserRouter>
         <Switch>
-          <Route path="/component/avatar" component={Avatar} />
+          <Route path="/component/avatar" component={ComponentAvatar} />
           <Route path="/component/layout" component={ComponentLayout} />
           <Route path="/webpack/builder" component={WebpackBuilder} />
           <Route component={Demo}/>

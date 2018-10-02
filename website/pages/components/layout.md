@@ -138,11 +138,6 @@ const containerStyle = {
 </Layout>
 
 
-## 栅栏偏移
-
-TODO
-
-
 ## 嵌套
 
 Layout 可以相互嵌套
@@ -263,6 +258,29 @@ Layout 可以相互嵌套
 ```
 
 <Layout gutter="5rem">
+  <div style={placeholderStyle}>GRID</div>
+  <div style={placeholderStyle}>GRID</div>
+  <div style={placeholderStyle}>GRID</div>
+</Layout>
+
+
+## 自定义标签
+
+默认情况下，Layout 使用 div 标签作为 wrapper，可以通过 tag，tags，wrapper，wrappers 来自定义tag：
+
+```jsx
+<Layout tags={{ row: 'ul', col: 'li' }}>
+  <div>GRID</div>
+  <div>GRID</div>
+  <div>GRID</div>
+</Layout>
+```
+
+```code
+const tags={ row: 'ul', col: 'li' }
+```
+
+<Layout tags={tags}>
   <div style={placeholderStyle}>GRID</div>
   <div style={placeholderStyle}>GRID</div>
   <div style={placeholderStyle}>GRID</div>

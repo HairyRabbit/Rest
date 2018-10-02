@@ -8,9 +8,10 @@
 
 import * as React from 'react'
 import style from './style.css'
-import { classnames as cs } from '../../util'
+import { classnames as cs, makeWrapper } from '../../util'
 import parseGutter, { type GutterSize } from './gutter-parser'
 import parseAlign from './align-parser'
+import parseSize from './size-parser'
 import computeStyle from './style-computer'
 
 
@@ -25,18 +26,43 @@ type Props = {
   size?: string,
   clssNames?: {
     row: string,
-    col: Array<string>
+    col: string
   },
   styles?: {
     row?: Object,
-    col?: Array<Object>
+    col?: Object
+  },
+  tag?: string,
+  tags?: {
+    row?: 'string',
+    col?: 'string'
+  },
+  wrapper?: React.Node,
+  wrappers?: {
+    row?: React.Node,
+    col?: React.Node
   },
   children?: React.Node,
   className?: string,
   style?: Object
 }
 
-function Layout({ gutter = 'md', nogutter = false, vertical = false, size, align, center, children, classNames = {}, styles = {}, className, style: cstyle, ...props }: Props = {}): React.Node {
+function Layout({ gutter = 'md',
+                  nogutter = false,
+                  vertical = false,
+                  size,
+                  align,
+                  center,
+                  children,
+                  classNames = {},
+                  styles = {},
+                  className,
+                  style: cstyle,
+                  tag,
+                  tags,
+                  wrapper,
+                  wrappers,
+                  ...props }: Props = {}): React.Node {
   const [ gutterFlag, gutterSize ] = parseGutter(nogutter ? false : gutter)
   const [ rowGutter, colGutter ] = gutterFlag
         ? [
@@ -67,44 +93,41 @@ function Layout({ gutter = 'md', nogutter = false, vertical = false, size, align
     ...cstyle
   }
 
-  const colClass = idx => cs(
+  const colClass = cs(
     !size && style.mono,
     gutterFlag && colGutter,
-    classNames.col && classNames.col[idx]
+    classNames.col && classNames.col
   )
 
   const colStyle = idx => ({
     ...(size ? parseSize(size)[idx] : {}),
     ...(!gutterFlag ? colGutter : {}),
-    ...(styles.col && styles.col[idx] || {})
+    ...(styles.col && styles.col || {})
   })
 
+  const [RowWrapper, ColWrapper] = wrappers
+        ? [wrappers.row || makeWrapper(), wrappers.col || makeWrapper]
+        : wrapper
+        ? [wrapper || makeWrapper(), makeWrapper()]
+        : tags
+        ? [makeWrapper(tags.row), makeWrapper(tags.col)]
+        : tag
+        ? [makeWrapper(tag), makeWrapper()]
+        : [makeWrapper(), makeWrapper()]
+
   return (
-    <div className={rowClass}
+    <RowWrapper className={rowClass}
          style={rowStyle}
          {...props}>
       {React.Children.toArray(children).map((child, idx) => (
-        <div className={colClass(idx)}
+        <ColWrapper className={colClass}
              style={colStyle(idx)}
              key={idx}>
           {child}
-        </div>
+        </ColWrapper>
       ))}
-    </div>
+    </RowWrapper>
   )
-}
-
-/**
- * parse size value
- *
- * @pure
- */
-function parseSize(size: string): Array<{ flex: string }> {
-  return size.split(':').map(s => {
-    const n = Number(s)
-    if(!isNaN(n)) return { flex: `${n} 0 auto` }
-    return { flex: `0 0 ${s}` }
-  })
 }
 
 
