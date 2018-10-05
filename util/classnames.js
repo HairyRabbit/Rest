@@ -10,7 +10,7 @@ import { flattenDeep } from 'lodash'
 /**
  * @pure
  */
-function classnames(...args: Array<?(boolean | string | Array<string>)>): string {
+function classnames(...args: Array<?(boolean | string)>): string {
   return args.filter(Boolean).join(' ')
 }
 

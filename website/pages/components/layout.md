@@ -17,6 +17,12 @@ const containerStyle = {
   borderRadius: '2px',
   minHeight: '12rem'
 }
+
+const styles = {
+  col: {
+
+  }
+}
 ```
 
 # <Layout />

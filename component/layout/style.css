@@ -22,8 +22,12 @@ $gutter: (
   flex-direction: column;
 }
 
-.mono {
+.grow {
   flex: 1 0 auto;
+}
+
+.basic {
+  flex: 0 0 auto;
 }
 
 @each $size, $value in $gutter {

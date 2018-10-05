@@ -9,7 +9,7 @@
 import * as React from 'react'
 import style from './style.css'
 import { classnames as cs, makeWrapper } from '../../util'
-import parseGutter, { type GutterSize } from './gutter-parser'
+import parseGutter from './gutter-parser'
 import parseAlign from './align-parser'
 import parseSize from './size-parser'
 import computeStyle from './style-computer'
@@ -18,15 +18,15 @@ import computeStyle from './style-computer'
 /// code
 
 type Props = {
-  gutter?: boolean | string | GutterSize,
+  gutter?: boolean | string,
   nogutter?: boolean,
   vertical?: boolean,
   align?: string,
   center?: boolean,
   size?: string,
-  clssNames?: {
-    row: string,
-    col: string
+  classNames?: {
+    row?: string,
+    col?: string
   },
   styles?: {
     row?: Object,
@@ -37,19 +37,19 @@ type Props = {
     row?: 'string',
     col?: 'string'
   },
-  wrapper?: React.Node,
+  wrapper?: React.ComponentType<*>,
   wrappers?: {
-    row?: React.Node,
-    col?: React.Node
+    row?: React.ComponentType<*>,
+    col?: React.ComponentType<*>
   },
   children?: React.Node,
   className?: string,
   style?: Object
 }
 
-function Layout({ gutter = 'md',
-                  nogutter = false,
-                  vertical = false,
+function Layout({ gutter,
+                  nogutter,
+                  vertical,
                   size,
                   align,
                   center,
@@ -63,26 +63,32 @@ function Layout({ gutter = 'md',
                   wrapper,
                   wrappers,
                   ...props }: Props = {}): React.Node {
-  const [ gutterFlag, gutterSize ] = parseGutter(nogutter ? false : gutter)
+  const [ gutterFlag, gutterSize ] = parseGutter(nogutter ? false : gutter || 'md')
   const [ rowGutter, colGutter ] = gutterFlag
-        ? [
-          style[`row${vertical ? '_v' : ''}_${gutterSize}`],
-          style[`col${vertical ? '_v' : ''}_${gutterSize}`]
-        ]
-        : [
-          !vertical
-            ? computeStyle(gutterSize, true, 'marginLeft', 'marginRight')
-            : computeStyle(gutterSize, true, 'marginTop', 'marginBottom'),
-          !vertical
-            ? computeStyle(gutterSize, false, 'paddingLeft', 'paddingRight')
-            : computeStyle(gutterSize, false, 'paddingTop', 'paddingBottom')
-        ]
+        ? (gutterSize
+           ? [
+             style[`row${vertical ? '_v' : ''}_${gutterSize}`],
+             style[`col${vertical ? '_v' : ''}_${gutterSize}`]
+           ]
+           : [])
+        : (gutterSize
+           ? [
+             !vertical
+               ? computeStyle(gutterSize, true, 'marginLeft', 'marginRight')
+               : computeStyle(gutterSize, true, 'marginTop', 'marginBottom'),
+             !vertical
+               ? computeStyle(gutterSize, false, 'paddingLeft', 'paddingRight')
+               : computeStyle(gutterSize, false, 'paddingTop', 'paddingBottom')
+           ]
+           : [])
+
+  const sizes = parseSize(size)
 
   const rowClass = cs(
     vertical ? style.vertical : style.base,
     gutterFlag && rowGutter,
-    center && cs.apply(null, parseAlign('center, center')),
-    !center && align && cs.apply(null, parseAlign(align)),
+    center && parseAlign('center, center'),
+    !center && align && parseAlign(align),
     classNames.row,
     className
   )
@@ -93,14 +99,14 @@ function Layout({ gutter = 'md',
     ...cstyle
   }
 
-  const colClass = cs(
-    !size && style.mono,
+  const colClass = idx => cs(
+    !size ? style.grow : ('string' === typeof sizes[idx] ? sizes[idx] : null),
     gutterFlag && colGutter,
     classNames.col && classNames.col
   )
 
   const colStyle = idx => ({
-    ...(size ? parseSize(size)[idx] : {}),
+    ...(size && 'string' !== typeof sizes[idx] ? sizes[idx] : {}),
     ...(!gutterFlag ? colGutter : {}),
     ...(styles.col && styles.col || {})
   })
@@ -117,12 +123,12 @@ function Layout({ gutter = 'md',
 
   return (
     <RowWrapper className={rowClass}
-         style={rowStyle}
-         {...props}>
+                style={rowStyle}
+                {...props}>
       {React.Children.toArray(children).map((child, idx) => (
-        <ColWrapper className={colClass}
-             style={colStyle(idx)}
-             key={idx}>
+        <ColWrapper className={colClass(idx)}
+                    style={colStyle(idx)}
+                    key={idx}>
           {child}
         </ColWrapper>
       ))}

@@ -6,6 +6,7 @@
  * @flow
  */
 
+import { classnames as cs } from '../../util'
 import style from './style.css'
 
 /// code
@@ -26,10 +27,10 @@ type ParseResult = [?JustifyContent, ?AlignItems]
 
 function parse(align: string): ParseResult {
   const [ justifyContent = '', alignItems = '' ] = align.split(',')
-  return [
+  return cs(
     parseJustifyContent(justifyContent.trim()),
     parseAlignItems(alignItems.trim())
-  ]
+  )
 }
 
 function parseJustifyContent(align: string): ?JustifyContent {
