@@ -324,6 +324,49 @@ const list = {listStyleType: 'none'}
 </Layout>
 
 
+## 格子布局
+
+```jsx
+<Layout grid size="3:6:3">
+  <div>GRID</div>
+  <div>GRID</div>
+  <div>GRID</div>
+</Layout>
+```
+
+<Layout grid size="3:6:3">
+  <div style={placeholderStyle}>GRID</div>
+  <div style={placeholderStyle}>GRID</div>
+  <div style={placeholderStyle}>GRID</div>
+</Layout>
+
 ## 响应式支持
 
-TODO
+```code
+const gridsize = {
+  default: '12:12:12',
+  sm: '3:6:3',
+  md: '4:4:4'
+}
+```
+
+```jsx
+<Layout grid size={{ default: '12:12:12', sm: '3:6:3', md: '4:4:4' }}>
+  <div>GRID</div>
+  <div>GRID</div>
+  <div>GRID</div>
+</Layout>
+```
+
+<Layout grid size={gridsize}>
+  <div style={placeholderStyle}>GRID</div>
+  <div style={placeholderStyle}>GRID</div>
+  <div style={placeholderStyle}>GRID</div>
+</Layout>
+
+
+## 构建变量
+
+- LAYOUT_RESPONSE_SUPPORT && RESPONSE_SUPPORT
+- BREAK_POINT
+- LAYOUT_COLUMN

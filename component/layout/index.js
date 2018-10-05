@@ -12,6 +12,7 @@ import { classnames as cs, makeWrapper } from '../../util'
 import parseGutter from './gutter-parser'
 import parseAlign from './align-parser'
 import parseSize from './size-parser'
+import parseGridSize from './grid-size-parser'
 import computeStyle from './style-computer'
 
 
@@ -24,6 +25,7 @@ type Props = {
   align?: string,
   center?: boolean,
   size?: string,
+  grid?: boolean | string,
   classNames?: {
     row?: string,
     col?: string
@@ -53,11 +55,12 @@ function Layout({ gutter,
                   size,
                   align,
                   center,
+                  grid,
                   children,
-                  classNames = {},
-                  styles = {},
                   className,
+                  classNames = {},
                   style: cstyle,
+                  styles = {},
                   tag,
                   tags,
                   wrapper,
@@ -82,7 +85,8 @@ function Layout({ gutter,
            ]
            : [])
 
-  const sizes = parseSize(size)
+  // if(process.env.LAYOUT_GRID)
+  const sizes = grid ? parseGridSize(size) : parseSize(size)
 
   const rowClass = cs(
     vertical ? style.vertical : style.base,

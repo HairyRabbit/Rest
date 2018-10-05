@@ -11,16 +11,7 @@ import style from './style.css'
 
 /// code
 
-//@TODO: BreakPoint supports
-type BreakPointsSize = {
-  xs?: string,
-  sm?: string,
-  md?: string,
-  lg?: string,
-  xl?: string
-}
-
-function parseSize(size: ?(string | BreakPointsSize)): Array<string | { flex: string }> {
+function parseSize(size: ?string): Array<string | { flex: string }> {
   if(!size) return []
 
   return size.split(':').map(s => {

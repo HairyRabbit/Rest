@@ -1,0 +1,36 @@
+/**
+ * layout grid supports
+ */
+
+$column: 12;
+$breakPoint: (
+  sm: 36rem,
+  md: 48rem,
+  lg: 62rem,
+  xl: 75rem
+);
+$responseSupport: true;
+
+@for $i from 1 through $column {
+  $val: percentage($i / 12);
+  $sel: flex_g#{$column}_#{$i};
+
+  .#{$sel} {
+    flex: 0 0 $val;
+  }
+}
+
+@if $responseSupport {
+  @each $name, $value in $breakPoint {
+    @media (min-width: $value) {
+      @for $i from 1 through $column {
+        $val: percentage($i / 12);
+        $sel: flex_g#{$column}_#{$i};
+
+        .#{$sel}_#{$name} {
+          flex: 0 0 $val;
+        }
+      }
+    }
+  }
+}
