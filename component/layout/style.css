@@ -30,6 +30,10 @@ $gutter: (
   flex: 0 0 auto;
 }
 
+.col {
+  line-height: 0;
+}
+
 @each $size, $value in $gutter {
   .row_#{$size} {
     margin-left: ($value / -2);

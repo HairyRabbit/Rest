@@ -104,6 +104,7 @@ function Layout({ gutter,
   }
 
   const colClass = idx => cs(
+    style.col,
     !size ? style.grow : ('string' === typeof sizes[idx] ? sizes[idx] : null),
     gutterFlag && colGutter,
     classNames.col && classNames.col
