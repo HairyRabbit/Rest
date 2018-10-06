@@ -14,7 +14,6 @@ $gutter: (
 
 .base {
   display: flex;
-  flex-wrap: wrap;
 }
 
 .vertical {

@@ -12,6 +12,7 @@ import BundleAnalyzePlugin from '../script/webpack/bundle-analyze-plugin'
 export default webpack('spa', {
   gcssEntry: [
     path.resolve(__dirname, '../style/main.css'),
+    path.resolve(__dirname, 'style.css'),
     /node_modules/
   ]
 })
@@ -37,6 +38,17 @@ export default webpack('spa', {
       }
     }
   })
+  .setRuleLoader('img', 'url-loader', {
+    options: {
+      limit: 4096
+    }
+  })
+  .setRuleLoader('img', 'image-webpack-loader', {
+    options: {
+
+    }
+  })
+  .setRuleTypes('img', ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])
   .set('resolve.alias.~component', path.resolve('component'))
   .set('resolve.alias.~style', path.resolve('style'))
   .transform()

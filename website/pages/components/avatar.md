@@ -2,7 +2,6 @@
 import { Avatar } from '~component'
 import { avatar } from '@rabbitcc/faker'
 import style from '../../style/typo.css';
-import 'prismjs/themes/prism.css'
 ```
 
 # <Avatar />

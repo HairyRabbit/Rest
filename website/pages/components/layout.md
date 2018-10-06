@@ -2,7 +2,7 @@
 import { Layout } from '~component'
 import { avatar } from '@rabbitcc/faker'
 import style from '../../style/typo.css';
-import 'prismjs/themes/prism.css'
+import Image from '../../asserts/ComponentLayout.png'
 
 const placeholderStyle = {
   padding: '0.5rem 1rem',
@@ -27,7 +27,15 @@ const styles = {
 
 # <Layout />
 
-一个用于快速构建布局的组件
+<Layout center size="0" className={style.author}>
+  <span>
+    HariyRabbit
+  </span>
+</Layout>
+
+<Layout center size="0">
+  <img src={Image} width="560" />
+</Layout>
 
 
 ## 基本用法
@@ -55,53 +63,47 @@ const styles = {
 </Layout>
 ```
 
-<Layout size="1:2:1">
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-</Layout>
-
-```jsx
-<Layout size="2:3:3">
-  <div>GRID</div>
-  <div>GRID</div>
-  <div>GRID</div>
-</Layout>
-```
-
-<Layout size="2:3:3">
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-</Layout>
-
-```jsx
-<Layout size="1:1:1:1">
-  <div>GRID</div>
-  <div>GRID</div>
-  <div>GRID</div>
-  <div>GRID</div>
-</Layout>
-```
-
-<Layout size="1:1:1:1">
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-</Layout>
-
-
-```jsx
-<Layout size="1:10rem">
-  <div>GRID</div>
-  <div>GRID</div>
-</Layout>
-```
-
-<Layout size="1:10rem">
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
+<Layout vertical>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      1:2:1
+    </Layout>
+    <Layout size="1:2:1">
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>2</div>
+      <div style={placeholderStyle}>1</div>
+    </Layout>
+  </Layout>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      2:3:2
+    </Layout>
+    <Layout size="2:3:3">
+      <div style={placeholderStyle}>2</div>
+      <div style={placeholderStyle}>3</div>
+      <div style={placeholderStyle}>2</div>
+    </Layout>
+  </Layout>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      1:1:1:1
+    </Layout>
+    <Layout size="1:1:1:1">
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>1</div>
+    </Layout>
+  </Layout>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      1:10rem
+    </Layout>
+    <Layout size="1:10rem">
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>10rem</div>
+    </Layout>
+  </Layout>
 </Layout>
 
 
@@ -183,47 +185,60 @@ Layout 可以相互嵌套
 </Layout>
 ```
 
-### GutterSize XS
-
-<Layout gutter="xs">
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
+<Layout vertical>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      xs
+    </Layout>
+    <Layout gutter="xs">
+      <div style={placeholderStyle}>GRID</div>
+      <div style={placeholderStyle}>GRID</div>
+      <div style={placeholderStyle}>GRID</div>
+    </Layout>
+  </Layout>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      sm
+    </Layout>
+    <Layout gutter="sm">
+      <div style={placeholderStyle}>GRID</div>
+      <div style={placeholderStyle}>GRID</div>
+      <div style={placeholderStyle}>GRID</div>
+    </Layout>
+  </Layout>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      md
+    </Layout>
+    <Layout gutter="md">
+      <div style={placeholderStyle}>GRID</div>
+      <div style={placeholderStyle}>GRID</div>
+      <div style={placeholderStyle}>GRID</div>
+    </Layout>
+  </Layout>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      lg
+    </Layout>
+    <Layout gutter="lg">
+      <div style={placeholderStyle}>GRID</div>
+      <div style={placeholderStyle}>GRID</div>
+      <div style={placeholderStyle}>GRID</div>
+    </Layout>
+  </Layout>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      xl
+    </Layout>
+    <Layout gutter="xl">
+      <div style={placeholderStyle}>GRID</div>
+      <div style={placeholderStyle}>GRID</div>
+      <div style={placeholderStyle}>GRID</div>
+    </Layout>
+  </Layout>
 </Layout>
 
-### GutterSize SM
-
-<Layout gutter="sm">
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-</Layout>
-
-### GutterSize MD
-
-<Layout gutter="md">
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-</Layout>
-
-### GutterSize LG
-
-<Layout gutter="lg">
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-</Layout>
-
-### GutterSize XL
-
-<Layout gutter="xl">
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-  <div style={placeholderStyle}>GRID</div>
-</Layout>
-
-### 取消槽宽
+### 无槽宽
 
 将 gutter 设置为 false 可以去掉槽宽，实现栅格 edge-to-edge 的形式：
 

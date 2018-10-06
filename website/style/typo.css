@@ -4,11 +4,10 @@
 
 .main {
   width: 42rem;
-  padding: 10rem 0;
+  padding: 12rem 0;
   margin: 0 auto;
 
   font-size: 15px;
-  letter-spacing: 1px;
   line-height: 1.85;
 }
 
@@ -30,15 +29,15 @@
   text-align: center;
   font-size: 1.5rem;
   font-weight: lighter;
-  margin-bottom: 2rem;
   color: #000;
 }
 
 .header2 {
+  text-align: center;
   font-size: 1.25rem;
-  font-weight: bolder;
-  margin-top: 3rem;
-  margin-bottom: 2rem;
+  font-weight: lighter;
+  margin-top: 5rem;
+  margin-bottom: 3rem;
   color: #555;
 }
 
@@ -89,4 +88,11 @@
   align-items: center;
   min-width: 5.5rem;
   min-height: 5.5rem;
+}
+
+.author {
+  margin-top: -1rem;
+  margin-bottom: 3rem;
+  font-size: 14px;
+  color: #aaa;
 }

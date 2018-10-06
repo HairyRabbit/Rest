@@ -10,6 +10,7 @@ import { BrowserRouter, Switch, Route } from 'react-router-dom'
 import Loadable from 'react-loadable'
 import { hot } from 'react-hot-loader'
 import '../style/main.css'
+import './style.css'
 // import Avatar from './pages/components/avatar.md'
 // import WebpackBuilder from './pages/scripts/webpack/builder.md'
 

@@ -92,7 +92,8 @@ function createTransformer({ components, preload = '' } = {}) {
       }
 
       default:
-        const { children } = node
+        const { children, value } = node
+        console.log(node)
         const child = children && children.map(transform) || ''
 
         return child.join('\n')
