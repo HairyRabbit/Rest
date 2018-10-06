@@ -130,8 +130,8 @@ function Layout({ gutter,
                 style={rowStyle}
                 {...props}>
       {React.Children.toArray(children).map((child, idx) => (
-        <ColWrapper className={colClass(idx % size.length)}
-                    style={colStyle(idx % size.length)}
+        <ColWrapper className={colClass(idx % sizes.length)}
+                    style={colStyle(idx % sizes.length)}
                     key={idx}>
           {child}
         </ColWrapper>
