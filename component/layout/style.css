@@ -20,6 +20,10 @@ $gutter: (
 .vertical {
   composes: base;
   flex-direction: column;
+
+  &.base {
+    flex-wrap: nowrap;
+  }
 }
 
 .grow {
@@ -31,7 +35,7 @@ $gutter: (
 }
 
 .col {
-  line-height: 0;
+  // line-height: 0;
 }
 
 @each $size, $value in $gutter {
