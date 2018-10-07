@@ -18,13 +18,13 @@ function parseSize(size: ?string): Array<string | { flex: string }> {
     const n = Number(s)
     if(isNaN(n)) {
       if('auto' === s) return style.basic
-      return { flex: `0 0 ${s}` }
+      return { flex: `0 ${s}` }
     }
 
     switch(n) {
       case 0: return style.basic
       case 1: return style.grow
-      default: return { flex: `${n} 0 auto` }
+      default: return { flex: `${n}` }
     }
   })
 }
