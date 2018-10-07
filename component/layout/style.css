@@ -15,11 +15,18 @@ $gutter: (
 .base {
   display: flex;
   flex-wrap: wrap;
+  &.reverse {
+    flex-direction: row-reverse;
+  }
 }
 
 .vertical {
   composes: base;
   flex-direction: column;
+
+  &.reverse {
+    flex-direction: column-reverse;
+  }
 
   &.base {
     flex-wrap: nowrap;
@@ -32,6 +39,10 @@ $gutter: (
 
 .basic {
   flex: 0 auto;
+}
+
+.fill {
+  height: 100%;
 }
 
 @each $size, $value in $gutter {

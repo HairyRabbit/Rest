@@ -22,8 +22,10 @@ type Props = {
   gutter?: boolean | string,
   nogutter?: boolean,
   vertical?: boolean,
+  reverse?: boolean,
   align?: string,
   center?: boolean,
+  fill?: boolean,
   size?: string,
   grid?: boolean | string,
   classNames?: {
@@ -51,10 +53,12 @@ type Props = {
 
 function Layout({ gutter,
                   nogutter,
+                  reverse,
                   vertical,
                   size,
                   align,
                   center,
+                  fill,
                   grid,
                   children,
                   className,
@@ -90,9 +94,11 @@ function Layout({ gutter,
 
   const rowClass = cs(
     vertical ? style.vertical : style.base,
+    reverse && style.reverse,
     gutterFlag && rowGutter,
     center && parseAlign('center, center'),
     !center && align && parseAlign(align),
+    fill && style.fill,
     classNames.row,
     className
   )
