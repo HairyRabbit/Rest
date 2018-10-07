@@ -27,15 +27,11 @@ $gutter: (
 }
 
 .grow {
-  flex: 1 0 0;
+  flex: 1;
 }
 
 .basic {
-  flex: 0 0 auto;
-}
-
-.col {
-  // line-height: 0;
+  flex: 0 auto;
 }
 
 @each $size, $value in $gutter {
