@@ -38,9 +38,12 @@ const styles = {
 </Layout>
 
 
+`<Layout />` 是一个基础组件，用于快速构建视图层骨架，使用简单并具有丰富的属性，用来生成更干净的代码。
 
-## Basic Usage
 
+## 简单使用
+
+使用方式与[bootstrap](https://github.com/twbs/bootstrap)相似，但也有很明显的区别。`<Layout />`无法直接控制`col`，例如：
 
 ```jsx
 <Layout>

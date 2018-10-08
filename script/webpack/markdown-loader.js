@@ -28,7 +28,8 @@ const defaultComponents = {
   h4: children => `<h4>${children}</h4>`,
   h5: children => `<h5>${children}</h5>`,
   h6: children => `<h6>${children}</h6>`,
-  code: children => `<pre>${children}</pre>`
+  code: children => `<pre>${children}</pre>`,
+  paragraph: children => `<p>${children}</p>`
 }
 
 function createTransformer({ components, preload = '' } = {}) {
@@ -91,10 +92,16 @@ function createTransformer({ components, preload = '' } = {}) {
         return `{\`${value}\`}`
       }
 
+      case 'paragraph': {
+        const { children } = node
+        const child = children.map(c => transform(c, { shouldEscape: true }))
+        return comps.paragraph(child.join('\n'))
+      }
+
       default:
         const { children, value } = node
         console.log(node)
-        const child = children && children.map(transform) || ''
+        const child = children && children.map(transform) || []
 
         return child.join('\n')
     }
