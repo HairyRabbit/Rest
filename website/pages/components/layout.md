@@ -92,7 +92,7 @@ const styles = {
     <Layout align="end,center" size="0">
       2:3:2
     </Layout>
-    <Layout size="2:3:3">
+    <Layout size="2:3:2">
       <div style={placeholderStyle}>2</div>
       <div style={placeholderStyle}>3</div>
       <div style={placeholderStyle}>2</div>
