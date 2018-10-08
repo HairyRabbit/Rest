@@ -38,13 +38,27 @@ const styles = {
 </Layout>
 
 
-## 基本用法
+
+## Basic Usage
+
 
 ```jsx
 <Layout>
   <div>GRID</div>
   <div>GRID</div>
 </Layout>
+
+
+// transform to
+
+<div class="row">
+  <div class="col">
+    <div>GRID</div>
+  </div>
+  <div class="col">
+    <div>GRID</div>
+  </div>
+</div>
 ```
 
 <Layout>
