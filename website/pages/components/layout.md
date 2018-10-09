@@ -1,5 +1,5 @@
 ```code
-import { Layout } from '~component'
+import { Layout, Avatar } from '~component'
 import { avatar } from '@rabbitcc/faker'
 import style from '../../style/typo.css';
 import Image from '../../asserts/ComponentLayout.png'
@@ -17,19 +17,13 @@ const containerStyle = {
   borderRadius: '2px',
   minHeight: '12rem'
 }
-
-const styles = {
-  col: {
-
-  }
-}
 ```
 
 # <Layout />
 
 <Layout center size="0" className={style.author}>
   <span>
-    HariyRabbit
+    @component/base
   </span>
 </Layout>
 
@@ -38,25 +32,20 @@ const styles = {
 </Layout>
 
 
-`<Layout />` 是一个基础组件，用于快速构建视图层骨架，使用简单并具有丰富的属性，用来生成更干净的代码。
+`<Layout />` 是一个基础组件，用于快速构建视图层骨架，使用简单并具有丰富的属性。使用方式与[bootstrap](https://github.com/twbs/bootstrap)相似，但也有很明显的区别。
 
-使用方式与[bootstrap](https://github.com/twbs/bootstrap)相似，但也有很明显的区别。`<Layout />`无法直接控制`col`，例如：
+`<Layout />`无法直接控制`col`，例如：
 
-
-<Layout>
-<Layout center fill>
 
 ```jsx
 <Layout>
   <div>GRID</div>
   <div>GRID</div>
 </Layout>
-```
 
-</Layout>
-<Layout center fill>
 
-```jsx
+/// 转换为如下代码
+
 <div class="row">
   <div class="col">
     <div>GRID</div>
@@ -67,10 +56,67 @@ const styles = {
 </div>
 ```
 
-</Layout>
-</Layout>
+没有了`col`，可以编写更为干净的代码。下面是很常见的三栏布局例子对比：
+
+```jsx
+/**
+ * use bootstrap v4 grid system
+ */
+
+<div class="row">
+  <div class="col-3">
+    <img src="path/to/avatar" />
+  </div>
+
+  <div class="col">
+    <div>HairyRabbit<small>一天前</small></div>
+    <p>一个超棒的布局组件，覆盖90%的常见布局</p>
+  </div>
+
+  <div class="col-3">
+    <button>Replay</button>
+  </div>
+</div>
 
 
+/**
+ * use <Layout />
+ */
+
+<Layout size="0:1">
+  <img src="path/to/avatar" />
+
+  <div>
+    <div>HairyRabbit<small>一天前</small></div>
+    <p>一个超棒的布局组件，覆盖90%的常见布局</p>
+  </div>
+
+  <button>Replay</button>
+</Layout>
+```
+
+<Layout center>
+<figure>
+<div style={{border:'1px solid #eee',padding:'1rem',boxShadow:'0 6px 20px -16px #000'}}>
+  <Layout size="0:1">
+    <Layout center fill>
+      <Avatar value="https://avatars2.githubusercontent.com/u/5752902" />
+    </Layout>
+    <Layout vertical gutter="xs" size="0">
+      <div>
+        <span style={{marginRight:'0.5rem'}}>HairyRabbit</span>
+        <span style={{fontSize:'12px',color:'#aaa'}}>1 天前</span>
+      </div>
+      <div style={{fontSize:'14px',color:'#555'}}>
+        一个超棒的布局组件，覆盖90%的常见布局
+      </div>
+    </Layout>
+    <div style={{fontSize:'12px',color:'#aaa'}}>Replay</div>
+  </Layout>
+</div>
+  <figcaption style={{fontSize:'12px',color:'#aaa',paddingTop:'0.5rem',textAlign:'center'}}>布局中常见的三栏布局</figcaption>
+</figure>
+</Layout>
 
 ## 简单使用
 

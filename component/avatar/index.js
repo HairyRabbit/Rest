@@ -154,8 +154,20 @@ import Enzyme, { shallow } from 'enzyme'
 import Adapter from 'enzyme-adapter-react-16'
 
 describe('component <Avatar />', (done) => {
-
   Enzyme.configure({ adapter: new Adapter() })
+
+  style.main = 'main'
+  style.image = 'image'
+  style.sizeXS = 'sizeXS'
+  style.sizeSM = 'sizeSM'
+  style.sizeMD = 'sizeMD'
+  style.sizeLG = 'sizeLG'
+  style.sizeXL = 'sizeXL'
+  style.rect = 'rect'
+  style.roundSM = 'roundSM'
+  style.roundMD = 'roundMD'
+  style.roundLG = 'roundLG'
+  style.circle = 'circle'
 
   it('default props', () => {
     const comp = shallow(

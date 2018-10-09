@@ -49,10 +49,10 @@ describe('Component <Layout /> Function parseSize()', () => {
   })
 
   it('should return custom flex-grow value', () => {
-    assert.deepStrictEqual([{ flex: '2 0 auto' }], parseSize('2'))
+    assert.deepStrictEqual([{ flex: '2' }], parseSize('2'))
   })
 
   it('should return custom flex-basic value', () => {
-    assert.deepStrictEqual([{ flex: '0 0 2rem' }], parseSize('2rem'))
+    assert.deepStrictEqual([{ flex: '0 2rem' }], parseSize('2rem'))
   })
 })
