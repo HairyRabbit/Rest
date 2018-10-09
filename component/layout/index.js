@@ -8,6 +8,7 @@
 
 import * as React from 'react'
 import style from './style.css'
+import reset from '../../style/reset.css'
 import { classnames as cs, makeWrapper } from '../../util'
 import parseGutter from './gutter-parser'
 import parseAlign from './align-parser'
@@ -27,6 +28,7 @@ type Props = {
   center?: boolean,
   fill?: boolean,
   size?: string,
+  list?: boolean,
   grid?: boolean | string,
   classNames?: {
     row?: string,
@@ -60,6 +62,7 @@ function Layout({ gutter,
                   center,
                   fill,
                   grid,
+                  list,
                   children,
                   className,
                   classNames = {},
@@ -100,6 +103,7 @@ function Layout({ gutter,
     center && parseAlign('center, center'),
     !center && align && parseAlign(align),
     fill && style.fill,
+    list && reset.list,
     classNames.row,
     className
   )
@@ -113,9 +117,9 @@ function Layout({ gutter,
   const colClass = idx => cs(
     style.col,
     !size
-      ? (child.length
-           ? style.grow
-           : style.basic)
+      ? (1 === child.length
+           ? style.basic
+           : style.grow)
       : ('string' === typeof sizes[idx]
            ? sizes[idx]
            : null),
@@ -129,7 +133,9 @@ function Layout({ gutter,
     ...(styles.col && styles.col || {})
   })
 
-  const [RowWrapper, ColWrapper] = wrappers
+  const [RowWrapper, ColWrapper] = list
+        ? [makeWrapper('ul'), makeWrapper('li')]
+        : wrappers
         ? [wrappers.row || makeWrapper(), wrappers.col || makeWrapper]
         : wrapper
         ? [wrapper || makeWrapper(), makeWrapper()]

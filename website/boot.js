@@ -6,6 +6,7 @@
 
 import * as React from 'react'
 import { render } from 'react-dom'
+import initial from './initial'
 import Root from './'
 
 
@@ -32,8 +33,10 @@ function ensureMountNode(id: string): HTMLElement {
 }
 
 function main() {
-  const node = ensureMountNode('app')
-  render(<Root />, node)
+  initial().then(() => {
+    const node = ensureMountNode('app')
+    render(<Root />, node)
+  })
 }
 
 

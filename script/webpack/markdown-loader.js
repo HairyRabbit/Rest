@@ -9,11 +9,17 @@ import { parse } from 'remark'
 import { highlight, languages } from 'prismjs'
 import components from 'prismjs/components'
 import loadLanguages from 'prismjs/components/'
+import html2jsx from 'htmltojsx'
 
 loadLanguages(Object.keys(components.languages).filter(lang => 'meta' !== lang))
 
+const html2jsxConvert = new html2jsx({
+  createClass: false
+})
+
 function loader(content, map, meta) {
   this.cacheable(true)
+  this.addDependency(__filename)
   const options = getOptions(this)
   const ast = parse(content)
   const transform = createTransformer(options)
@@ -29,7 +35,11 @@ const defaultComponents = {
   h5: children => `<h5>${children}</h5>`,
   h6: children => `<h6>${children}</h6>`,
   code: children => `<pre>${children}</pre>`,
-  paragraph: children => `<p>${children}</p>`
+  paragraph: children => `<p>${children}</p>`,
+  inlineCode: children => `<code>{\`${children}\`}</code>`,
+  link: (href, children) => `<a href="${href}">${children}</a>`,
+  list: children => `<ul>${children}</ul>`,
+  listItem: children => `<li>${children}</li>`
 }
 
 function createTransformer({ components, preload = '' } = {}) {
@@ -75,15 +85,17 @@ function createTransformer({ components, preload = '' } = {}) {
           }
 
           default: {
-            // console.log(highlight(value, languages[lang], lang))
             const hl = highlight(value, languages[lang], lang)
-                  .replace(/class/g, 'className')
-                  .replace(/(\{|\})/g, '{"$1"}')
-                  .replace(/>(\s+)/g, '>{`$1`}')
-
-            return comps.code(`<code className='language-${lang}'>${hl}</code>`)
+            const wrap = `<pre><code class='language-${lang}'>${hl}</code></pre>`
+            const jsx = html2jsxConvert.convert(wrap)
+            return comps.code(jsx)
           }
         }
+      }
+
+      case 'inlineCode': {
+        const { value } = node
+        return comps.inlineCode(value)
       }
 
       case 'text': {
@@ -98,12 +110,31 @@ function createTransformer({ components, preload = '' } = {}) {
         return comps.paragraph(child.join('\n'))
       }
 
-      default:
-        const { children, value } = node
-        console.log(node)
-        const child = children && children.map(transform) || []
+      case 'list': {
+        const { children } = node
+        const child = children.map(c => transform(c, { shouldEscape: true }))
+        return comps.list(child.join('\n'))
+      }
 
+      case 'listItem': {
+        const { children } = node
+        const child = children.map(c => transform(c, { shouldEscape: true }))
+        return comps.listItem(child.join('\n'))
+      }
+
+      case 'link': {
+        console.log(node)
+        const { title, url, children } = node
+        const child = children.map(c => transform(c, { shouldEscape: true }))
+        return comps.link(url, child.join('\n'))
+      }
+
+      default: {
+        console.log(type, node)
+        const { children, value } = node
+        const child = children && children.map(transform) || []
         return child.join('\n')
+      }
     }
   }
 }

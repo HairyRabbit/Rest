@@ -40,20 +40,23 @@ const styles = {
 
 `<Layout />` 是一个基础组件，用于快速构建视图层骨架，使用简单并具有丰富的属性，用来生成更干净的代码。
 
-
-## 简单使用
-
 使用方式与[bootstrap](https://github.com/twbs/bootstrap)相似，但也有很明显的区别。`<Layout />`无法直接控制`col`，例如：
+
+
+<Layout>
+<Layout center fill>
 
 ```jsx
 <Layout>
   <div>GRID</div>
   <div>GRID</div>
 </Layout>
+```
 
+</Layout>
+<Layout center fill>
 
-// transform to
-
+```jsx
 <div class="row">
   <div class="col">
     <div>GRID</div>
@@ -63,6 +66,13 @@ const styles = {
   </div>
 </div>
 ```
+
+</Layout>
+</Layout>
+
+
+
+## 简单使用
 
 <Layout>
   <div style={placeholderStyle}>GRID</div>
@@ -328,7 +338,7 @@ const tags={ row: 'ul', col: 'li' }
 const list = {listStyleType: 'none'}
 ```
 
-<Layout tags={tags} style={list}>
+<Layout list>
   <div style={placeholderStyle}>GRID</div>
   <div style={placeholderStyle}>GRID</div>
   <div style={placeholderStyle}>GRID</div>

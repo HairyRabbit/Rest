@@ -3,7 +3,7 @@
  */
 
 .main {
-  width: 42rem;
+  max-width: 42rem;
   padding: 12rem 0;
   margin: 0 auto;
 
@@ -61,6 +61,18 @@
   font-size: 0.85rem;
   /* background-color: #f3f3f3; */
   /* box-shadow: 0px 8px 10px -6px #000; */
+}
+
+.link {
+  color: #2164ff;
+  margin: 0 0.25rem;
+}
+
+.inlinecode {
+  background-color: #0001;
+  padding: 1px 0.25rem;
+  border-radius: 4px;
+  margin: 0 0.25rem;
 }
 
 .example {
