@@ -7,7 +7,7 @@
 import fs from 'fs'
 import path from 'path'
 import { set, isEmpty, uniq } from 'lodash'
-import { modulePath } from '../../../util'
+import modulePath from './module-resolver'
 import Entry from './entry'
 import Rule from './rule'
 import Plugin from './plugin'

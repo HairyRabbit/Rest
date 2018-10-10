@@ -1,5 +1,5 @@
 /**
- * module-path
+ * module-resolver
  *
  * safe resolve module path
  *

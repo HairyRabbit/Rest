@@ -28,6 +28,7 @@ type Props = {
   center?: boolean,
   fill?: boolean,
   size?: string,
+  auto?: boolean,
   list?: boolean,
   grid?: boolean | string,
   classNames?: {
@@ -58,6 +59,7 @@ function Layout({ gutter,
                   reverse,
                   vertical,
                   size,
+                  auto,
                   align,
                   center,
                   fill,
@@ -133,7 +135,7 @@ function Layout({ gutter,
     ...(styles.col && styles.col || {})
   })
 
-  const [RowWrapper, ColWrapper] = list
+  const [ RowWrapper, ColWrapper ] = list
         ? [makeWrapper('ul'), makeWrapper('li')]
         : wrappers
         ? [wrappers.row || makeWrapper(), wrappers.col || makeWrapper]

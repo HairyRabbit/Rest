@@ -1,8 +1,6 @@
-/**
- * prism.js default theme for JavaScript, CSS and HTML
- * Based on dabblet (http://dabblet.com)
- * @author Lea Verou
- */
+body {
+  color: #555;
+}
 
 code[class*="language-"],
 pre[class*="language-"] {

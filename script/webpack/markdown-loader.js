@@ -123,7 +123,6 @@ function createTransformer({ components, preload = '' } = {}) {
       }
 
       case 'link': {
-        console.log(node)
         const { title, url, children } = node
         const child = children.map(c => transform(c, { shouldEscape: true }))
         return comps.link(url, child.join('\n'))
