@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npx cross-env NODE_ENV=test npx mocha -r @babel/register -r jsdom-global/register -r esm -r script/mock/index.js component util script --recursive",
+    "test:one": "npx cross-env NODE_ENV=test npx mocha -r @babel/register -r jsdom-global/register -r esm -r script/mock/index.js --recursive",
     "test:debug": "npx cross-env NODE_ENV=test npx mocha -r @babel/register -r jsdom-global/register -r esm -r script/mock/index.js component util script --recursive",
     "type": "npx flow check",
     "test:website": "npx cross-env NODE_ENV=test npx mocha -r @babel/register -r jsdom-global/register -r esm -r script/mock/index.js website --recursive",

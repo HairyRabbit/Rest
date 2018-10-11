@@ -3,6 +3,8 @@ import { Layout, Avatar } from '~component'
 import { avatar } from '@rabbitcc/faker'
 import style from '../../style/typo.css';
 import Image from '../../asserts/ComponentLayout.png'
+import Wing from '../../asserts/Wing.svg'
+import Header from '../../component/header'
 
 const placeholderStyle = {
   padding: '0.5rem 1rem',
@@ -119,6 +121,7 @@ const containerStyle = {
 
 
 ## 简单使用
+
 
 Layout 继承了 Bootstrap 的简单易用，根据使用频繁程度，默认情况下，Layout 下的元素是等宽的：
 
@@ -289,7 +292,7 @@ Layout 继承了 Bootstrap 的简单易用，根据使用频繁程度，默认�
 </Layout>
 
 
-可以使用占位符`..`来改变这一模式：
+可以使用重复标记`..`来改变这一模式，`n..`与`..n`都属于合法标记，并可多次使用：
 
 ```jsx
 <Layout size="1..:2">
@@ -302,6 +305,64 @@ Layout 继承了 Bootstrap 的简单易用，根据使用频繁程度，默认�
 ```
 
 更多例子：
+
+<Layout center size="1">
+<figure style={{margin: '0'}}>
+<div style={{border:'1px solid #eee',padding:'1rem',boxShadow:'0 6px 20px -16px #000'}}>
+<Layout vertical>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      1.. : 2
+    </Layout>
+    <Layout size="1..:2">
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>2</div>
+    </Layout>
+  </Layout>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      ..1 : 2 : 1..
+    </Layout>
+    <Layout size="..1:2:1..">
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>2</div>
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>1</div>
+    </Layout>
+  </Layout>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      1.. : ...2
+    </Layout>
+    <Layout size="1..:...2">
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>2</div>
+      <div style={placeholderStyle}>2</div>
+      <div style={placeholderStyle}>2</div>
+    </Layout>
+  </Layout>
+  <Layout align=",center" size="8rem:1">
+    <Layout align="end,center" size="0">
+      1 : 2.. : 1
+    </Layout>
+    <Layout size="1:2..:1">
+      <div style={placeholderStyle}>1</div>
+      <div style={placeholderStyle}>2</div>
+      <div style={placeholderStyle}>2</div>
+      <div style={placeholderStyle}>2</div>
+      <div style={placeholderStyle}>1</div>
+    </Layout>
+  </Layout>
+</Layout>
+</div>
+  <figcaption style={{fontSize:'12px',color:'#aaa',paddingTop:'0.5rem',textAlign:'center'}}>size 重复模式</figcaption>
+</figure>
+</Layout>
 
 
 ## 对齐方式

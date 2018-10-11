@@ -6,6 +6,7 @@
  * @flow
  */
 
+import sizeRepeat from './size-repeat-resolver'
 import style from './style.css'
 
 
@@ -16,7 +17,7 @@ function parseSize(size: ?string, max?: number): Array<string | { flex: string }
 
   if(process.env.LAYOUT_SIZE_PATTERN_ENABLE &&
      "0" !== process.env.LAYOUT_SIZE_PATTERN_ENABLE) {
-    return size.split(':')
+    return sizeRepeat(size, max).map(transform)
   }
 
   return size.split(':').map(transform)

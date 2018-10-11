@@ -76,6 +76,7 @@ function Layout({ gutter,
                   wrappers,
                   ...props }: Props = {}): React.Node {
   const child = React.Children.toArray(children)
+  const len = child.length
   const [ gutterFlag, gutterSize ] = parseGutter(nogutter ? false : gutter || 'md')
   const [ rowGutter, colGutter ] = gutterFlag
         ? (gutterSize
@@ -96,7 +97,7 @@ function Layout({ gutter,
            : [])
 
   // if(process.env.LAYOUT_GRID)
-  const sizes = grid ? parseGridSize(size) : parseSize(size)
+  const sizes = grid ? parseGridSize(size) : parseSize(size, len)
 
   const rowClass = cs(
     vertical ? style.vertical : style.base,
@@ -119,7 +120,7 @@ function Layout({ gutter,
   const colClass = idx => cs(
     style.col,
     !size
-      ? (1 === child.length
+      ? (1 === len
            ? style.basic
            : style.grow)
       : ('string' === typeof sizes[idx]
