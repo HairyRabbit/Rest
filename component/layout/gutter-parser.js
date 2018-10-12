@@ -40,11 +40,9 @@ function parseGutter(gutter: mixed): GutterParseResult {
        * only check at development mode
        */
       if('production' !== process.env.NODE_ENV) {
-        declare var CSSStyleValue: any
-
         if(window.CSSStyleValue) {
           try {
-            window.CSSStyleValue.parse('width', String(gutter))
+            window.CSSStyleValue.parse('padding', String(gutter))
           } catch(e) {
             throw new Error(e)
           }

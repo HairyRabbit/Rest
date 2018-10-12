@@ -21,6 +21,7 @@ import computeStyle from './style-computer'
 
 type Props = {
   gutter?: boolean | string,
+  cgutter?: boolean | string,
   nogutter?: boolean,
   vertical?: boolean,
   reverse?: boolean,
@@ -51,10 +52,11 @@ type Props = {
   },
   children?: React.Node,
   className?: string,
-  style?: Object
+  style?: { string: string }
 }
 
 function Layout({ gutter,
+                  cgutter,
                   nogutter,
                   reverse,
                   vertical,
@@ -121,7 +123,7 @@ function Layout({ gutter,
     style.col,
     !size
       ? (1 === len
-           ? style.basic
+           ? style.auto
            : style.grow)
       : ('string' === typeof sizes[idx]
            ? sizes[idx]

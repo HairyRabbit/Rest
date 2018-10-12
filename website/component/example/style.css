@@ -1,0 +1,18 @@
+/**
+ * <Example />
+ *
+ * example view styles
+ */
+
+.main {
+  padding: 1rem;
+  border: 1px solid #eee;
+  box-shadow: 0 6px 20px -16px #000;
+}
+
+.text {
+  padding-top: 0.5rem;
+  font-size: 12px;
+  text-align: center;
+  color: #aaa;
+}

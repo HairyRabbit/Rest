@@ -15,6 +15,10 @@ import style from './style.css'
 function parseSize(size: ?string, max?: number): Array<string | { flex: string }> {
   if(!size) return []
 
+  /**
+   * parse repeat pattern, should set env variable
+   * "LAYOUT_SIZE_PATTERN_ENABLE" to non zero value
+   */
   if(process.env.LAYOUT_SIZE_PATTERN_ENABLE &&
      "0" !== process.env.LAYOUT_SIZE_PATTERN_ENABLE) {
     return sizeRepeat(size, max).map(transform)
@@ -27,14 +31,43 @@ function transform(value: string): string | { flex: string } {
   const num = Number(value)
 
   if(isNaN(num)) {
-    if('auto' === value) return style.basic
+    if('auto' === value) return style.auto
+
+    /**
+     * check property "flex-basis" with "CSSStyleValue.parse"
+     * only apply at development mode
+     */
+    if('production' !== process.env.NODE_ENV) {
+      if(window.CSSStyleValue) {
+        try {
+          window.CSSStyleValue.parse('flex-basis', String(value))
+        } catch(e) {
+          throw new Error(e)
+        }
+      }
+    }
     return { flex: `0 ${value}` }
   }
 
   switch(num) {
-    case 0: return style.basic
+    case 0: return style.auto
     case 1: return style.grow
-    default: return { flex: `${num}` }
+    default: {
+      /**
+       * check property "flex-grow" with "CSSStyleValue.parse"
+       * only apply at development mode
+       */
+      if('production' !== process.env.NODE_ENV) {
+        if(window.CSSStyleValue) {
+          try {
+            window.CSSStyleValue.parse('flex-grow', String(value))
+          } catch(e) {
+            throw new Error(e)
+          }
+        }
+      }
+      return { flex: value }
+    }
   }
 }
 
@@ -51,11 +84,11 @@ import assert from 'assert'
 
 describe('Component <Layout /> Function parseSize()', () => {
   style.grow = 'grow'
-  style.basic = 'basic'
+  style.auto = 'auto'
 
   describe(`Function transform()`, () => {
-    it('should return "style.basic"', () => {
-      assert.deepStrictEqual(style.basic, transform('auto'))
+    it('should return "style.auto"', () => {
+      assert.deepStrictEqual(style.auto, transform('auto'))
     })
 
     it('should return custom "flex-basis"', () => {
@@ -63,7 +96,7 @@ describe('Component <Layout /> Function parseSize()', () => {
     })
 
     it('should return buildin style', () => {
-      assert.deepStrictEqual(style.basic, transform('0'))
+      assert.deepStrictEqual(style.auto, transform('0'))
       assert.deepStrictEqual(style.grow, transform('1'))
     })
 
@@ -74,14 +107,14 @@ describe('Component <Layout /> Function parseSize()', () => {
 
   it('should return buildin style', () => {
     assert.deepStrictEqual([style.grow], parseSize('1'))
-    assert.deepStrictEqual([style.basic], parseSize('0'))
+    assert.deepStrictEqual([style.auto], parseSize('0'))
   })
 
   it('should return custom flex-grow value', () => {
     assert.deepStrictEqual([{ flex: '2' }], parseSize('2'))
   })
 
-  it('should return custom flex-basic value', () => {
+  it('should return custom flex-auto value', () => {
     assert.deepStrictEqual([{ flex: '0 2rem' }], parseSize('2rem'))
   })
 })

@@ -79,7 +79,7 @@ import assert from 'assert'
 
 describe('Component <Layout /> Function parseSize()', () => {
   style.grow = 'grow'
-  style.basic = 'basic'
+  style.auto = 'auto'
 
   it('should return equal width', () => {
     assert.deepStrictEqual([style.grow], parseGridSize('0'))

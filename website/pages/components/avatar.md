@@ -1,7 +1,9 @@
 ```code
 import { Avatar } from '~component'
 import { avatar } from '@rabbitcc/faker'
-import style from '../../style/typo.css';
+import style from '../../style/typo.css'
+import Header from '../../component/header'
+import Example from '../../component/example'
 ```
 
 # <Avatar />

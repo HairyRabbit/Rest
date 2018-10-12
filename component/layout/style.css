@@ -37,7 +37,7 @@ $gutter: (
   flex: 1;
 }
 
-.basic {
+.auto {
   flex: 0 auto;
 }
 

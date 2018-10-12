@@ -3,8 +3,8 @@ import { Layout, Avatar } from '~component'
 import { avatar } from '@rabbitcc/faker'
 import style from '../../style/typo.css';
 import Image from '../../asserts/ComponentLayout.png'
-import Wing from '../../asserts/Wing.svg'
 import Header from '../../component/header'
+import Example from '../../component/example'
 
 const placeholderStyle = {
   padding: '0.5rem 1rem',
@@ -95,9 +95,7 @@ const containerStyle = {
 </Layout>
 ```
 
-<Layout center>
-<figure style={{margin: '0'}}>
-<div style={{border:'1px solid #eee',padding:'1rem',boxShadow:'0 6px 20px -16px #000'}}>
+<Example value="布局中常见的三栏布局">
   <Layout size="0:1">
     <Layout center fill>
       <Avatar value="https://avatars2.githubusercontent.com/u/5752902" />
@@ -113,10 +111,7 @@ const containerStyle = {
     </Layout>
     <div style={{fontSize:'12px',color:'#aaa'}}>Replay</div>
   </Layout>
-</div>
-  <figcaption style={{fontSize:'12px',color:'#aaa',paddingTop:'0.5rem',textAlign:'center'}}>布局中常见的三栏布局</figcaption>
-</figure>
-</Layout>
+</Example>
 
 
 
@@ -133,18 +128,13 @@ Layout 继承了 Bootstrap 的简单易用，根据使用频繁程度，默认�
 </Layout>
 ```
 
-<Layout center>
-<figure style={{margin: '0'}}>
-<div style={{border:'1px solid #eee',padding:'1rem',boxShadow:'0 6px 20px -16px #000'}}>
-<Layout>
-  <div style={placeholderStyle}>COLUMN</div>
-  <div style={placeholderStyle}>COLUMN</div>
-  <div style={placeholderStyle}>COLUMN</div>
-</Layout>
-</div>
-  <figcaption style={{fontSize:'12px',color:'#aaa',paddingTop:'0.5rem',textAlign:'center'}}>简单使用 生成等宽栅栏</figcaption>
-</figure>
-</Layout>
+<Example value="生成等宽栅栏">
+  <Layout>
+    <div style={placeholderStyle}>COLUMN</div>
+    <div style={placeholderStyle}>COLUMN</div>
+    <div style={placeholderStyle}>COLUMN</div>
+  </Layout>
+</Example>
 
 
 ## 栅栏宽度
@@ -161,55 +151,51 @@ Layout 继承了 Bootstrap 的简单易用，根据使用频繁程度，默认�
 
 更多例子：
 
-<Layout center size="1">
-<figure style={{margin: '0'}}>
-<div style={{border:'1px solid #eee',padding:'1rem',boxShadow:'0 6px 20px -16px #000'}}>
-<Layout vertical>
-  <Layout align=",center" size="8rem:1">
-    <Layout align="end,center" size="0">
-      1:2:1
+<Example value="size 属性与栅栏宽度" size="1">
+  <Layout vertical>
+    <Layout align=",center" size="8rem:1">
+      <Layout align="end,center" size="0">
+        1:2:1
+      </Layout>
+      <Layout size="1:2:1">
+        <div style={placeholderStyle}>1</div>
+        <div style={placeholderStyle}>2</div>
+        <div style={placeholderStyle}>1</div>
+      </Layout>
     </Layout>
-    <Layout size="1:2:1">
-      <div style={placeholderStyle}>1</div>
-      <div style={placeholderStyle}>2</div>
-      <div style={placeholderStyle}>1</div>
+    <Layout align=",center" size="8rem:1">
+      <Layout align="end,center" size="0">
+        2:3:2
+      </Layout>
+      <Layout size="2:3:2">
+        <div style={placeholderStyle}>2</div>
+        <div style={placeholderStyle}>3</div>
+        <div style={placeholderStyle}>2</div>
+      </Layout>
+    </Layout>
+    <Layout align=",center" size="8rem:1">
+      <Layout align="end,center" size="0">
+        1:1:1:1
+      </Layout>
+      <Layout size="1:1:1:1">
+        <div style={placeholderStyle}>1</div>
+        <div style={placeholderStyle}>1</div>
+        <div style={placeholderStyle}>1</div>
+        <div style={placeholderStyle}>1</div>
+      </Layout>
+    </Layout>
+    <Layout align=",center" size="8rem:1">
+      <Layout align="end,center" size="0">
+        1:10rem
+      </Layout>
+      <Layout size="1:10rem">
+        <div style={placeholderStyle}>1</div>
+        <div style={placeholderStyle}>10rem</div>
+      </Layout>
     </Layout>
   </Layout>
-  <Layout align=",center" size="8rem:1">
-    <Layout align="end,center" size="0">
-      2:3:2
-    </Layout>
-    <Layout size="2:3:2">
-      <div style={placeholderStyle}>2</div>
-      <div style={placeholderStyle}>3</div>
-      <div style={placeholderStyle}>2</div>
-    </Layout>
-  </Layout>
-  <Layout align=",center" size="8rem:1">
-    <Layout align="end,center" size="0">
-      1:1:1:1
-    </Layout>
-    <Layout size="1:1:1:1">
-      <div style={placeholderStyle}>1</div>
-      <div style={placeholderStyle}>1</div>
-      <div style={placeholderStyle}>1</div>
-      <div style={placeholderStyle}>1</div>
-    </Layout>
-  </Layout>
-  <Layout align=",center" size="8rem:1">
-    <Layout align="end,center" size="0">
-      1:10rem
-    </Layout>
-    <Layout size="1:10rem">
-      <div style={placeholderStyle}>1</div>
-      <div style={placeholderStyle}>10rem</div>
-    </Layout>
-  </Layout>
-</Layout>
-</div>
-  <figcaption style={{fontSize:'12px',color:'#aaa',paddingTop:'0.5rem',textAlign:'center'}}>size 属性与栅栏宽度</figcaption>
-</figure>
-</Layout>
+</Example>
+
 
 ### 设置 auto 值
 
