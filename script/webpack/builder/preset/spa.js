@@ -69,10 +69,10 @@ function preset(builder: Builder): Builder {
         }
       }
     })
-    .setDev('devServer.host', '0.0.0.0')
-    .setDev('devServer.port', '23333')
-    .setDev('devServer.publicPath', '/')
-    .setDev('devServer.historyApiFallback', true)
+    // .setDev('devServer.host', '0.0.0.0')
+    // .setDev('devServer.port', '23333')
+    // .setDev('devServer.publicPath', '/')
+    // .setDev('devServer.historyApiFallback', true)
 
   if(gcssEntry) {
     builder
@@ -102,6 +102,7 @@ function preset(builder: Builder): Builder {
 
 /// export
 
+export const install = 'server'
 export default preset
 
 

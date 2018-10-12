@@ -1,6 +1,8 @@
 /**
  * builder
  *
+ * powerful webpack builder
+ *
  * @flow
  */
 
@@ -22,8 +24,12 @@ import type {
 /// code
 
 type Options = {
+  debug?: boolean,
+  logger?: Function,
   disableGuess?: boolean
 }
+
+const presetDir = path.resolve(__dirname, `./preset`)
 
 class Builder {
   webpackOptions: string | WebpackOptions
@@ -34,18 +40,20 @@ class Builder {
   entry: Entry
   plugin: Plugin
   rule: Rule
+  presets: { [name: string]: string }
 
   constructor(webpackOptions: webpackOptions, options: Options) {
+    this.options = options || {}
     this.webpackOptions = 'string' === typeof webpackOptions
       ? {}
       : (webpackOptions || {})
-    this.options = options || {}
     this.mode = this.webpackOptions.mode || this.guessMode()
     this.context = undefined
     this.output = undefined
     this.entry = new Entry(this.webpackOptions.entry)
     this.plugin = new Plugin(this.webpackOptions.plugin)
     this.rule = new Rule(this.webpackOptions.module && this.webpackOptions.module.rules)
+    this.presets = []
 
     this
       .export(this, [
@@ -102,17 +110,37 @@ class Builder {
       this.guessContext()
     }
 
+    /**
+     * if "webpackOptions" was string, call preset install
+     */
     if('string' === typeof webpackOptions) {
-      uniq(webpackOptions.split('-')).forEach(preset => {
-        const name = modulePath(
-          path.resolve(__dirname, `./preset/${preset}`)
-        ) || modulePath(preset)
-
-        if(!name) throw new Error(`Preset path not found`)
-
-        require(name).default(this)
-      })
+      this.install(webpackOptions)
     }
+  }
+
+  /**
+   * install preset
+   */
+  install(input: string) {
+    uniq(input.split(',')).forEach(preset => {
+      if(this.presets[preset]) return
+
+      /**
+       * resolve script path, order by:
+       *   1. webpack/builder/preset
+       *   2. node_modules/preset
+       */
+      const name = modulePath(path.resolve(presetDir, preset))
+            || modulePath(preset)
+      if(!name) throw new Error(`Preset not found, "${name}"`)
+
+      const { default: call, install, dependencies } = require(name)
+      this.presets[preset] = dependencies
+      install && this.install(install)
+      call(this)
+    })
+
+    return this
   }
 
   setMode(mode: WebpackMode) {
