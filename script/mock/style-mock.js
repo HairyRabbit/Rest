@@ -15,7 +15,7 @@ function register(module, filename) {
   }
 }
 
-function mock() {
+function mock(): { string: string } {
   return {}
 }
 

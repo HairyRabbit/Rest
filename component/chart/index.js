@@ -17,7 +17,7 @@ import style from './style.css'
 
 type Props = {
   className?: string,
-  container?: React.ElementRef,
+  container?: React.ElementRef<*>,
   children?: React.Node
 }
 

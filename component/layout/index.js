@@ -154,11 +154,11 @@ function Layout({ gutter,
     <RowWrapper className={rowClass}
                 style={rowStyle}
                 {...props}>
-      {child.map((child, idx) => (
+      {child.map((c, idx) => (
         <ColWrapper className={colClass(idx % sizes.length)}
                     style={colStyle(idx % sizes.length)}
                     key={idx}>
-          {child}
+          {c}
         </ColWrapper>
       ))}
     </RowWrapper>

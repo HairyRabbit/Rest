@@ -74,7 +74,7 @@ function sizeRepeat(input: string, max: number): Array<string> {
     })
 
     if(0 !== num - int) {
-      acc.sort((a, b) => b.greedy - a.greedy)
+      acc.sort((a, b) => Number(b.greedy) - Number(a.greedy))
       for(let i = 0; i < rest - rep * int; i++) {
         ++acc[i].span
       }

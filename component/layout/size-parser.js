@@ -12,7 +12,7 @@ import style from './style.css'
 
 /// code
 
-function parseSize(size: ?string, max?: number): Array<string | { flex: string }> {
+function parseSize(size: ?string, max: number): Array<string | { flex: string }> {
   if(!size) return []
 
   /**
@@ -106,15 +106,15 @@ describe('Component <Layout /> Function parseSize()', () => {
   })
 
   it('should return buildin style', () => {
-    assert.deepStrictEqual([style.grow], parseSize('1'))
-    assert.deepStrictEqual([style.auto], parseSize('0'))
+    assert.deepStrictEqual([style.grow], parseSize('1', 1))
+    assert.deepStrictEqual([style.auto], parseSize('0', 1))
   })
 
   it('should return custom flex-grow value', () => {
-    assert.deepStrictEqual([{ flex: '2' }], parseSize('2'))
+    assert.deepStrictEqual([{ flex: '2' }], parseSize('2', 1))
   })
 
   it('should return custom flex-auto value', () => {
-    assert.deepStrictEqual([{ flex: '0 2rem' }], parseSize('2rem'))
+    assert.deepStrictEqual([{ flex: '0 2rem' }], parseSize('2rem', 1))
   })
 })

@@ -1,17 +1,20 @@
 /**
- * object type
+ * object-type
  *
+ * get object tags for type, used for debug or throw message,
+ * e.g. [object Array] => array
+ * 
  * @flow
  */
 
 /**
  * @pure
  */
-function objectType(input: Object): string {
+function objectType(input: mixed): string {
   if('object' !== typeof input) {
     throw new Error(
       `The expected was not a object "${typeof input}", \
-maybe you should use typeof ${input} before call this function`
+maybe you should use typeof ${String(input)} before call this function`
     )
   }
 

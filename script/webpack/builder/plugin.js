@@ -6,7 +6,7 @@
 
 import { isEmpty, isMap, isPlainObject } from 'lodash'
 import parse from './plugin-parser'
-import type { Plugin as WebpackPlugin } from './webpack-options-type'
+import type { Plugins as WebpackPlugin } from './webpack-options-type'
 
 
 /// code
