@@ -15,7 +15,7 @@ import * as React from 'react'
 type Props = Object
 
 function withMount(mount: Function, unmount?: Function): * {
-  return function withMount1(Component: React.Component): * {
+  return function withMount1(Component: React.ComponentType<*>): * {
     if('production' !== process.env.NODE_ENV) {
       if(!mount || 'function' !== typeof mount) {
         throw new Error(
@@ -25,7 +25,7 @@ function withMount(mount: Function, unmount?: Function): * {
     }
 
     return class withMountWrappedComponent extends React.PureComponent<Props> {
-      container: React.ElementRef<HTMLElement>
+      container: React.ElementRef<*>
       ret: any
 
       constructor(props: Props) {
