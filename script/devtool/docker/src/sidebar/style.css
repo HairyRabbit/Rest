@@ -5,5 +5,45 @@
  */
 
 .main {
-  background-color: #0002;
+  height: 100%;
+  padding: 0.1px;
+  background-color: white;
+  box-shadow: 6px 0px 20px -16px #000;
+}
+
+.link {
+  composes: link from '~style/reset.css';
+  display: block;
+  padding: 0.25rem 2rem;
+  border-left: 3px solid transparent;
+  font-size: 14px;
+
+  &.active {
+    border-left-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+}
+
+.icon {
+  width: 1rem;
+  height: 1rem;
+  line-height: 0;
+  color: #555;
+
+  .active & {
+    color: var(--primary-color);
+  }
+}
+
+.logo {
+  padding: 2rem;
+  color: var(--primary-color);
+
+  & svg {
+    width: 2rem;
+    height: 2rem;
+
+    fill: currentColor;
+    stroke: currentColor;
+  }
 }

@@ -69,10 +69,6 @@ function preset(builder: Builder): Builder {
         }
       }
     })
-    // .setDev('devServer.host', '0.0.0.0')
-    // .setDev('devServer.port', '23333')
-    // .setDev('devServer.publicPath', '/')
-    // .setDev('devServer.historyApiFallback', true)
 
   if(gcssEntry) {
     builder
@@ -88,7 +84,7 @@ function preset(builder: Builder): Builder {
       .setRuleLoader('gcss', 'sass-loader')
       .setRuleLoaderOption('gcss', 'style-loader', 'sourceMap', true)
       .setRuleLoaderOption('gcss', 'css-loader', 'sourceMap', true)
-      .setRuleLoaderOption('gcss', 'css-loader', 'importLoaders', 1)
+      .setRuleLoaderOption('gcss', 'css-loader', 'importLoaders', 2)
       .setRuleLoaderOptionDev('gcss', 'css-loader', 'localIdentName', '[local]-[hash:base64:5]')
       .setRuleLoaderOption('gcss', 'postcss-loader', 'sourceMap', true)
       .setRuleLoaderOption('gcss', 'postcss-loader', 'options', {})
