@@ -1,0 +1,40 @@
+/**
+ * <Image />
+ *
+ * styles
+ */
+
+.main {
+  background-color: white;
+  box-shadow: 0px 6px 20px -16px #000;
+}
+
+.card {
+  & > * {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+  }
+}
+
+.avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.header {
+  composes: header from '~style/reset.css';
+  font-size: 1.5rem;
+  font-weight: lighter;
+}
+
+.name {
+  composes: link from '~style/reset.css';
+}
+
+.date {
+  font-size: 12px;
+  color: #aaa;
+}

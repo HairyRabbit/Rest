@@ -38,6 +38,14 @@ const WebpackBuilder = Loadable({
   loading: () => null
 })
 
+const DevtoolDocker = Loadable({
+  loader: () => import(
+    /* webpackChunkName: "devtool-docker" */
+    '../script/devtool/docker/src/index.js'
+  ),
+  loading: () => null
+})
+
 import Graph from '~component/chart/graph'
 import Title from '~component/chart/title'
 
@@ -98,6 +106,7 @@ function Root(): React.Node {
           <Route path="/component/avatar" component={ComponentAvatar} />
           <Route path="/component/layout" component={ComponentLayout} />
           <Route path="/webpack/builder" component={WebpackBuilder} />
+          <Route paht="/devtool/docker" component={DevtoolDocker} />
           <Route component={Demo}/>
         </Switch>
       </BrowserRouter>

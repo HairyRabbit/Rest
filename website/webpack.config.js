@@ -10,7 +10,7 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
 import { WebpackBundleSizeAnalyzerPlugin } from 'webpack-bundle-size-analyzer'
 import BundleAnalyzePlugin from '../script/webpack/bundle-analyze-plugin'
 
-export default Builder('spa', {
+export default Builder('icon,spa', {
   gcssEntry: [
     path.resolve(__dirname, '../style/main.css'),
     path.resolve(__dirname, 'style.css'),
@@ -52,8 +52,12 @@ export default Builder('spa', {
     }
   })
   .setRuleTypes('img', ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])
+  .setRuleOption('img', 'include', path.resolve(__dirname, 'assert'))
+  .setRuleOption('icon', 'exclude', path.resolve(__dirname, 'assert'))
   .set('resolve.alias.~component', path.resolve('component'))
   .set('resolve.alias.~style', path.resolve('style'))
+  .set('resolve.alias.@style', path.resolve('style'))
+  .set('resolve.alias.~util', path.resolve('util'))
   .setPlugin('env', webpack.DefinePlugin, {
     'process.env.LAYOUT_SIZE_PATTERN_ENABLE': JSON.stringify('1')
   })

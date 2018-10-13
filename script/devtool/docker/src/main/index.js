@@ -13,7 +13,8 @@ import { Layout } from '~component'
 import style from './style.css'
 import Sidebar from '../sidebar'
 import Dashboard from '../dashboard'
-import Container from '~/container'
+import Image from '../image'
+import Container from '../container'
 
 function Main(): React.Node {
   return (
@@ -23,6 +24,7 @@ function Main(): React.Node {
       <div className={style.main}>
         <Switch>
           <Route path="/" component={Dashboard} exact />
+          <Route path="/image" component={Image} exact />
           <Route path="/container" component={Container} exact />
           <Route component={Dashboard} />
         </Switch>

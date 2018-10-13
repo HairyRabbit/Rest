@@ -11,12 +11,12 @@
     "type": "npx flow check",
     "test:website": "npx cross-env NODE_ENV=test npx mocha -r @babel/register -r jsdom-global/register -r esm -r script/mock/index.js website --recursive",
     "prebuild:website": "rm -rf docs/*",
-    "start:website": "npx cross-env NODE_ENV=development npx webpack-dev-server -r @babel/register -r esm --config website/webpack.config.js",
+    "start:website": "npx cross-env NODE_ENV=development npx webpack-dev-server --hot -r @babel/register -r esm --config website/webpack.config.js",
     "build:website": "npx cross-env NODE_ENV=production npx webpack -r @babel/register -r esm --config website/webpack.config.js",
     "postbuild:website": "cp CNAME docs/ & cp docs/index.html docs/404.html & touch docs/.nojekyll",
     "prestart:scaffold": "npx cross-env NODE_ENV=development npx webpack -r @babel/register -r esm --config scaffold/webpack.config.js",
     "start:scaffold": "start npx cross-env NODE_ENV=development npx electron ./scaffold/build && start npx webpack-dev-server -r @babel/register -r esm --config scaffold/webpack.config.js",
-    "start:devtool:docker": "npx cross-env NODE_ENV=development npx webpack-dev-server -r @babel/register -r esm --config script/devtool/docker/webpack.config.js",
+    "start:devtool:docker": "npx cross-env NODE_ENV=development npx webpack-dev-server --hot -r @babel/register -r esm --config script/devtool/docker/webpack.config.js",
     "build:devtool:docker": "npx cross-env NODE_ENV=development npx webpack -r @babel/register -r esm --config script/devtool/docker/webpack.config.js"
   },
   "repository": {
@@ -83,7 +83,7 @@
     "postcss-preset-env": "^6.1.0",
     "power-assert": "^1.6.0",
     "prismjs": "^1.15.0",
-    "react-hot-loader": "^4.0.0",
+    "react-hot-loader": "^4.3.11",
     "react-loadable": "^5.5.0",
     "react-svg-loader": "^2.1.0",
     "remark": "^9.0.0",

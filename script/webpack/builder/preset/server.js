@@ -23,6 +23,7 @@ function server(builder: Builder): Builder {
     .setDev('devServer.port', serverPort)
     .setDev('devServer.publicPath', '/')
     .setDev('devServer.historyApiFallback', true)
+    .setDev('devServer.hot', true)
 
   return builder
 }

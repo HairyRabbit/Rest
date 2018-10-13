@@ -14,6 +14,10 @@ export default Builder('spa,icon', {
 })
   .setContext(__dirname)
   .setEntryEntry(path.resolve(__dirname, 'src/boot.js'), 'main')
+  .set('devServer.proxy./api', {
+    target: 'http://localhost:2375',
+    pathRewrite: { ['^/api']: '' }
+  })
   .set('resolve.alias.~', path.resolve(__dirname, 'src'))
   .set('resolve.alias.~util', path.resolve(__dirname, '../../../util'))
   .set('resolve.alias.~component', path.resolve(__dirname, '../../../component'))
