@@ -17,7 +17,8 @@
     "prestart:scaffold": "npx cross-env NODE_ENV=development npx webpack -r @babel/register -r esm --config scaffold/webpack.config.js",
     "start:scaffold": "start npx cross-env NODE_ENV=development npx electron ./scaffold/build && start npx webpack-dev-server -r @babel/register -r esm --config scaffold/webpack.config.js",
     "start:devtool:docker": "npx cross-env NODE_ENV=development npx webpack-dev-server --hot -r @babel/register -r esm --config script/devtool/docker/webpack.config.js",
-    "build:devtool:docker": "npx cross-env NODE_ENV=development npx webpack -r @babel/register -r esm --config script/devtool/docker/webpack.config.js"
+    "build:devtool:docker": "npx cross-env NODE_ENV=development npx webpack -r @babel/register -r esm --config script/devtool/docker/webpack.config.js",
+    "build:lib": "npx cross-env NODE_ENV=production npx webpack -r @babel/register -r esm --config script/webpack/builder/webpack.config.js"
   },
   "repository": {
     "type": "git",

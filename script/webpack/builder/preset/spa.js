@@ -28,8 +28,6 @@ function preset(builder: Builder): Builder {
     .set('output.devtoolModuleFilenameTemplate', smPathFmt)
     .setDev('devtool', 'inline-source-map')
     .setProd('devtool', 'hidden-source-map')
-    .setRuleLoader('js', 'babel-loader')
-    .setRuleLoaderOption('js', 'babel-loader', 'cacheDirectory', true)
     .setRuleLoaderDev('css', 'style-loader')
     .setRuleLoaderProd('css', 'style-loader', {
       name: MiniCssExtractPlugin.loader
@@ -98,7 +96,7 @@ function preset(builder: Builder): Builder {
 
 /// export
 
-export const install = 'server'
+export const install = 'babel,server'
 export default preset
 
 

@@ -132,7 +132,7 @@ class Builder {
        */
       const name = modulePath(path.resolve(presetDir, preset))
             || modulePath(preset)
-      if(!name) throw new Error(`Preset not found, "${name}"`)
+      if(!name) throw new Error(`Preset not found, "${preset}"`)
 
       const { default: call, install, dependencies } = require(name)
       this.presets[preset] = dependencies
