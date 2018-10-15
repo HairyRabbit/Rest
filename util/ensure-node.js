@@ -8,7 +8,7 @@
 
 /// code
 
-function ensureNode(id: string, parent?: HTMLElement = document.body, tag? = 'div'): HTMLElement {
+function ensureNode(id: string, parent?: HTMLElement = document.body, tag?: string = 'div'): HTMLElement {
   const node = document.getElementById(id)
   if(node) return node
 
