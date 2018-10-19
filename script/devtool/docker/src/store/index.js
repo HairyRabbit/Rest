@@ -15,11 +15,11 @@ const enhancer = 'production' !== process.env.NODE_ENV
       ? (window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
          ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({})
          : compose)(
-        // applyMiddleware(
-        //   createLogger({
-        //     collapsed: true
-        //   })
-        // )
+        applyMiddleware(
+          //   createLogger({
+          //     collapsed: true
+          //   })
+        )
       )
       : applyMiddleware()
 
