@@ -8,9 +8,6 @@
 
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import HtmlWebpackTemplate from 'html-webpack-template'
-import MiniCssExtractPlugin from 'mini-css-extract-plugin'
-import TerserPlugin from 'terser-webpack-plugin'
-import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin'
 import Builder from '../builder'
 import smPathFmt from '../sourcemap-path-formatter'
 
@@ -33,24 +30,6 @@ function preset(builder: Builder): Builder {
       inject: false,
       mobile: true
     })
-    .setPluginProd('css', MiniCssExtractPlugin, {
-      filename: '[name].[chunkhash].css'
-    })
-    .setPluginProd('jsmin', TerserPlugin, {
-      cache: true,
-      parallel: true,
-      sourceMap: true
-    })
-    .setPluginProd('cssmin', OptimizeCSSAssetsPlugin, {
-      sourceMap: true,
-      cssProcessorOptions: {
-        map: {
-          inline: false,
-          annotation: false
-        }
-      }
-    })
-
 
   return builder
 }

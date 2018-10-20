@@ -1,12 +1,14 @@
 ```code
 import { Avatar } from '~component'
 import { avatar } from '@rabbitcc/faker'
-import style from '../../../style/typo.css';
+import style from '../../../style/typo.css'
+import { Header } from '../../../component'
 ```
 
 # Builder
 
-一个简单易用的 Builder 用于快速构建 webpack 配置文件
+一个简单易用的 Builder 用于帮助你快速构建 webpack 配置文件。
+
 
 ## 基本用法
 
@@ -15,25 +17,42 @@ import style from '../../../style/typo.css';
  * webpack.config.js
  */
 
-import Builder from 'webpack-builder'
-
-export Builder()
-  .set('target', 'web')
-  .transform()
+export Builder().transform()
 ```
 
-Builder 提供一些工具方法来添加 entry、loader、plugin 等常用配置。这些方法大部分都有三个版本：
+`Builder` 提供一些工具方法来添加 `entry`、`loader`、`plugin` 等常用配置。这些方法大部分都有三个版本：
 
-  - set
-  - setDev
-  - setProd
+  - `set` - 设置属性，这里使用了 lodash.set，使得设置繁琐的复杂对象很方便
+  - `setDev` - 作用相同，但只在 mode 为 development 时起作用
+  - `setProd` - 与上楼作用相同，专用来设置产品环境
 
-set 忽略 mode；setDev 与 setProd 只会在对应环境下发挥作用， 例如：
+例如：
 
 ```js
 Builder()
+  .set('output.path', 'src')
   .setDev('output.filename', '[name].js')
   .setProd('output.filename', '[name].[contenthash].js')
+
+
+// when NODE_ENV === "development", transform to:
+
+{
+  output: {
+    path: 'src',
+    filename: '[name].js'
+  }
+}
+
+
+// when NODE_ENV === "production", transform to:
+
+{
+  output: {
+    path: 'src',
+    filename: '[name].[contenthash].js'
+  }
+}
 ```
 
 下面介绍的所有方法也都遵循这一规则。
@@ -41,23 +60,41 @@ Builder()
 同时 Builder 提供了一些预设，设置并修改这些预设可以方便的构建自己所需的功能。
 
 
-### 读取预设 Preset
+## 使用预设 Preset
 
 将预设名称作为第一个参数传入 Builder 即可：
 
 ```js
 Builder('spa')
-  .transform()
 ```
 
-可用的 Preset 目前只有：
+也可以混着来，以`,`分割，但要注意是顺序相关的：
 
-  - spa
+```js
+Builder('icon,spa')
+```
 
-其他类型的预设还在开发中。
+有一些已经写好的内建 Preset：
+
+  - `server` - WebpackDevServer 开发服务器相关配置
+  - `babel` - 主要是 babel-loader 的相关配置
+  - `style` - 样式相关配置
+  - `image` - 加载图片
+  - `icon` - 加载图标
+  - `spa` - 混合了 babel 与 style，并添加了一些更常用配置
 
 
-### 配置 Entry
+### 检查依赖是否安装
+
+每个 preset 都需要安装相关的依赖，比如 `babel` 依赖于 `babel-loader`, `@babel/core`, `@babel/preset-env` 等。那么在使用 `babel` 时，Builder 会检查相关的依赖是否已经安装，否则将给出一个警告。emm…… 或许也可以自动安装，笑。这个功能是默认开启的，关闭他可以将 `disableCheck` 设置为 `true`：
+
+```js
+Builder('spa', { disableCheck: true })
+```
+
+默认情况下会检查 `webpack`，`webpack-cli`。
+
+## 配置 Entry
 
 Entry 是应用程序的入口，在 webpack 中默认为 ./src/index.js。
 使用 setEntry 方法来设置 entry：
@@ -67,7 +104,7 @@ Builder()
   .setEntry('main', path.resolve('index.js'))
   .transform()
 
-// 转换为
+// transform to:
 
 {
   entry: {
@@ -87,7 +124,7 @@ Builder()
   .transform()
 
 
-// 转换为
+// transform to
 
 {
   entry: {
@@ -104,7 +141,7 @@ Builder()
 }
 ```
 
-### 配置 Loader
+## 配置 Loader
 
 Loader 是 webpack 核心功能，通过一系列的条件来加载不同类型的文件。
 
@@ -116,7 +153,7 @@ Builder()
   .transform()
 
 
-// 转换为
+// transform to
 
 {
   module: {
@@ -173,7 +210,7 @@ Builder()
   .transform()
 
 
-// 转换为
+// transform to
 
 {
   module: {
@@ -188,7 +225,7 @@ Builder()
 ```
 
 
-### 配置 Plugin
+## 配置 Plugin
 
 Plugin 也是 webpack 需要配置的必要属性，如最常见的 HtmlWebpackPlugin：
 

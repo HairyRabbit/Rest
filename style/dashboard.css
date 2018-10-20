@@ -2,11 +2,9 @@
  * dashboard global styles
  */
 
-$mount: #app;
-
 html,
 body,
-#{$mount} {
+#app {
   height: 100%;
   overflow-x: hidden;
 }

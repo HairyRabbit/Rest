@@ -1,7 +1,12 @@
 /**
  * style
  *
- * css resolver preset
+ * css resolver, features:
+ *
+ * 1. css modules by default, non-modules also works fine
+ * 2. sass parser and autoprefix by postcss
+ * 3. hmr
+ * 4. minify code at production mode
  *
  * @flow
  */
@@ -17,44 +22,19 @@ import Builder from '../'
 function preset(builder: Builder): Builder {
   const { gcssEntry } = builder.options
 
-  builder
-    .setRuleLoaderDev('css', 'style-loader')
-    .setRuleLoaderProd('css', 'style-loader', {
-      name: MiniCssExtractPlugin.loader
-    })
-    .setRuleLoader('css', 'css-loader')
-    .setRuleLoader('css', 'postcss-loader')
-    .setRuleLoader('css', 'sass-loader')
-
-  builder
-    .setRuleLoaderOption('css', 'style-loader', 'sourceMap', true)
-    .setRuleLoaderOption('css', 'css-loader', 'sourceMap', true)
-    .setRuleLoaderOption('css', 'postcss-loader', 'sourceMap', true)
-    .setRuleLoaderOption('css', 'sass-loader', 'sourceMap', true)
+  setupLoader(builder, 'css')
+  setupSourceMap(builder, 'css')
+  setupCss(builder, 'css')
+  setupPostcss(builder, 'css')
+  setupSass(builder, 'css')
 
   /**
    * setup css module
    */
   builder
     .setRuleLoaderOption('css', 'css-loader', 'modules', true)
-    .setRuleLoaderOption('css', 'css-loader', 'importLoaders', 2)
     .setRuleLoaderOptionDev('css', 'css-loader', 'localIdentName', '[local]-[hash:base64:5]')
     .setRuleLoaderOptionProd('css', 'css-loader', 'localIdentName', '[hash:base64:5]')
-
-  /**
-   * setup postcss parser and plugins
-   */
-  builder
-    .setRuleLoaderOption('css', 'postcss-loader', 'options', {})
-    .setRuleLoaderOption('css', 'postcss-loader', 'plugins', [
-      postcssPresetEnv()
-    ])
-
-  /**
-   * setup sass
-   */
-  builder
-    .setRuleLoaderOption('css', 'sass-loader', 'data', `$env: ${process.env.NODE_ENV};`)
 
 
   /**
@@ -64,22 +44,70 @@ function preset(builder: Builder): Builder {
     builder
       .setRuleOption('css', 'exclude', gcssEntry)
       .setRuleOption('gcss', 'include', gcssEntry)
+
+    /**
+     * same as "css"
+     */
+    builder
       .setRuleTypes('gcss', ['css'])
-      .setRuleLoaderDev('gcss', 'style-loader')
-      .setRuleLoaderProd('gcss', 'style-loader', {
+
+    setupLoader(builder, 'gcss')
+    setupSourceMap(builder, 'gcss')
+    setupCss(builder, 'gcss')
+    setupPostcss(builder, 'gcss')
+    setupSass(builder, 'gcss')
+  }
+
+  builder
+    .setPluginProd('css', MiniCssExtractPlugin, {
+      filename: '[name].[chunkhash].css'
+    })
+    .setPluginProd('cssmin', OptimizeCSSAssetsPlugin, {
+      sourceMap: true,
+      cssProcessorOptions: {
+        map: {
+          inline: false,
+          annotation: false
+        }
+      }
+    })
+
+
+  function setupLoader(builder: Builder, name: string): void {
+    builder
+      .setRuleLoaderDev(name, 'style-loader')
+      .setRuleLoaderProd(name, 'style-loader', {
         name: MiniCssExtractPlugin.loader
       })
-      .setRuleLoader('gcss', 'css-loader')
-      .setRuleLoader('gcss', 'postcss-loader')
-      .setRuleLoader('gcss', 'sass-loader')
-      .setRuleLoaderOption('gcss', 'style-loader', 'sourceMap', true)
-      .setRuleLoaderOption('gcss', 'css-loader', 'sourceMap', true)
-      .setRuleLoaderOption('gcss', 'css-loader', 'importLoaders', 2)
-      .setRuleLoaderOptionDev('gcss', 'css-loader', 'localIdentName', '[local]-[hash:base64:5]')
-      .setRuleLoaderOption('gcss', 'postcss-loader', 'sourceMap', true)
-      .setRuleLoaderOption('gcss', 'postcss-loader', 'options', {})
-      .setRuleLoaderOption('gcss', 'sass-loader', 'sourceMap', true)
-      .setRuleLoaderOption('gcss', 'sass-loader', 'data', `$env: ${process.env.NODE_ENV};`)
+      .setRuleLoader(name, 'css-loader')
+      .setRuleLoader(name, 'postcss-loader')
+      .setRuleLoader(name, 'sass-loader')
+  }
+
+  function setupSourceMap(builder: Builder, name: string): void {
+    builder
+      .setRuleLoaderOption(name, 'style-loader', 'sourceMap', true)
+      .setRuleLoaderOption(name, 'css-loader', 'sourceMap', true)
+      .setRuleLoaderOption(name, 'postcss-loader', 'sourceMap', true)
+      .setRuleLoaderOption(name, 'sass-loader', 'sourceMap', true)
+  }
+
+  function setupCss(builder: Builder, name: string): void {
+    builder
+      .setRuleLoaderOption('name', 'css-loader', 'importLoaders', 2)
+  }
+
+  function setupPostcss(builder: Builder, name: string): void {
+    builder
+      .setRuleLoaderOption(name, 'postcss-loader', 'options', {})
+      .setRuleLoaderOption(name, 'postcss-loader', 'plugins', [
+        postcssPresetEnv()
+      ])
+  }
+
+  function setupSass(builder: Builder, name: string): void {
+    builder
+      .setRuleLoaderOption(name, 'sass-loader', 'data', `$env: ${process.env.NODE_ENV};`)
   }
 
   return builder

@@ -265,7 +265,6 @@ class Builder {
     const transformRule = this.rule.transform()
     !isEmpty(transformRule) && this._set('module.rules', transformRule)
 
-    console.log(this.webpackOptions)
     return this.webpackOptions
   }
 }

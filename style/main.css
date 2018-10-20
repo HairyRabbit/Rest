@@ -2,23 +2,12 @@
  * gloabl styles
  */
 
-@import "~normalize.css";
-@import '~sanitize.css';
-
-html,
-body,
-#app {
-  height: 100%;
-}
+@import url('~normalize.css');
+@import url('~sanitize.css');
 
 body {
   font-size: 16px;
   line-height: 1.5;
-  background-color: #ffffff;
-  color: #232323;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
+  background-color: #f4f4f4;
+  color: #555;
 }
