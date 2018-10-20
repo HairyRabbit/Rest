@@ -7,7 +7,7 @@
 import path from 'path'
 import Builder from '../../webpack/builder'
 
-export default Builder('spa,icon', {
+export default Builder('icon,rest', {
   gcssEntry: [
     path.resolve(__dirname, 'src/style.css')
   ]

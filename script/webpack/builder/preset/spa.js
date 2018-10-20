@@ -28,23 +28,6 @@ function preset(builder: Builder): Builder {
     .set('output.devtoolModuleFilenameTemplate', smPathFmt)
     .setDev('devtool', 'inline-source-map')
     .setProd('devtool', 'hidden-source-map')
-    .setRuleLoaderDev('css', 'style-loader')
-    .setRuleLoaderProd('css', 'style-loader', {
-      name: MiniCssExtractPlugin.loader
-    })
-    .setRuleLoader('css', 'css-loader')
-    .setRuleLoader('css', 'postcss-loader')
-    .setRuleLoader('css', 'sass-loader')
-    .setRuleLoaderOption('css', 'style-loader', 'sourceMap', true)
-    .setRuleLoaderOption('css', 'css-loader', 'sourceMap', true)
-    .setRuleLoaderOption('css', 'css-loader', 'modules', true)
-    .setRuleLoaderOption('css', 'css-loader', 'importLoaders', 2)
-    .setRuleLoaderOptionDev('css', 'css-loader', 'localIdentName', '[local]-[hash:base64:5]')
-    .setRuleLoaderOptionProd('css', 'css-loader', 'localIdentName', '[hash:base64:5]')
-    .setRuleLoaderOption('css', 'postcss-loader', 'sourceMap', true)
-    .setRuleLoaderOption('css', 'postcss-loader', 'options', {})
-    .setRuleLoaderOption('css', 'sass-loader', 'sourceMap', true)
-    .setRuleLoaderOption('css', 'sass-loader', 'data', `$env: ${process.env.NODE_ENV};`)
     .setPlugin('html', HtmlWebpackPlugin, {
       template: HtmlWebpackTemplate,
       inject: false,
@@ -68,27 +51,6 @@ function preset(builder: Builder): Builder {
       }
     })
 
-  if(gcssEntry) {
-    builder
-      .setRuleOption('css', 'exclude', gcssEntry)
-      .setRuleOption('gcss', 'include', gcssEntry)
-      .setRuleTypes('gcss', ['css'])
-      .setRuleLoaderDev('gcss', 'style-loader')
-      .setRuleLoaderProd('gcss', 'style-loader', {
-        name: MiniCssExtractPlugin.loader
-      })
-      .setRuleLoader('gcss', 'css-loader')
-      .setRuleLoader('gcss', 'postcss-loader')
-      .setRuleLoader('gcss', 'sass-loader')
-      .setRuleLoaderOption('gcss', 'style-loader', 'sourceMap', true)
-      .setRuleLoaderOption('gcss', 'css-loader', 'sourceMap', true)
-      .setRuleLoaderOption('gcss', 'css-loader', 'importLoaders', 2)
-      .setRuleLoaderOptionDev('gcss', 'css-loader', 'localIdentName', '[local]-[hash:base64:5]')
-      .setRuleLoaderOption('gcss', 'postcss-loader', 'sourceMap', true)
-      .setRuleLoaderOption('gcss', 'postcss-loader', 'options', {})
-      .setRuleLoaderOption('gcss', 'sass-loader', 'sourceMap', true)
-      .setRuleLoaderOption('gcss', 'sass-loader', 'data', `$env: ${process.env.NODE_ENV};`)
-  }
 
   return builder
 }
@@ -96,7 +58,7 @@ function preset(builder: Builder): Builder {
 
 /// export
 
-export const install = 'babel,server'
+export const install = 'babel,style,server'
 export default preset
 
 

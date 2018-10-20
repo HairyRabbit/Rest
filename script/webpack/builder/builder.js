@@ -41,6 +41,7 @@ class Builder {
   plugin: Plugin
   rule: Rule
   presets: { [name: string]: string }
+  jobs: Array<Function>
 
   constructor(webpackOptions: webpackOptions, options: Options) {
     this.options = options || {}
@@ -48,18 +49,23 @@ class Builder {
       ? {}
       : (webpackOptions || {})
     this.mode = this.webpackOptions.mode || this.guessMode()
-    this.context = undefined
-    this.output = undefined
     this.entry = new Entry(this.webpackOptions.entry)
     this.plugin = new Plugin(this.webpackOptions.plugin)
     this.rule = new Rule(this.webpackOptions.module && this.webpackOptions.module.rules)
     this.presets = []
+    this.jobs = []
+
+    if(!this.options.disableGuess) {
+      this.guessContext()
+    }
 
     this
       .export(this, [
-        'set',
         'setContext',
         'setOutput'
+      ], 'unshift')
+      .export(this, [
+        'set'
       ])
       .export(this.entry, [
         'setEntry',
@@ -105,10 +111,6 @@ class Builder {
         'setRuleOption',
         'deleteRuleOption'
       ])
-
-    if(!this.options.disableGuess) {
-      this.guessContext()
-    }
 
     /**
      * if "webpackOptions" was string, call preset install
@@ -165,10 +167,11 @@ class Builder {
   /**
    * @private
    */
-  callWithMode(fn: Function, entity?: any, mode?: string): () => any {
+  callWithMode(proc: string, fn: Function, entity?: any, mode?: string): () => any {
     return (...args) => {
       if(mode && mode !== this.mode) return this
-      fn.apply(entity || this, args)
+      // fn.apply(entity || this, args)
+      this.jobs[proc](() => fn.apply(entity || this, args))
       return this
     }
   }
@@ -176,18 +179,22 @@ class Builder {
   /**
    * @private
    */
-  export(entity: any, fns: Array<string>) {
+  export(entity: any, fns: Array<string>, proc = 'push') {
     fns.forEach(name => {
-      const fn = entity[name].bind(entity)
-      this[name] = this.callWithMode(fn, entity)
-      this[name + 'Dev'] = this.callWithMode(fn, entity, 'development')
-      this[name + 'Prod'] = this.callWithMode(fn, entity, 'production')
+      const fn = entity[name]
+      this[name] = this.callWithMode(proc, fn, entity)
+      this[name + 'Dev'] = this.callWithMode(proc, fn, entity, 'development')
+      this[name + 'Prod'] = this.callWithMode(proc, fn, entity, 'production')
     })
 
     return this
   }
 
   set(key: string, value: *) {
+    return this._set(key, value)
+  }
+
+  _set(key: string, value: *) {
     set(this.webpackOptions, key, value)
     return this
   }
@@ -202,6 +209,15 @@ class Builder {
     return this.guessEntry()
   }
 
+  /**
+   * guessContext
+   *
+   * by default, webpack set context to 'process.cwd()'
+   * this method will set context to 'src', 'lib' and current
+   * dir(also cwd)
+   *
+   * @private
+   */
   guessContext() {
     const context = ['src', 'lib', '.']
           .map(dir => path.resolve(dir))
@@ -211,6 +227,15 @@ class Builder {
     return this.setContext(context)
   }
 
+  /**
+   * guessEntry
+   *
+   * by default, webpack set entry to "${context}/src/index.js"
+   * this method will set 'boot.js' first. you also override
+   * entry with 'this.setEntry'
+   *
+   * @private
+   */
   guessEntry() {
     if(!isEmpty(this.entry.value)) return this
 
@@ -221,24 +246,26 @@ class Builder {
           .find(file => fs.existsSync(file))
 
     if(!entry) return this
-    return this.setEntryEntry(entry)
+    return this.entry.setEntryEntry(entry)
   }
 
   transform(): WebpackOptions {
-    this.set('mode', this.webpackOptions.mode || this.guessMode())
+    this.jobs.forEach(fn => fn())
 
-    this.context && this.set('context', this.context)
-    this.output && this.set('output.path', this.output)
+    this._set('mode', this.webpackOptions.mode || this.guessMode())
+    this.context && this._set('context', this.context)
+    this.output && this._set('output.path', this.output)
 
     const transformEntry = this.entry.transform()
-    !isEmpty(transformEntry) && this.set('entry', transformEntry)
+    !isEmpty(transformEntry) && this._set('entry', transformEntry)
 
     const transformPlugin = this.plugin.transform()
-    !isEmpty(transformPlugin) && this.set('plugins', transformPlugin)
+    !isEmpty(transformPlugin) && this._set('plugins', transformPlugin)
 
     const transformRule = this.rule.transform()
-    !isEmpty(transformRule) && this.set('module.rules', transformRule)
+    !isEmpty(transformRule) && this._set('module.rules', transformRule)
 
+    console.log(this.webpackOptions)
     return this.webpackOptions
   }
 }
