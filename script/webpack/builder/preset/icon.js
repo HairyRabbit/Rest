@@ -22,5 +22,7 @@ function iconPreset(builder: Builder): Builder {
 
 
 /// export
-export const dependencies = ['react-svg-loader']
+export const dependencies = [
+  'react-svg-loader'
+]
 export default iconPreset

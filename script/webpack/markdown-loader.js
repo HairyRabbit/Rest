@@ -85,8 +85,9 @@ function createTransformer({ components, preload = '' } = {}) {
           }
 
           default: {
-            const hl = highlight(value, languages[lang], lang)
-            const wrap = `<pre><code class='language-${lang}'>${hl}</code></pre>`
+            const la = languages[lang] ? lang : 'extends'
+            const hl = highlight(value, languages[la], la)
+            const wrap = `<pre><code class='language-${la}'>${hl}</code></pre>`
             const jsx = html2jsxConvert.convert(wrap)
             return comps.code(jsx)
           }

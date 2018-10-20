@@ -61,4 +61,4 @@ export default Builder('icon,spa', {
   .setPlugin('env', webpack.DefinePlugin, {
     'process.env.LAYOUT_SIZE_PATTERN_ENABLE': JSON.stringify('1')
   })
-  .transform()
+  .transform(true)

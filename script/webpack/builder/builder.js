@@ -8,17 +8,13 @@
 
 import fs from 'fs'
 import path from 'path'
-import { set, isEmpty, uniq } from 'lodash'
+import { set, isEmpty, uniq, groupBy } from 'lodash'
 import modulePath from './module-resolver'
 import Entry from './entry'
 import Rule from './rule'
 import Plugin from './plugin'
 import readEnv from './read-env'
-import type {
-  WebpackOptions,
-  Mode as WebpackMode,
-  Entry as WebpackEntry
-} from './webpack-options-type'
+import type { WebpackOptions, Mode as WebpackMode } from './webpack-options-type'
 
 
 /// code
@@ -26,7 +22,8 @@ import type {
 type Options = {
   debug?: boolean,
   logger?: Function,
-  disableGuess?: boolean
+  disableGuess?: boolean,
+  disableCheck?: boolean
 }
 
 const presetDir = path.resolve(__dirname, `./preset`)
@@ -40,53 +37,53 @@ class Builder {
   entry: Entry
   plugin: Plugin
   rule: Rule
-  presets: { [name: string]: string }
+  presets: { [name: string]: Array<string | [string, string]> }
   jobs: Array<Function>
 
-  $key: string
-  $value: () => mixed
-  _set: Function
-  set: Function
-  setContext: Function
-  setOutput: Function
-  setEntry: Function
-  deleteEntry: Function
-  clearEntry: Function
-  setEntryEntry: Function
-  setEntryPrepends: Function
-  clearEntryPrepends: Function
-  addEntryPrepend: Function
-  deleteEntryPrepend: Function
-  setEntryCommonPrepends: Function
-  clearEntryCommonPrepends: Function
-  addEntryCommonPrepend: Function
-  deleteEntryCommonPrepend: Function
-  setPlugin: Function
-  deletePlugin: Function
-  clearPlugin: Function
-  setPluginOptions: Function
-  clearPluginOptions: Function
-  setPluginOption: Function
-  deletePluginOption: Function
-  setRule: Function
-  deleteRule: Function
-  clearRule: Function
-  setRuleTypes: Function
-  clearRuleTypes: Function
-  addRuleType: Function
-  deleteRuleType: Function
-  setRuleLoaders: Function
-  clearRuleLoaders: Function
-  setRuleLoader: Function
-  deleteRuleLoader: Function
-  setRuleLoaderOptions: Function
-  clearRuleLoaderOptions: Function
-  setRuleLoaderOption: Function
-  deleteRuleLoaderOption: Function
-  setRuleOptions: Function
-  clearRuleOptions: Function
-  setRuleOption: Function
-  deleteRuleOption: Function
+  // $key: string
+  // $value: () => mixed
+  // _set: Function
+  // set: Function
+  // setContext: Function
+  // setOutput: Function
+  // setEntry: Function
+  // deleteEntry: Function
+  // clearEntry: Function
+  // setEntryEntry: Function
+  // setEntryPrepends: Function
+  // clearEntryPrepends: Function
+  // addEntryPrepend: Function
+  // deleteEntryPrepend: Function
+  // setEntryCommonPrepends: Function
+  // clearEntryCommonPrepends: Function
+  // addEntryCommonPrepend: Function
+  // deleteEntryCommonPrepend: Function
+  // setPlugin: Function
+  // deletePlugin: Function
+  // clearPlugin: Function
+  // setPluginOptions: Function
+  // clearPluginOptions: Function
+  // setPluginOption: Function
+  // deletePluginOption: Function
+  // setRule: Function
+  // deleteRule: Function
+  // clearRule: Function
+  // setRuleTypes: Function
+  // clearRuleTypes: Function
+  // addRuleType: Function
+  // deleteRuleType: Function
+  // setRuleLoaders: Function
+  // clearRuleLoaders: Function
+  // setRuleLoader: Function
+  // deleteRuleLoader: Function
+  // setRuleLoaderOptions: Function
+  // clearRuleLoaderOptions: Function
+  // setRuleLoaderOption: Function
+  // deleteRuleLoaderOption: Function
+  // setRuleOptions: Function
+  // clearRuleOptions: Function
+  // setRuleOption: Function
+  // deleteRuleOption: Function
 
   constructor(webpackOptions?: string | WebpackOptions, options?: Options) {
     this.options = options || {}
@@ -158,7 +155,7 @@ class Builder {
       ])
 
     /**
-     * if "webpackOptions" was string, call preset install
+     * if "webpackOptions" was string, call install
      */
     if('string' === typeof webpackOptions) {
       this.install(webpackOptions)
@@ -166,7 +163,9 @@ class Builder {
   }
 
   /**
-   * install preset
+   * install
+   *
+   * install presets
    */
   install(input: string) {
     uniq(input.split(',')).forEach(preset => {
@@ -174,15 +173,16 @@ class Builder {
 
       /**
        * resolve script path, order by:
-       *   1. webpack/builder/preset
-       *   2. node_modules/preset
+       *
+       * 1. webpack/builder/preset
+       * 2. node_modules/preset
        */
       const name = modulePath(path.resolve(presetDir, preset))
             || modulePath(preset)
       if(!name) throw new Error(`Preset not found, "${preset}"`)
 
       const { default: call, install, dependencies } = require(name)
-      this.presets[preset] = dependencies
+      this.presets[preset] = dependencies || []
       install && this.install(install)
       call(this)
     })
@@ -323,8 +323,102 @@ class Builder {
     return this.entry.setEntryEntry(entry)
   }
 
-  transform(): WebpackOptions {
+  /**
+   * check
+   *
+   * check dependencies was installed
+   *
+   * @private
+   */
+  check() {
+    type Acc = {
+      preset: string,
+      dependencies: string,
+      result: boolean
+    }
+
+    const acc: Acc = []
+    const failed: [string, string, string] = []
+
+    /**
+     * check "webpack"
+     */
+    Array.from(['webpack', 'webpack-cli']).forEach(dep => {
+      const preset = 'default'
+      const res = modulePath(dep)
+      if(!res) failed.push([preset, dep, 'D'])
+
+      acc.push({
+        preset,
+        dependency: dep,
+        result: Boolean(res)
+      })
+    })
+
+    /**
+     * check all presets
+     */
+    Object.keys(this.presets).forEach(preset => {
+      const deps = this.presets[preset]
+      deps.length && deps.forEach(dep => {
+        const [ depen, flag ] = Array.isArray(dep) ? dep : [dep, 'D']
+        const res = modulePath(depen)
+        if(!res) failed.push([preset, depen, flag])
+
+        acc.push({
+          preset,
+          dependency: depen,
+          result: Boolean(res)
+        })
+      })
+    })
+
+    if(failed.length) {
+      const groupByPreset = groupBy(failed, '0')
+      const groupByFlag = groupBy(failed, '2')
+
+      const content = Object.keys(groupByPreset).map(preset => {
+        const deps = uniq(groupByPreset[preset].map(([ _, dep ]) => dep)).join(', ')
+        return `  [${preset}] ${deps}`
+      }).join('\n')
+
+      const cmd = Object.keys(groupByFlag).map(flag => {
+        const deps = uniq(groupByFlag[flag].map(([ _, dep ]) => dep)).join(' ')
+        return `  npm install -${flag} ${deps}`
+      }).join('\n')
+
+      console.warn(`
+[Builder] Warning:
+
+These presets require dependencies, but not resolved:
+
+${content}
+
+Run command to fix:
+
+${cmd}
+
+`)
+    }
+
+    this.checked = acc
+  }
+
+  report() {
+    // console.log(this.checked)
+  }
+
+  /**
+   * transform
+   *
+   * transform and output webpackOptions
+   */
+  transform(report?: boolean): WebpackOptions {
     this.jobs.forEach(fn => fn())
+
+    if(!this.options.disableCheck) {
+      this.check()
+    }
 
     this._set('mode', this.webpackOptions.mode || this.guessMode())
     this.context && this._set('context', this.context)
@@ -338,6 +432,10 @@ class Builder {
 
     const transformRule = this.rule.transform()
     !isEmpty(transformRule) && this._set('module.rules', transformRule)
+
+    if(report) {
+      this.report()
+    }
 
     return this.webpackOptions
   }

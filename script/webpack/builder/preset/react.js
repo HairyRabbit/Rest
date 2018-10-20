@@ -17,5 +17,8 @@ function preset(builder: Builder): Builder {
 
 
 /// export
-
+export const dependencies = [
+  ['react', 'P'],
+  ['react-dom', 'P']
+]
 export default preset

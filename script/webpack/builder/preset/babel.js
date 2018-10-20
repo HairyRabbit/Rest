@@ -28,5 +28,9 @@ function preset(builder: Builder): Builder {
 
 
 /// export
-
+export const dependencies = [
+  'babel-loader',
+  '@babel/core',
+  '@babel/preset-env'
+]
 export default preset

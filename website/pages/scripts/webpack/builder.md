@@ -86,7 +86,21 @@ Builder('icon,spa')
 
 ### 检查依赖是否安装
 
-每个 preset 都需要安装相关的依赖，比如 `babel` 依赖于 `babel-loader`, `@babel/core`, `@babel/preset-env` 等。那么在使用 `babel` 时，Builder 会检查相关的依赖是否已经安装，否则将给出一个警告。emm…… 或许也可以自动安装，笑。这个功能是默认开启的，关闭他可以将 `disableCheck` 设置为 `true`：
+每个 preset 都需要安装相关的依赖，比如 `babel` 依赖于 `babel-loader`, `@babel/core`, `@babel/preset-env` 等。那么在使用 `babel` 时，Builder 会检查相关的依赖是否已经安装，否则将给出一个警告：
+
+```extend
+[Builder] Warning:
+
+These presets require dependencies, but not resolved:
+
+  [spa] foo, bar
+
+Run command to fix:
+
+  npm install -D foo bar
+```
+
+emm…… 或许也可以自动安装，笑。这个功能是默认开启的，关闭他可以将 `disableCheck` 设置为 `true`：
 
 ```js
 Builder('spa', { disableCheck: true })
