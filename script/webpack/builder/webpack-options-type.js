@@ -19,7 +19,10 @@ export type Mode =
   | 'production'
   | 'none'
 
-type Plugin = { apply: Function }
+interface Plugin {
+  apply(compiler: any): void
+}
+
 export type Plugins = Array<Plugin>
 
 type Node$Value =

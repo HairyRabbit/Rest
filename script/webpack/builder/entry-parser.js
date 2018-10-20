@@ -8,18 +8,18 @@
 
 import { isPlainObject } from 'lodash'
 import { objectType } from '../../../util'
-import type { Entry } from 'webpack-options-type'
+import type { Entry } from './webpack-options-type'
 
 
 /// code
 
 type Result = {
   name: string,
-  entry: string,
+  entry: string | Function,
   prepends: Array<string>,
 }
 
-function parse(entry: Entry, name? = 'main', subtype?: boolean = false): Array<Result> {
+function parse(entry: Entry, name?: string = 'main', subtype?: boolean = false): Array<Result> {
   switch(typeof entry) {
     case 'string':
     case 'function': {
@@ -160,6 +160,7 @@ describe('Function entryOptionParse()', () => {
 
   it('should parse array when some prepends type not string', () => {
     assert.throws(
+      // $FlowFixMe
       () => parse([null, 'bar']),
       /The entry array should be all the element was string type/
     )
@@ -178,7 +179,7 @@ describe('Function entryOptionParse()', () => {
   })
 
   it('should parse function', () => {
-    const ref = () => 42
+    const ref = () => 'foo'
     assert.deepStrictEqual(
       [{
         name: 'main',
@@ -253,6 +254,7 @@ describe('Function entryOptionParse()', () => {
 
   it('should throw when parse invaild type', () => {
     assert.throws(
+      // $FlowFixMe
       () => parse(undefined),
       /Unknow webpack option.entry type "undefined"/
     )
@@ -260,6 +262,7 @@ describe('Function entryOptionParse()', () => {
 
   it('should throw when parse invaild type with subtype', () => {
     assert.throws(
+      // $FlowFixMe
       () => parse(undefined, 'foo', true),
       /Unknow webpack option.entry\["foo"\] type "undefined"/
     )
@@ -267,6 +270,7 @@ describe('Function entryOptionParse()', () => {
 
   it('should throw when parse invaild object type', () => {
     assert.throws(
+      // $FlowFixMe
       () => parse(null),
       /Unknow webpack option.entry type "null"/
     )

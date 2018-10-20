@@ -32,7 +32,7 @@ type Options = {
 const presetDir = path.resolve(__dirname, `./preset`)
 
 class Builder {
-  webpackOptions: string | WebpackOptions
+  webpackOptions: WebpackOptions
   option: Option
   mode: ?WebpackMode
   context: ?string
@@ -43,7 +43,52 @@ class Builder {
   presets: { [name: string]: string }
   jobs: Array<Function>
 
-  constructor(webpackOptions: webpackOptions, options: Options) {
+  $key: string
+  $value: () => mixed
+  _set: Function
+  set: Function
+  setContext: Function
+  setOutput: Function
+  setEntry: Function
+  deleteEntry: Function
+  clearEntry: Function
+  setEntryEntry: Function
+  setEntryPrepends: Function
+  clearEntryPrepends: Function
+  addEntryPrepend: Function
+  deleteEntryPrepend: Function
+  setEntryCommonPrepends: Function
+  clearEntryCommonPrepends: Function
+  addEntryCommonPrepend: Function
+  deleteEntryCommonPrepend: Function
+  setPlugin: Function
+  deletePlugin: Function
+  clearPlugin: Function
+  setPluginOptions: Function
+  clearPluginOptions: Function
+  setPluginOption: Function
+  deletePluginOption: Function
+  setRule: Function
+  deleteRule: Function
+  clearRule: Function
+  setRuleTypes: Function
+  clearRuleTypes: Function
+  addRuleType: Function
+  deleteRuleType: Function
+  setRuleLoaders: Function
+  clearRuleLoaders: Function
+  setRuleLoader: Function
+  deleteRuleLoader: Function
+  setRuleLoaderOptions: Function
+  clearRuleLoaderOptions: Function
+  setRuleLoaderOption: Function
+  deleteRuleLoaderOption: Function
+  setRuleOptions: Function
+  clearRuleOptions: Function
+  setRuleOption: Function
+  deleteRuleOption: Function
+
+  constructor(webpackOptions?: string | WebpackOptions, options?: Options) {
     this.options = options || {}
     this.webpackOptions = 'string' === typeof webpackOptions
       ? {}
@@ -165,10 +210,15 @@ class Builder {
   }
 
   /**
+   * callWithMode
+   *
+   * assert proc should call with current mode, if given mode
+   * was setted and equal mode flag, push proc to jobs queue
+   *
    * @private
    */
-  callWithMode(proc: string, fn: Function, entity?: any, mode?: string): () => any {
-    return (...args) => {
+  callWithMode(proc: string, fn: Function, entity?: any, mode?: string): * {
+    return (...args: Array<any>): * => {
       if(mode && mode !== this.mode) return this
       // fn.apply(entity || this, args)
       this.jobs[proc](() => fn.apply(entity || this, args))
@@ -177,6 +227,10 @@ class Builder {
   }
 
   /**
+   * export
+   *
+   * export method with "method", "methodDev" and "methodProd"
+   *
    * @private
    */
   export(entity: any, fns: Array<string>, proc = 'push') {
@@ -190,20 +244,40 @@ class Builder {
     return this
   }
 
-  set(key: string, value: *) {
-    return this._set(key, value)
-  }
-
+  /**
+   * _set
+   *
+   * set options to webpackOptions, just wrapped "lodash.set"
+   *
+   * @private
+   */
   _set(key: string, value: *) {
     set(this.webpackOptions, key, value)
     return this
   }
 
+  /**
+   * set
+   *
+   * set webpackOptions with normal way
+   */
+  set(key: string, value: *) {
+    return this._set(key, value)
+  }
+
+  /**
+   * setOutput
+   *
+   * set "webpackOptions.output.path", this call will unshift to jobs
+   */
   setOutput(output: string) {
     this.output = output
     return this
   }
 
+  /**
+   * set "webpackOptions.context", this call will unshift to jobs
+   */
   setContext(context: string) {
     this.context = path.isAbsolute(context) ? context : path.resolve(context)
     return this.guessEntry()
@@ -301,9 +375,7 @@ describe('Class Builder', () => {
   it('Builder.setMode', () => {
     assert.deepStrictEqual(
       'development',
-      new Builder()
-        .setMode('development')
-        .mode
+      new Builder().setMode('development').mode
     )
   })
 
@@ -319,9 +391,7 @@ describe('Class Builder', () => {
 
   it('Builder.callWithMode', () => {
     const fake = sinon.fake()
-    new Builder()
-        .callWithMode(fake)()
-
+    new Builder().callWithMode('push', fake)()
     assert(1 === fake.callCount)
   })
 
@@ -329,8 +399,7 @@ describe('Class Builder', () => {
     const fake = sinon.fake()
     new Builder()
       .setMode('development')
-      .callWithMode(fake, undefined, 'development')()
-
+      .callWithMode('push', fake, undefined, 'development')()
     assert(1 === fake.callCount)
   })
 
@@ -338,9 +407,8 @@ describe('Class Builder', () => {
     const builder = new Builder()
     assert.deepStrictEqual(
       builder,
-
       builder
-        .callWithMode(() => 42, 'production')()
+        .callWithMode('push', () => 42, 'production')()
     )
   })
 
@@ -359,11 +427,11 @@ describe('Class Builder', () => {
     assert.deepStrictEqual(
       {
         mode: 'test',
-        foo: 42
+        foo: 'bar'
       },
 
       new Builder(null, { disableGuess: true })
-        .set('foo', 42)
+        .set('foo', 'bar')
         .transform()
     )
   })
@@ -373,12 +441,12 @@ describe('Class Builder', () => {
       {
         mode: 'test',
         foo: {
-          bar: 42
+          bar: 'baz'
         }
       },
 
       new Builder(null, { disableGuess: true })
-        .set('foo.bar', 42)
+        .set('foo.bar', 'baz')
         .transform()
     )
   })

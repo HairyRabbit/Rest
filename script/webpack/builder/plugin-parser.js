@@ -6,7 +6,7 @@
  * @flow
  */
 
-import type { Plugins } from 'webpack-options-type'
+import type { Plugins } from './webpack-options-type'
 
 
 /// code
@@ -38,8 +38,8 @@ import assert from 'assert'
 
 describe('Function pluginParse', () => {
   it('parse plugin', () => {
-    class Foo {}
-    class Bar {}
+    class Foo { apply() {} }
+    class Bar { apply() {} }
     const foo = new Foo
     const bar = new Bar
 
@@ -54,8 +54,8 @@ describe('Function pluginParse', () => {
   })
 
   it('parse plugin with options', () => {
-    class Foo {}
-    const foo = new Foo('bar')
+    class Foo { apply() {} }
+    const foo = new Foo()
 
     assert.deepStrictEqual(
       [
