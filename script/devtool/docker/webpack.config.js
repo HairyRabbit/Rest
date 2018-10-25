@@ -8,11 +8,11 @@ import path from 'path'
 import Builder from '../../webpack/builder'
 
 export default Builder('icon,rest', {
-  gcssEntry: [
-    path.resolve(__dirname, 'src/style.css')
-  ]
+  // gcssEntry: [
+  //   path.resolve(__dirname, 'src/style.css')
+  // ]
 })
-  .setContext(__dirname)
+  .setContext(__dirname, 'src')
   .setEntryEntry(path.resolve(__dirname, 'src/boot.js'), 'main')
   .set('devServer.proxy./api', {
     target: 'http://localhost:2375',
@@ -23,4 +23,4 @@ export default Builder('icon,rest', {
   .set('resolve.alias.~component', path.resolve(__dirname, '../../../component'))
   .set('resolve.alias.~style', path.resolve(__dirname, '../../../style'))
   .set('resolve.alias.@style', path.resolve(__dirname, '../../../style'))
-  .transform()
+  .transform(true)

@@ -26,11 +26,11 @@ type Options = {
   disableCheck?: boolean
 }
 
-const presetDir = path.resolve(__dirname, `./preset`)
+const presetDir = path.resolve(__dirname, 'preset')
 
 class Builder {
   webpackOptions: WebpackOptions
-  option: Option
+  option: Options
   mode: ?WebpackMode
   context: ?string
   output: ?string
@@ -39,6 +39,7 @@ class Builder {
   rule: Rule
   presets: { [name: string]: Array<string | [string, string]> }
   jobs: Array<Function>
+  shared: Object
 
   // $key: string
   // $value: () => mixed
@@ -96,6 +97,7 @@ class Builder {
     this.rule = new Rule(this.webpackOptions.module && this.webpackOptions.module.rules)
     this.presets = []
     this.jobs = []
+    this.shared = {}
 
     if(!this.options.disableGuess) {
       this.guessContext()
@@ -151,7 +153,8 @@ class Builder {
         'setRuleOptions',
         'clearRuleOptions',
         'setRuleOption',
-        'deleteRuleOption'
+        'deleteRuleOption',
+        'setRuleExtract'
       ])
 
     /**
@@ -174,8 +177,8 @@ class Builder {
       /**
        * resolve script path, order by:
        *
-       * 1. webpack/builder/preset
-       * 2. node_modules/preset
+       * 1. webpack/builder/preset/FOO
+       * 2. node_modules/webpack-builder-preset-FOO
        */
       const name = modulePath(path.resolve(presetDir, preset))
             || modulePath(preset)
@@ -414,7 +417,8 @@ ${cmd}
    * transform and output webpackOptions
    */
   transform(report?: boolean): WebpackOptions {
-    this.jobs.forEach(fn => fn())
+    let fn
+    while((fn = this.jobs.shift())) fn(this.shared)
 
     if(!this.options.disableCheck) {
       this.check()

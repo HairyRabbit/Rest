@@ -1,13 +1,11 @@
 /**
- * babel preset, support features:
+ * rust
  *
- * - transform js by babel parser
- * - minify js by Terser (es6 friendly uglify)
+ * rust wasm preset
  *
  * @flow
  */
 
-import TerserPlugin from 'terser-webpack-plugin'
 import typeof Builder from '../builder'
 
 
@@ -17,6 +15,7 @@ function preset(builder: Builder): Builder {
   builder
     .setRuleLoader('js', 'babel-loader')
     .setRuleLoaderOption('js', 'babel-loader', 'cacheDirectory', true)
+
     .setPluginProd('jsmin', TerserPlugin, {
       cache: true,
       parallel: true,

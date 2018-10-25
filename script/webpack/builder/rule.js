@@ -1,10 +1,17 @@
 /**
- * rule tools
+ * rule helpers and transformor
+ *
+ * supports:
+ *
+ * - setRule
+ * - setRuleOptions
+ * - setRuleOption
  *
  * @flow
  */
 
 import { isEmpty } from 'lodash'
+// import ExtractTextPlugin from 'extract-text-webpack-plugin'
 import parse from './rule-parser'
 import type { Rule as WebpackRule } from './webpack-options-type'
 
@@ -14,14 +21,15 @@ import type { Rule as WebpackRule } from './webpack-options-type'
 type Loader = {
   loader: string,
   name?: string,
-  options: Map<string, any>
+  options: Map<string, Object>
 }
 
 class Rule {
   value: Map<string, {
     type: Set<string>,
     loaders: Map<string, Loader>,
-    options: Map<string, any>
+    options: Map<string, Object>,
+    extract: boolean
   }>
 
   constructor(rules?: WebpackRule) {
@@ -63,11 +71,12 @@ class Rule {
     return this
   }
 
-  setRule(name: string, loaders?: Array<Loader>, options?: Object, type?: string | Array<string>) {
+  setRule(name: string, loaders?: Array<Loader>, options?: Object, type?: string | Array<string>, extract: boolean = false) {
     this.value.set(name, {
       loaders: new Map(),
       options: new Map(),
-      type: new Set()
+      type: new Set(),
+      extract
     })
 
     this.setRuleLoaders(name, loaders)
@@ -234,11 +243,24 @@ class Rule {
     return this
   }
 
+  setRuleExtract(name: string, extract: boolean) {
+    this
+      .ensure(name)
+      .value.get(name)
+      .extract = extract
+
+    return this
+  }
+
+  /**
+   * transform rules
+   */
   transform(): Array<WebpackRule> {
     const acc = []
 
-    this.value.forEach(({ loaders, type, options }, name) => {
+    this.value.forEach(({ loaders, type, options, extract }, name) => {
       const uses = []
+
       loaders.forEach(({ name: loaderName, options: loaderOptions }, loader) => {
         const loaderOpts = {}
         loaderOptions.forEach((optv, optk) => {
@@ -260,8 +282,15 @@ class Rule {
             ? name
             : Array.from(type).join('|')
 
+      /**
+       * @todo ExtractTextPlugin should use multi times, like:
+       * const extractOne = new ExtractTextPlugin('file.ext')
+       */
       acc.push({
         test: new RegExp(`\\.(${test})$`),
+        // use: extract
+        //   ? ExtractTextPlugin.extract({ use: uses })
+        //   : uses,
         use: uses,
         ...opts
       })

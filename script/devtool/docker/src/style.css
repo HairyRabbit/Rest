@@ -2,13 +2,11 @@
  * gcss
  */
 
-@import url('~@style/main.css');
-@import url('~@style/dashboard.css');
+@import '~@style/main.css';
+@import '~@style/dashboard.css';
 
 body {
-  font-size: 16px;
-  line-height: 1.5;
-  background-color: #f4f4f4;
+  background-color: white;
   color: #555;
 }
 

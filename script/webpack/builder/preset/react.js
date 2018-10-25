@@ -6,7 +6,7 @@
  * @flow
  */
 
-import Builder from '../builder'
+import typeof Builder from '../builder'
 
 
 /// code

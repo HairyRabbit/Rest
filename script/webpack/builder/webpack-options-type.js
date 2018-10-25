@@ -47,7 +47,7 @@ type Condition$Base =
   | RegExp
   | (request: string) => boolean
 
-type Condition =
+export type Condition =
   | Condition$Base
   | Array<Condition$Base>
   | {

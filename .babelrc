@@ -50,12 +50,13 @@
           "@babel/preset-env",
           {
             "targets": {
+              "node": true,
               "browsers": ["last 2 versions", "ie >= 9"]
             },
             "modules": false,
             "loose": true,
             "useBuiltIns": "usage",
-            "debug": true
+            "debug": false
           }
         ]
       ],
