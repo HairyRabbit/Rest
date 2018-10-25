@@ -1,6 +1,4 @@
 /**
- * builder
- *
  * powerful webpack builder
  *
  * @flow
@@ -15,6 +13,7 @@ import Rule from './rule'
 import Plugin from './plugin'
 import readEnv from './read-env'
 import type { WebpackOptions, Mode as WebpackMode } from './webpack-options-type'
+import type { Options as PresetStyleOptions } from './preset/style.js'
 
 
 /// code
@@ -24,13 +23,13 @@ type Options = {
   logger?: Function,
   disableGuess?: boolean,
   disableCheck?: boolean
-}
+} & PresetStyleOptions
 
 const presetDir = path.resolve(__dirname, 'preset')
 
 class Builder {
   webpackOptions: WebpackOptions
-  option: Options
+  options: Options
   mode: ?WebpackMode
   context: ?string
   output: ?string
@@ -40,8 +39,13 @@ class Builder {
   presets: { [name: string]: Array<string | [string, string]> }
   jobs: Array<Function>
   shared: Object
+  checked: Array<{
+    preset: string,
+    dependencies: string,
+    result: boolean
+  }>
 
-  // $key: string
+  $key: string
   // $value: () => mixed
   // _set: Function
   // set: Function
@@ -166,8 +170,6 @@ class Builder {
   }
 
   /**
-   * install
-   *
    * install presets
    */
   install(input: string) {
@@ -213,10 +215,8 @@ class Builder {
   }
 
   /**
-   * callWithMode
-   *
-   * assert proc should call with current mode, if given mode
-   * was setted and equal mode flag, push proc to jobs queue
+   * callWithMode, assert proc should call with current mode, if given mode
+   * was setted and equal mode flag, push proc to jobs queue.
    *
    * @private
    */
@@ -230,9 +230,7 @@ class Builder {
   }
 
   /**
-   * export
-   *
-   * export method with "method", "methodDev" and "methodProd"
+   * export method with "M", "MDev" and "MProd"
    *
    * @private
    */
@@ -248,8 +246,6 @@ class Builder {
   }
 
   /**
-   * _set
-   *
    * set options to webpackOptions, just wrapped "lodash.set"
    *
    * @private
@@ -260,8 +256,6 @@ class Builder {
   }
 
   /**
-   * set
-   *
    * set webpackOptions with normal way
    */
   set(key: string, value: *) {
@@ -269,9 +263,7 @@ class Builder {
   }
 
   /**
-   * setOutput
-   *
-   * set "webpackOptions.output.path", this call will unshift to jobs
+   * setOutput, set "webpackOptions.output.path", this will unshift to jobs
    */
   setOutput(output: string) {
     this.output = output
@@ -279,7 +271,7 @@ class Builder {
   }
 
   /**
-   * set "webpackOptions.context", this call will unshift to jobs
+   * setContext, set "webpackOptions.context", this will unshift to jobs
    */
   setContext(context: string) {
     this.context = path.isAbsolute(context) ? context : path.resolve(context)
@@ -307,7 +299,7 @@ class Builder {
   /**
    * guessEntry
    *
-   * by default, webpack set entry to "${context}/src/index.js"
+   * by default, webpack set entry to "CONTEXT/src/index.js"
    * this method will set 'boot.js' first. you also override
    * entry with 'this.setEntry'
    *
@@ -340,8 +332,8 @@ class Builder {
       result: boolean
     }
 
-    const acc: Acc = []
-    const failed: [string, string, string] = []
+    const acc: Array<Acc> = []
+    const failed: Array<[string, string, string]> = []
 
     /**
      * check "webpack"
@@ -445,7 +437,7 @@ ${cmd}
   }
 }
 
-function builder(...args): Builder {
+function builder(...args: Array<*>): Builder {
   return new Builder(...args)
 }
 
@@ -515,12 +507,8 @@ describe('Class Builder', () => {
   })
 
   it('Builder.transform', () => {
-    assert.deepStrictEqual(
-      {
-        mode: 'test'
-      },
-
-      new Builder(null, { disableGuess: true })
+    assert.deepStrictEqual({ mode: 'test' },
+      new Builder(undefined, { disableGuess: true })
         .transform()
     )
   })
@@ -532,7 +520,7 @@ describe('Class Builder', () => {
         foo: 'bar'
       },
 
-      new Builder(null, { disableGuess: true })
+      new Builder(undefined, { disableGuess: true })
         .set('foo', 'bar')
         .transform()
     )
@@ -547,22 +535,21 @@ describe('Class Builder', () => {
         }
       },
 
-      new Builder(null, { disableGuess: true })
+      new Builder(undefined, { disableGuess: true })
         .set('foo.bar', 'baz')
         .transform()
     )
   })
 
   it('Builder.setEntryEntry', () => {
-    assert.deepStrictEqual(
-      {
+    assert.deepStrictEqual({
         mode: 'test',
         entry: {
           main: ['foo']
         }
       },
 
-      new Builder(null, { disableGuess: true })
+      new Builder(undefined, { disableGuess: true })
         .setEntryEntry('foo')
         .transform()
     )

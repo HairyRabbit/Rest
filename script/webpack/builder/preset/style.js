@@ -1,7 +1,5 @@
 /**
- * style
- *
- * css resolver, support features:
+ * style preset, support features:
  *
  * 1. css modules by default, non-modules(named "gcss") also works fine
  * 2. sass supports and autoprefix by postcss
@@ -28,7 +26,8 @@ import type { Condition } from '../webpack-options-type'
 /// code
 
 export type Options = {
-  gcssEntry: string
+  gcssEntry?: Condition,
+  disableGuessGcss?: boolean
 }
 
 function preset(builder: Builder): Builder {
@@ -84,7 +83,7 @@ function preset(builder: Builder): Builder {
    * - add "exclude" options to css rule
    * - add "include" options to gcss rule
    */
-  function buildGCSS(gcssEntry): void {
+  function buildGCSS(gcssEntry: Condition): void {
     builder
       .setRuleOption('css', 'exclude', gcssEntry)
       .setRuleOption('gcss', 'include', gcssEntry)
