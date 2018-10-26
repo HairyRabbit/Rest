@@ -10,7 +10,7 @@ import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer'
 import { WebpackBundleSizeAnalyzerPlugin } from 'webpack-bundle-size-analyzer'
 import BundleAnalyzePlugin from '../script/webpack/bundle-analyze-plugin'
 
-export default Builder('icon,spa', {
+export default Builder('icon,rest', {
   gcssEntry: [
     path.resolve(__dirname, '../style/main.css'),
     path.resolve(__dirname, 'style.css'),

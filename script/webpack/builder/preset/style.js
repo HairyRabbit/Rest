@@ -8,6 +8,8 @@
  *
  * "gcss" means global css
  *
+ * @todo add vendor.css to index.html file
+ * @todo add postcss api
  * @todo "CSS Block" integrate
  * @todo supports disable "CSS Modules" feature
  * @todo add more control options

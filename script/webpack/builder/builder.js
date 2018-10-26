@@ -25,7 +25,11 @@ type Options = {
   disableCheck?: boolean
 } & PresetStyleOptions
 
-const presetDir = path.resolve(__dirname, 'preset')
+
+/**
+ * build build-in presets
+ */
+const presets = require.context('./preset', true, /\.js$/)
 
 class Builder {
   webpackOptions: WebpackOptions
@@ -171,22 +175,60 @@ class Builder {
 
   /**
    * install presets
+   *
+   * @todo Add BUILDER_PATH env for searcher
    */
   install(input: string) {
+    const paths = process.env.WEBPACK_BUILDER_PATH
+
     uniq(input.split(',')).forEach(preset => {
       if(this.presets[preset]) return
 
       /**
        * resolve script path, order by:
        *
-       * 1. webpack/builder/preset/FOO
-       * 2. node_modules/webpack-builder-preset-FOO
+       * 1. webpack/builder/preset/{name}.js
+       * 2. node_modules/webpack-builder-preset-{name}
+       * 3. WEBPACK_BUILDER_PATH/{name}.js
        */
-      const name = modulePath(path.resolve(presetDir, preset))
-            || modulePath(preset)
-      if(!name) throw new Error(`Preset not found, "${preset}"`)
+      let lib
 
-      const { default: call, install, dependencies } = require(name)
+      /**
+       * search build-in
+       */
+      try {
+        lib = presets('./' + preset + '.js')
+      } catch(e) {}
+
+      /**
+       * search node_modules
+       */
+      if(!lib) {
+        try {
+          lib = __non_webpack_require__(`webpack-builder-preset-${preset}`)
+        } catch(e) {}
+      }
+
+      /**
+       * search paths
+       */
+      if(paths) {
+        paths.split(';').forEach(p => {
+          try {
+            lib = __non_webpack_require__(`${p}/${preset}.js`)
+          } catch(e) {}
+        })
+      }
+
+
+      /**
+       * search preset failed
+       */
+      if(!lib) {
+        throw new Error(`Search Preset not found, "${preset}"`)
+      }
+
+      const { default: call, install, dependencies } = lib
       this.presets[preset] = dependencies || []
       install && this.install(install)
       call(this)
@@ -400,7 +442,7 @@ ${cmd}
   }
 
   report() {
-    // console.log(this.checked)
+    console.log(this.checked)
   }
 
   /**

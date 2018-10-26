@@ -5,7 +5,7 @@ import style from '../../../style/typo.css'
 import { Header } from '../../../component'
 ```
 
-# Builder
+# Builder()
 
 一个简单易用的 Builder 用于帮助你快速构建 webpack 配置文件。
 
@@ -291,6 +291,55 @@ TODO
 
 TODO
 
+### style-preset
+
+```js
+Builder('style')
+```
+
+`style` 提供了样式相关的常用配置。包括：
+
+1. 默认启用 CSS Module，也可以使用传统构建方式，或同时使用两种策略
+2. 使用 Sass 作为预处理器，使用 Postcss 作为后处理器
+3. 在开发模式下支持热加载（HMR）
+4. 在产品模式下开启优化及代码压缩
+
+
+
 ## 自定义预设
 
-TODO
+preset 只是一个普通的函数，自定义一个 preset 非常简单：
+
+```js
+/**
+ * my-preset
+ */
+
+export default function preset(builder) {
+  return builder
+}
+
+/**
+ * webpack.config.js
+ */
+
+export default Builder('my-preset').transform()
+```
+
+这个 preset 什么都没做，下面可以添加一些插件：
+
+```js
+/**
+ * my-preset
+ */
+
+import AwesomePlugin from '/path/to/awesome-plugin'
+
+export default function preset(builder) {
+
+  builder
+    .setPlugin('name', AwesomePlugin, {})
+
+  return builder
+}
+```

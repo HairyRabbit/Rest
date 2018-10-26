@@ -1,7 +1,5 @@
 /**
- * lib
- *
- * lib builder preset
+ * lib preset, used to build library
  *
  * @flow
  */
@@ -16,6 +14,8 @@ function preset(builder: Builder): Builder {
 
   builder
     .set('output.libraryTarget', libraryTarget)
+    .set('target', 'node')
+    .set('node', 'false')
 
   return builder
 }

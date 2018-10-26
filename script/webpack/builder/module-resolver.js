@@ -10,7 +10,7 @@
 
 function modulePath(path: string): ?string {
   try {
-    return require.resolve(path)
+    return __non_webpack_require__.resolve(path)
   } catch(e) {
     return null
   }

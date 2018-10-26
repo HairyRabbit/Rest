@@ -36,7 +36,7 @@ function main() {
   render(<Root />, node)
 }
 
-
+console.log(require('http'))
 /// run
 
 main()

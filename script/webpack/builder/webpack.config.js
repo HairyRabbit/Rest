@@ -9,35 +9,31 @@
 import glob from 'glob'
 import fs from 'fs'
 import path from 'path'
+import WebpackNodeExternals from 'webpack-node-externals'
 
 
 /// code
 
-const commons = {
-  mode: 'production',
+export default {
+  mode: process.env.NODE_ENV,
   target: 'node',
   node: false,
+  context: path.resolve(__dirname),
+  entry: {
+    main: './index.js'
+  },
   output: {
-    path: path.resolve('lib/webpack-builder'),
-    filename: '[name].js',
+    path: path.resolve('lib'),
+    filename: 'webpack-builder.js',
+    library: 'WebpackBuilder',
     libraryTarget: 'commonjs2'
   },
   module: {
     rules: [
       { test: /\.js$/, use: 'babel-loader' }
     ]
-  }
+  },
+  externals: [
+    WebpackNodeExternals()
+  ]
 }
-
-const presets = glob.sync(path.resolve(__dirname, 'preset') + '/*').map(p => {
-  const filename = path.basename(p, path.extname(p))
-  return {
-    ...commons,
-    entry: { filename: p }
-  }
-})
-
-export default presets.concat({
-  ...commons,
-  entry: { index: path.resolve(__dirname, 'index.js') }
-})

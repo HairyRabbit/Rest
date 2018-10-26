@@ -6,12 +6,12 @@
  * @flow
  */
 
-import Builder from '../builder'
+import typeof Builder from '../builder'
 
 
 /// code
 
-function iconPreset(builder: Builder): Builder {
+function preset(builder: Builder): Builder {
   builder
     .setRuleLoader('icon', 'babel-loader')
     .setRuleLoaderOption('icon', 'babel-loader', 'cacheDirectory', true)
@@ -25,4 +25,4 @@ function iconPreset(builder: Builder): Builder {
 export const dependencies = [
   'react-svg-loader'
 ]
-export default iconPreset
+export default preset

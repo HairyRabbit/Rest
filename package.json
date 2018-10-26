@@ -15,10 +15,11 @@
     "build:website": "npx cross-env NODE_ENV=production npx webpack -r @babel/register -r esm --config website/webpack.config.js",
     "postbuild:website": "cp CNAME docs/ & cp docs/index.html docs/404.html & touch docs/.nojekyll",
     "prestart:scaffold": "npx cross-env NODE_ENV=development npx webpack -r @babel/register -r esm --config scaffold/webpack.config.js",
-    "start:scaffold": "start npx cross-env NODE_ENV=development npx electron ./scaffold/build && start npx webpack-dev-server -r @babel/register -r esm --config scaffold/webpack.config.js",
+    "start:scaffold": "start npx cross-env NODE_ENV=development npx electron ./scaffold/build && start npx webpack-dev-server --hot -r @babel/register -r esm --config scaffold/webpack.config.js",
     "start:devtool:docker": "npx cross-env NODE_ENV=development npx webpack-dev-server --hot -r @babel/register -r esm --config script/devtool/docker/webpack.config.js",
     "build:devtool:docker": "npx cross-env NODE_ENV=production BROWSERSLIST=\"ie 6-8\" npx webpack -r @babel/register -r esm --config script/devtool/docker/webpack.config.js",
-    "build:lib": "npx cross-env NODE_ENV=production npx webpack -r @babel/register -r esm --config script/webpack/builder/webpack.config.js"
+    "build:lib": "npx cross-env NODE_ENV=production npx webpack -r @babel/register -r esm --config script/webpack/builder/webpack.config.js",
+    "start:lib": "npx cross-env NODE_ENV=development npx webpack -r @babel/register -r esm --config script/webpack/builder/webpack.config.js"
   },
   "repository": {
     "type": "git",
@@ -48,6 +49,7 @@
     "@rabbitcc/log": "^0.4.1",
     "@rabbitcc/umd-extra": "0.0.16",
     "babel-loader": "^8.0.0-beta.6",
+    "babel-plugin-add-module-exports": "^1.0.0",
     "babel-plugin-webpack-alias": "^2.1.2",
     "babel-preset-power-assert": "^3.0.0",
     "concurrently": "^4.0.1",
@@ -103,7 +105,8 @@
     "webpack-bundle-analyzer": "^3.0.1",
     "webpack-bundle-size-analyzer": "^2.7.0",
     "webpack-cli": "^3.1.0",
-    "webpack-dev-server": "^3.1.8"
+    "webpack-dev-server": "^3.1.8",
+    "webpack-node-externals": "^1.7.2"
   },
   "dependencies": {
     "immer": "^1.7.2",
