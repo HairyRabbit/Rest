@@ -1,57 +1,65 @@
 /**
- * withMount
+ * withMount HOC component
  *
  * run script didMount/willUnMount lifecycle
  *
  * @flow
  */
 
-
 import * as React from 'react'
+import { isFunction } from 'lodash'
 
 
 /// code
 
-type Props = Object
-
-function withMount(mount: Function, unmount?: Function): * {
+function withMount(handle: Function): * {
   return function withMount1(Component: React.ComponentType<*>): * {
+    /**
+     * ensure handle was a function, at development mode
+     */
     if('production' !== process.env.NODE_ENV) {
-      if(!mount || 'function' !== typeof mount) {
+      if(!isFunction(handle)) {
         throw new Error(
-          'mount was required or not Function'
+          `[withMount] require handle function, but got "${typeof handle}"`
         )
       }
     }
 
-    return class withMountWrappedComponent extends React.PureComponent<Props> {
+    class WithMountWrappedComponent extends React.PureComponent<Props> {
       container: React.ElementRef<*>
       ret: any
 
-      constructor(props: Props) {
+      constructor(props: *) {
         super(props)
 
-        this.container = React.createRef()
+        this.containerRef = React.createRef()
       }
 
       componentDidMount() {
-        const { container, props } = this
-
-        this.ret = mount && mount({ container, ...props })
+        const { containerRef, props } = this
+        this.ret = handle({ containerRef, ...props })
       }
 
+      /**
+       * if this.ref provided and type was "function", call on this hook
+       */
       componentWillUnmount() {
-        const { container, ret, props } = this
+        const { containerRef, ret, props } = this
 
-        unmount && unmount({ container, ...props }, ret)
+        if(!isFunction(ret)) return
+        ret({ containerRef, ...props })
       }
 
       render() {
         return (
-          <Component {...this.props} container={this.container} />
+          <Component {...this.props} containerRef={this.containerRef} />
         )
       }
     }
+
+    const name = Component.displayName || Component.name
+    WithMountWrappedComponent.displayName = `WithMount(${name})`
+    return WithMountWrappedComponent
   }
 }
 

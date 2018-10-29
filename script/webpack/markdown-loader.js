@@ -42,8 +42,9 @@ const defaultComponents = {
   listItem: children => `<li>${children}</li>`
 }
 
-function createTransformer({ components, preload = '' } = {}) {
+function createTransformer({ components, preload = '', wrapperExport } = {}) {
   const hosit = []
+  const inject = []
   const comps = { ...defaultComponents, ...components }
 
   return function transform({ type, ...node } = {}, { shouldEscape } = {}) {
@@ -55,9 +56,14 @@ function createTransformer({ components, preload = '' } = {}) {
         return [
           `import * as React from 'react'`,
           preload,
-          hosit.join('\n'),
-          `export default () => (\n${comps.root(child.join('\n'))}\n)`
-        ].join('\n\n')
+          hosit.length && hosit.join('\n'),
+
+          `function MDXComponent(props) { `,
+          inject.length && inject.join('\n'),
+          `  return (\n${comps.root(child.join('\n'))}\n)`,
+          `}`,
+          `export default ${wrapperExport ? wrapperExport('MDXComponent') : 'MDXComponent'}`
+        ].filter(Boolean).join('\n\n')
       }
 
       case 'heading': {
@@ -81,6 +87,11 @@ function createTransformer({ components, preload = '' } = {}) {
         switch(lang) {
           case 'code': {
             hosit.push(value)
+            return ''
+          }
+
+          case 'code.inject': {
+            inject.push(value)
             return ''
           }
 

@@ -18,18 +18,17 @@ import type { Options as PresetStyleOptions } from './preset/style.js'
 
 /// code
 
+/**
+ * packages all build-in presets under "./presets"
+ */
+const presetsContext = require.context('./preset', true, /\.js$/)
+
 type Options = {
   debug?: boolean,
   logger?: Function,
   disableGuess?: boolean,
   disableCheck?: boolean
 } & PresetStyleOptions
-
-
-/**
- * build build-in presets
- */
-const presets = require.context('./preset', true, /\.js$/)
 
 class Builder {
   webpackOptions: WebpackOptions
@@ -48,51 +47,7 @@ class Builder {
     dependencies: string,
     result: boolean
   }>
-
   $key: string
-  // $value: () => mixed
-  // _set: Function
-  // set: Function
-  // setContext: Function
-  // setOutput: Function
-  // setEntry: Function
-  // deleteEntry: Function
-  // clearEntry: Function
-  // setEntryEntry: Function
-  // setEntryPrepends: Function
-  // clearEntryPrepends: Function
-  // addEntryPrepend: Function
-  // deleteEntryPrepend: Function
-  // setEntryCommonPrepends: Function
-  // clearEntryCommonPrepends: Function
-  // addEntryCommonPrepend: Function
-  // deleteEntryCommonPrepend: Function
-  // setPlugin: Function
-  // deletePlugin: Function
-  // clearPlugin: Function
-  // setPluginOptions: Function
-  // clearPluginOptions: Function
-  // setPluginOption: Function
-  // deletePluginOption: Function
-  // setRule: Function
-  // deleteRule: Function
-  // clearRule: Function
-  // setRuleTypes: Function
-  // clearRuleTypes: Function
-  // addRuleType: Function
-  // deleteRuleType: Function
-  // setRuleLoaders: Function
-  // clearRuleLoaders: Function
-  // setRuleLoader: Function
-  // deleteRuleLoader: Function
-  // setRuleLoaderOptions: Function
-  // clearRuleLoaderOptions: Function
-  // setRuleLoaderOption: Function
-  // deleteRuleLoaderOption: Function
-  // setRuleOptions: Function
-  // clearRuleOptions: Function
-  // setRuleOption: Function
-  // deleteRuleOption: Function
 
   constructor(webpackOptions?: string | WebpackOptions, options?: Options) {
     this.options = options || {}
@@ -185,11 +140,12 @@ class Builder {
       if(this.presets[preset]) return
 
       /**
-       * resolve script path, order by:
+       * resolve script path by order:
        *
        * 1. webpack/builder/preset/{name}.js
-       * 2. node_modules/webpack-builder-preset-{name}
-       * 3. WEBPACK_BUILDER_PATH/{name}.js
+       * 2. WEBPACK_BUILDER_PATH/{name}.js
+       * 3. node_modules/webpack-builder-preset-{name}
+       *
        */
       let lib
 
@@ -197,7 +153,7 @@ class Builder {
        * search build-in
        */
       try {
-        lib = presets('./' + preset + '.js')
+        lib = presetsContext('./' + preset + '.js')
       } catch(e) {}
 
       /**
@@ -210,22 +166,21 @@ class Builder {
       }
 
       /**
+       * search preset failed
+       */
+      if(!lib) {
+        throw new Error(`Search Preset not found, "${preset}"`)
+      }
+
+      /**
        * search paths
        */
       if(paths) {
         paths.split(';').forEach(p => {
           try {
-            lib = __non_webpack_require__(`${p}/${preset}.js`)
+            lib = __non_webpack_require__(`${p.trim()}/${preset}.js`)
           } catch(e) {}
         })
-      }
-
-
-      /**
-       * search preset failed
-       */
-      if(!lib) {
-        throw new Error(`Search Preset not found, "${preset}"`)
       }
 
       const { default: call, install, dependencies } = lib

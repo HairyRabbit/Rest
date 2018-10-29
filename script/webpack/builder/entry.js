@@ -63,13 +63,13 @@ class Entry {
     return this
   }
 
-  setEntryEntry(entry: string | Function, name?: string = 'main') {
+  setEntryEntry(name: string = 'main', entry: string | Function) {
     this.ensure(name)
     this.value.get(name).entry = entry
     return this
   }
 
-  setEntryPrepends(prepends?: Array<string> = [], name?: string = 'main') {
+  setEntryPrepends(name: string = 'main', prepends?: Array<string> = []) {
     if(!Array.isArray(prepends)) {
       throw new Error(
         `Entry.setEntry prepends argument should be array`
@@ -90,13 +90,13 @@ class Entry {
     return this
   }
 
-  addEntryPrepend(prepend: string, name?: string = 'main') {
+  addEntryPrepend(name: string = 'main', prepend: string) {
     this.ensure(name)
     this.value.get(name).prepends.add(prepend)
     return this
   }
 
-  deleteEntryPrepend(prepend: string, name?: string = 'main') {
+  deleteEntryPrepend(name: string = 'main', prepend: string) {
     this.ensure(name)
     this.value.get(name).prepends.delete(prepend)
     return this
