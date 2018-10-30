@@ -18,6 +18,8 @@ import type { Options as PresetStyleOptions } from './preset/style.js'
 
 /// code
 
+declare var __non_webpack_require__: Function
+
 /**
  * packages all build-in presets under "./presets"
  */
