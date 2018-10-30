@@ -1,0 +1,7 @@
+Unknow webpack option.entry{{ subtype }} type "{{ entrytype }}"
+The entry type should one of:
+
+  * string
+  * Array<string>
+  * { [name:string]: string | Array<string> }
+  * Function

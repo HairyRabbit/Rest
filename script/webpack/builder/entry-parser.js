@@ -1,14 +1,14 @@
 /**
- * entry parser
+ * entry parser, parse webpackOptions.entry
  *
- * parse webpackOptions.entry
- *
+ * @todo function type was invaild
  * @flow
  */
 
 import { isPlainObject } from 'lodash'
 import { objectType } from '../../../util'
 import type { Entry } from './webpack-options-type'
+import TemplateEntryOptionTypeError from './txt/entry-option-type-error.txt'
 
 
 /// code
@@ -129,12 +129,7 @@ import assert from 'assert'
 describe('Function entryOptionParse()', () => {
   it('should parse string', () => {
     assert.deepStrictEqual(
-      [{
-        name: 'main',
-        entry: 'foo',
-        prepends: []
-      }],
-
+      [{ name: 'main', entry: 'foo', prepends: [] }],
       parse('foo')
     )
   })
@@ -207,48 +202,23 @@ describe('Function entryOptionParse()', () => {
 
   it('should parse object with keys', () => {
     assert.deepStrictEqual(
-      [{
-        name: 'foo',
-        entry: 'bar',
-        prepends: []
-      },{
-        name: 'baz',
-        entry: 'qux',
-        prepends: []
-      }],
-
-      parse({
-        foo: 'bar',
-        baz: 'qux'
-      })
+      [{ name: 'foo', entry: 'bar', prepends: [] },
+       { name: 'baz', entry: 'qux', prepends: [] }],
+      parse({ foo: 'bar', baz: 'qux' })
     )
   })
 
   it('should parse object type with array type property', () => {
     assert.deepStrictEqual(
-      [{
-        name: 'foo',
-        entry: 'baz',
-        prepends: ['bar']
-      }],
-
-      parse({
-        foo: ['bar', 'baz']
-      })
+      [{ name: 'foo', entry: 'baz', prepends: ['bar'] }],
+      parse({ foo: ['bar', 'baz'] })
     )
   })
 
   it('should parse object with array type property, array only one element', () => {
     assert.deepStrictEqual(
-      [{
-        name: 'foo',
-        entry: 'bar',
-        prepends: []
-      }],
-
-      parse({
-        foo: ['bar']
-      })
+      [{ name: 'foo', entry: 'bar', prepends: [] }],
+      parse({ foo: ['bar'] })
     )
   })
 
