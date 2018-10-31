@@ -116,6 +116,9 @@ function parse(entry: Entry, name?: string = 'main', subtype?: boolean = false):
         const acc = []
 
         for(let key in entry) {
+          /**
+           * just fix the [true, null] type
+           */
           const sub = parse(entry[key], key, true)[1]
           if(sub) acc.push(sub[0])
         }
@@ -153,7 +156,6 @@ export default parse
 import assert from 'assert'
 
 describe('Function entryOptionParse()', () => {
-  console.log(TplEntryOptionTypeError)
   it('should parse dynamic entry', () => {
     assert.deepStrictEqual([true, null], parse(() => 'foo'))
   })
@@ -225,6 +227,11 @@ describe('Function entryOptionParse()', () => {
   it('should throw when parse invaild type with subtype', () => {
     // $FlowFixMe
     assert.throws(() => parse(undefined, 'foo', true), /.*/)
+  })
+
+  it('should throw when parse function type with subtype', () => {
+    // $FlowFixMe
+    assert.throws(() => parse(undefined, () => 'foo', true), /.*/)
   })
 
   it('should throw when parse invaild object type', () => {
