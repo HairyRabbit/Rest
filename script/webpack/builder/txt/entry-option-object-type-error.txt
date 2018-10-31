@@ -1,7 +1,7 @@
 [WebpackBuilder] Error:
 
-Unknow webpack option.entry{{ subtype }} type "{{ entrytype }}",
-The entry type should one of:
+Unknow webpack option.entry type "{{ entrytype }}", The entry
+type should one of:
 
   * string
   * Array<string>

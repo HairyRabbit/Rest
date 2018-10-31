@@ -49,6 +49,7 @@ class Builder {
     dependencies: string,
     result: boolean
   }>
+  transforms: Array<any>
   $key: string
 
   constructor(webpackOptions?: string | WebpackOptions, options?: Options) {
@@ -63,6 +64,7 @@ class Builder {
     this.presets = []
     this.jobs = []
     this.shared = {}
+    this.transforms = []
 
     if(!this.options.disableGuess) {
       this.guessContext()

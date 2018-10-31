@@ -7,6 +7,9 @@
  * - non-empty string
  * - Array<non-empty string>
  *
+ * if entry was dynamic entry - function type, log warning
+ * when set entry prepends, but commonPrepends was ok.
+ *
  * @flow
  */
 
@@ -17,7 +20,7 @@ import type { Entry as WebpackEntry } from './webpack-options-type'
 
 /// code
 
-type EntryValue = string | Function
+type EntryValue = string
 
 type Value = {
   entry: ?EntryValue,
@@ -27,17 +30,22 @@ type Value = {
 class Entry {
   value: Map<string, Value>
   commons: Set<string>
+  isDynamicEntry: boolean
 
   constructor(entry?: WebpackEntry) {
     this.value = new Map()
     this.commons = new Set()
+    this.isDynamicEntry = false
 
     if(entry) {
-      const parsed = parse(entry)
+      const [isDynamicEntry, parsed] = parse(entry)
+      this.isDynamicEntry = isDynamicEntry
 
-      for(let i = 0; i < parsed.length; i++) {
-        const { name, entry, prepends } = parsed[i]
-        this.setEntry(name, entry, prepends)
+      if(!isDynamicEntry) {
+        for(let i = 0; i < parsed.length; i++) {
+          const { name, entry, prepends } = parsed[i]
+          this.setEntry(name, entry, prepends)
+        }
       }
     }
   }
@@ -52,7 +60,7 @@ class Entry {
   setEntry(name: string = 'main', entry: ?EntryValue, prepends?: Array<string> = []) {
     if(!Array.isArray(prepends)) {
       throw new Error(
-        `Entry.setEntry prepends argument should be array`
+        `Entry.setEntry prepends should be array`
       )
     }
 
@@ -145,11 +153,6 @@ class Entry {
       switch(typeof entry) {
         case 'string': {
           options[name] = [...pre, entry]
-          return
-        }
-
-        case 'function': {
-          options[name] = () => entry(pre)
           return
         }
 
@@ -474,14 +477,6 @@ describe('Class Entry', () => {
       new Entry(['foo', 'bar']).transform()
     )
   })
-
-  // it('Entry.transfrom with dyamic entry', () => {
-  //   const ref = a => a
-  //   assert.deepStrictEqual(
-  //     ['foo'],
-  //     new Entry(ref).setEntryPrepends(['foo']).transform().main()
-  //   )
-  // })
 
   it('Entry.transform with common prepends', () => {
     assert.deepStrictEqual(

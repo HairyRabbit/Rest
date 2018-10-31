@@ -14,6 +14,13 @@ import typeof Builder from '../builder'
 /// code
 
 function preset(builder: Builder): Builder {
+  if(!builder.babel) {
+    builder.babel = new Babel()
+    builder.export(builder.babel, [
+      'addBabelPlugin'
+    ])
+  }
+
   builder
     .setRuleLoader('js', 'babel-loader')
     .setRuleLoaderOption('js', 'babel-loader', 'cacheDirectory', true)
@@ -24,6 +31,16 @@ function preset(builder: Builder): Builder {
     })
 
   return builder
+}
+
+class Babel {
+  constructor() {
+    this.plugins = new Set()
+    this.presets = new Set()
+  }
+  addBabelPlugin() {
+    return this
+  }
 }
 
 

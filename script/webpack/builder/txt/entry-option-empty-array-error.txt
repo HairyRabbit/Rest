@@ -1,0 +1,3 @@
+[WebpackBuilder] Error:
+
+The entry should include more then one element, but got "[]"

@@ -4,11 +4,11 @@
  * @flow
  */
 
+
 /// code
 
 function readEnv(name: string): ?string {
-  if(!process.env) return void 0
-
+  if(!process.env) return undefined
   return process.env[name]
 }
 

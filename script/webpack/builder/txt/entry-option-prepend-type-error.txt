@@ -1,0 +1,5 @@
+[WebpackBuilder] Error:
+
+The entry array should be all the element was string type, but \
+the entry{{ subtype }} prepends[{{ idx }}] {{ elem }} type was \
+{{ type }}
