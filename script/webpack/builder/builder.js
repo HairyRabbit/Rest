@@ -52,19 +52,20 @@ class Builder {
   transforms: Array<any>
   $key: string
 
-  constructor(webpackOptions?: string | WebpackOptions, options?: Options) {
+  constructor(webpackOptions?: mixed, options?: Options) {
     this.options = options || {}
     this.webpackOptions = 'string' === typeof webpackOptions
       ? {}
       : (webpackOptions || {})
     this.mode = this.webpackOptions.mode || this.guessMode()
-    this.entry = new Entry(this.webpackOptions.entry)
-    this.plugin = new Plugin(this.webpackOptions.plugin)
+
     this.rule = new Rule(this.webpackOptions.module && this.webpackOptions.module.rules)
     this.presets = []
     this.jobs = []
     this.shared = {}
-    this.transforms = []
+    this.transforms = [ Entry, Plugin ]
+
+    this.init()
 
     if(!this.options.disableGuess) {
       this.guessContext()
@@ -77,29 +78,6 @@ class Builder {
       ], 'unshift')
       .export(this, [
         'set'
-      ])
-      .export(this.entry, [
-        'setEntry',
-        'deleteEntry',
-        'clearEntry',
-        'setEntryEntry',
-        'setEntryPrepends',
-        'clearEntryPrepends',
-        'addEntryPrepend',
-        'deleteEntryPrepend',
-        'setEntryCommonPrepends',
-        'clearEntryCommonPrepends',
-        'addEntryCommonPrepend',
-        'deleteEntryCommonPrepend'
-      ])
-      .export(this.plugin, [
-        'setPlugin',
-        'deletePlugin',
-        'clearPlugin',
-        'setPluginOptions',
-        'clearPluginOptions',
-        'setPluginOption',
-        'deletePluginOption'
       ])
       .export(this.rule, [
         'setRule',
@@ -130,6 +108,16 @@ class Builder {
     if('string' === typeof webpackOptions) {
       this.install(webpackOptions)
     }
+  }
+
+  /**
+   * initial hook
+   */
+  init() {
+    this.transforms.forEach(({ init }) => {
+      if('function' !==typeof init) return
+      init(this)
+    })
   }
 
   /**
@@ -307,7 +295,7 @@ class Builder {
    * @private
    */
   guessEntry() {
-    if(!isEmpty(this.entry.value)) return this
+    if(!this.entry.isEmpty()) return this
 
     const entry = ['boot.js', 'index.js']
           .map(file => this.context
@@ -316,7 +304,7 @@ class Builder {
           .find(file => fs.existsSync(file))
 
     if(!entry) return this
-    return this.entry.setEntryEntry(entry)
+    return this.entry.setEntryModule(entry)
   }
 
   /**
@@ -421,11 +409,13 @@ ${cmd}
     this.context && this._set('context', this.context)
     this.output && this._set('output.path', this.output)
 
-    const transformEntry = this.entry.transform()
-    !isEmpty(transformEntry) && this._set('entry', transformEntry)
+    this.transforms.forEach(({ setOption }) => {
+      if('function' !== typeof setOption) return
+      setOption(this)
+    })
 
-    const transformPlugin = this.plugin.transform()
-    !isEmpty(transformPlugin) && this._set('plugins', transformPlugin)
+    // const transformPlugin = this.plugin.transform()
+    // !isEmpty(transformPlugin) && this._set('plugins', transformPlugin)
 
     const transformRule = this.rule.transform()
     !isEmpty(transformRule) && this._set('module.rules', transformRule)
@@ -542,7 +532,7 @@ describe('Class Builder', () => {
     )
   })
 
-  it('Builder.setEntryEntry', () => {
+  it('Builder.setEntryModule', () => {
     assert.deepStrictEqual({
         mode: 'test',
         entry: {
@@ -551,7 +541,7 @@ describe('Class Builder', () => {
       },
 
       new Builder(undefined, { disableGuess: true })
-        .setEntryEntry('foo')
+        .setEntryModule('foo')
         .transform()
     )
   })

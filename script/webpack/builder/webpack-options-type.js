@@ -19,7 +19,7 @@ export type Mode =
   | 'production'
   | 'none'
 
-interface Plugin {
+type Plugin = {
   apply(compiler: any): void
 }
 

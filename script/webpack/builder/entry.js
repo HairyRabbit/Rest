@@ -1,63 +1,82 @@
 /**
- * entry tool, used for single entry, multi also supports.
- * the webpack entry schame:
+ * entry tool, first support SPA, MPA also works fine.
+ * the webpack entry types:
  *
- * - function
- * - Object<{ [key: string]: non-empty string | Array<non-empty string> }>
- * - non-empty string
- * - Array<non-empty string>
+ * - function - DynamicEntry
+ * - Object<{ [key: string]: string | Array<string> }> - MultiEntry
+ * - string - SingleEntry
+ * - Array<string> - MultiEntry
  *
- * if entry was dynamic entry - function type, log warning
- * when set entry prepends, but commonPrepends was ok.
- *
+ * @link [webpack/lib/EntryOptionPlugin](https://github.com/webpack/webpack/blob/master/lib/EntryOptionPlugin.js)
  * @flow
  */
 
 import { isEmpty } from 'lodash'
 import parse from './entry-parser'
+import typeof { Builder } from './builder'
 import type { Entry as WebpackEntry } from './webpack-options-type'
 
 
 /// code
 
-type EntryValue = string
-
-type Value = {
-  entry: ?EntryValue,
+type Entry$Value = {
+  entry: ?string,
   prepends: Set<string>
 }
 
 class Entry {
-  value: Map<string, Value>
+  value: Map<string, Entry$Value>
   commons: Set<string>
-  isDynamicEntry: boolean
+  dynamicEntry: ?Function
 
   constructor(entry?: WebpackEntry) {
     this.value = new Map()
     this.commons = new Set()
-    this.isDynamicEntry = false
 
     if(entry) {
-      const [isDynamicEntry, parsed] = parse(entry)
-      this.isDynamicEntry = isDynamicEntry
-
-      if(!isDynamicEntry) {
+      const parsed = parse(entry)
+      if('function' === typeof parsed) {
+        this.dynamicEntry = parsed
+      } else {
         for(let i = 0; i < parsed.length; i++) {
           const { name, entry, prepends } = parsed[i]
-          this.setEntry(name, entry, prepends)
+          this.setEntry(entry, prepends, name)
         }
       }
     }
   }
 
+  /**
+   * test value is empty
+   *
+   * @private
+   */
+  isEmpty() {
+    return 0 === this.value.size
+  }
+
+  /**
+   * ensure the named entry avaiable
+   *
+   * @private
+   */
   ensure(name: string) {
-    if(name && !this.value.get(name)) this.setEntry(name)
+    if(name && !this.getEntry(name)) this.setEntry(undefined, undefined, name)
     const value = this.value.get(name)
     if(!value) throw new Error(`Entry "${name}" not found`)
     return value
   }
 
-  setEntry(name: string = 'main', entry: ?EntryValue, prepends?: Array<string> = []) {
+  /**
+   * get entry by name
+   *
+   * @private
+   */
+  getEntry(name?: string = 'main') {
+    return this.value.get(name)
+  }
+
+  setEntry(entry: ?string, prepends?: Array<string> = [], name?: string = 'main') {
     if(!Array.isArray(prepends)) {
       throw new Error(
         `Entry.setEntry prepends should be array`
@@ -82,8 +101,24 @@ class Entry {
     return this
   }
 
-  setEntryEntry(entry: ?EntryValue, name?: string = 'main') {
+  /**
+   * set entry module path
+   */
+  setEntryModule(entry: ?string, name?: string = 'main') {
     this.ensure(name).entry = entry
+    return this
+  }
+
+  /**
+   * rename entry name to a new one
+   */
+  renameEntry(name?: string = 'main', newName: string) {
+    if(!newName) {
+      throw new Error('name was required')
+    }
+
+    this.value.set(newName, this.ensure(name))
+    this.deleteEntry(name)
     return this
   }
 
@@ -93,8 +128,6 @@ class Entry {
         `Entry.setEntry prepends argument should be array`
       )
     }
-
-    if(!prepends.length) return this
 
     this.ensure(name).prepends = new Set(prepends)
     return this
@@ -115,6 +148,9 @@ class Entry {
     return this
   }
 
+  /**
+   * setEntryCommonPrepends, override entry commons prepends
+   */
   setEntryCommonPrepends(prepends: Array<string> = []) {
     if(!Array.isArray(prepends)) {
       throw new Error(
@@ -126,47 +162,79 @@ class Entry {
     return this
   }
 
+  /**
+   * clearEntryCommonPrepends, clear commons prepends
+   */
   clearEntryCommonPrepends() {
     this.commons.clear()
     return this
   }
 
+  /**
+   * addEntryCommonPrepend, add commons prepend
+   */
   addEntryCommonPrepend(prepend: string) {
     this.commons.add(prepend)
     return this
   }
 
+  /**
+   * deleteEntryCommonPrepend, delete commons prepend
+   */
   deleteEntryCommonPrepend(prepend: string) {
     this.commons.delete(prepend)
     return this
   }
 
+  /**
+   * transform to webpack option.entry
+   */
   transform(): WebpackEntry {
     const options = {}
     const commons = Array.from(this.commons)
 
     this.value.forEach(({ entry, prepends }, name) => {
-      if(!entry) return
-
-      const pre = [...commons, ...Array.from(prepends)]
-
-      switch(typeof entry) {
-        case 'string': {
-          options[name] = [...pre, entry]
-          return
-        }
-
-        default: {
-          return
-        }
-      }
+      if('string' !== typeof entry) return
+      options[name] = [
+        ...commons,
+        ...Array.from(prepends),
+        entry
+      ]
     })
 
-    if(isEmpty(options)) throw new Error(
-      `Entry was empty`
-    )
+    const dynamicEntry = this.dynamicEntry
+    if(dynamicEntry) {
+      return function wrapperDynamicEntry() {
+        return dynamicEntry(options, commons)
+      }
+    }
 
     return options
+  }
+
+  static init(self: Builder): Builder {
+    self.entry = new Entry(self.webpackOptions.entry)
+    return self.export(self.entry, [
+      'setEntry',
+      'deleteEntry',
+      'clearEntry',
+      'renameEntry',
+      'setEntryModule',
+      'setEntryPrepends',
+      'clearEntryPrepends',
+      'addEntryPrepend',
+      'deleteEntryPrepend',
+      'setEntryCommonPrepends',
+      'clearEntryCommonPrepends',
+      'addEntryCommonPrepend',
+      'deleteEntryCommonPrepend'
+    ])
+  }
+
+  static setOption(self: Builder): Builder {
+    const options = self.entry.transform()
+    if(isEmpty(options)) return self
+    return self._set('entry', options)
   }
 }
 
@@ -178,53 +246,71 @@ export default Entry
 
 /// test
 
+import webpack from 'webpack'
 import assert from 'assert'
 
 describe('Class Entry', () => {
+  const init = { entry: undefined, prepends: new Set() }
   it('Entry.constrctor', () => {
-    assert.deepStrictEqual(
-      new Map([['foo', {
-        entry: 'bar',
-        prepends: new Set()
-      }],['baz', {
-        entry: 'quxx',
-        prepends: new Set(['qux'])
-      }]]),
+    const entry = new Entry()
+    assert.deepStrictEqual(new Map(), entry.value)
+    assert.deepStrictEqual(new Set(), entry.commons)
+    assert.deepStrictEqual(undefined, entry.dynamicEntry)
+  })
 
+  it('Entry.constrctor, should parse webpack entry options', () => {
+    assert.deepStrictEqual(
+      new Map([['foo', { entry: 'bar', prepends: new Set() }],
+               ['baz', { entry: 'quxx', prepends: new Set(['qux']) }]]),
       new Entry({ foo: 'bar', baz: ['qux', 'quxx'] }).value
     )
   })
 
-  it('Entry.setEntry', () => {
-    assert.deepStrictEqual(
-      new Map([['foo', {
-        entry: undefined,
-        prepends: new Set()
-      }]]),
+  it('Entry.constrctor, should parse webpack dynamic entry', () => {
+    const ref = () => 'foo'
+    const entry = new Entry(ref)
+    assert.deepStrictEqual(new Map(), entry.value)
+    assert.deepStrictEqual(ref, entry.dynamicEntry)
+  })
 
-      new Entry().setEntry('foo').value
-    )
+  it('Entry.isEmpty', () => {
+    assert(new Entry().isEmpty())
+    assert(!new Entry('foo').isEmpty())
+  })
+
+  it('Entry.getEntry', () => {
+    const entry = new Entry().setEntry()
+    assert.deepStrictEqual(init, entry.getEntry())
+  })
+
+  it('Entry.getEntry, undefined', () => {
+    const entry = new Entry().setEntry()
+    assert.deepStrictEqual(undefined, entry.getEntry('foo'))
   })
 
   it('Entry.ensure', () => {
-    assert.deepStrictEqual(
-      { entry: undefined, prepends: new Set() },
-      new Entry().ensure('foo')
-    )
+    assert.deepStrictEqual(init, new Entry().ensure('foo'))
+  })
+
+  it('Entry.renameEntry', () => {
+    const entry = new Entry().setEntry()
+    entry.renameEntry('main', 'foo')
+    assert.deepStrictEqual(undefined, entry.getEntry())
+    assert.deepStrictEqual(init, entry.getEntry('foo'))
+  })
+
+  it('Entry.setEntry, default entry', () => {
+    assert.deepStrictEqual(init, new Entry().setEntry().getEntry())
+  })
+
+  it('Entry.setEntry, with name', () => {
+    const entry = new Entry().setEntry(undefined, undefined, 'foo')
+    assert.deepStrictEqual(init, entry.getEntry('foo'))
   })
 
   it('Entry.clearEntry', () => {
     assert.deepStrictEqual(
       new Map(),
-
-      new Entry('foo').clearEntry().value
-    )
-  })
-
-  it('Entry.clearEntry', () => {
-    assert.deepStrictEqual(
-      new Map(),
-
       new Entry('foo').clearEntry().value
     )
   })
@@ -232,7 +318,6 @@ describe('Class Entry', () => {
   it('Entry.clearEntry with empty map', () => {
     assert.deepStrictEqual(
       new Map(),
-
       new Entry().clearEntry().value
     )
   })
@@ -240,45 +325,36 @@ describe('Class Entry', () => {
   it('Entry.deleteEntry', () => {
     assert.deepStrictEqual(
       new Map(),
-
       new Entry('foo').deleteEntry('main').value
     )
   })
 
   it('Entry.deleteEntry name not exists', () => {
     assert.deepStrictEqual(
-      new Map([['main', {
-        entry: 'foo',
-        prepends: new Set()
-      }]]),
-
+      new Map([['main', { entry: 'foo', prepends: new Set() }]]),
       new Entry('foo').deleteEntry('bar').value
     )
   })
 
-  it('Entry.setEntryEntry', () => {
+  it('Entry.setEntryModule', () => {
     assert.deepStrictEqual(
-      new Map([['main', {
-        entry: 'bar',
-        prepends: new Set()
-      }]]),
-
-      new Entry('foo').setEntryEntry('bar').value
+      new Map([['main', { entry: 'bar', prepends: new Set() }]]),
+      new Entry('foo').setEntryModule('bar').value
     )
   })
 
-  it('Entry.setEntryEntry with null', () => {
+  it('Entry.setEntryModule with null', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: null,
         prepends: new Set()
       }]]),
 
-      new Entry().setEntryEntry(null).value
+      new Entry().setEntryModule(null).value
     )
   })
 
-  it('Entry.setEntryEntry with name', () => {
+  it('Entry.setEntryModule with name', () => {
     assert.deepStrictEqual(
       new Map([['main', {
         entry: 'foo',
@@ -288,7 +364,7 @@ describe('Class Entry', () => {
         prepends: new Set()
       }]]),
 
-      new Entry('foo').setEntryEntry('bar', 'baz').value
+      new Entry('foo').setEntryModule('bar', 'baz').value
     )
   })
 
@@ -456,19 +532,25 @@ describe('Class Entry', () => {
 
   it('Entry.transfrom', () => {
     assert.deepStrictEqual(
-      {
-        main: ['foo']
-      },
-
+      { main: ['foo'] },
       new Entry('foo').transform()
     )
   })
 
-  it('Entry.transfrom filter null entry', () => {
-    assert.deepStrictEqual(
-      null,
-      new Entry('foo').clearEntry().transform()
-    )
+  it('Entry.transfrom for dynamic entry', () => {
+    const ref = () => 'foo'
+    const opt = new Entry(ref).transform()
+    assert('function' === typeof opt)
+  })
+
+  it('Entry.transfrom for dynamic entry and pass commons and options', () => {
+    const ref = (...args) => args
+    const opt = new Entry(ref)
+          .addEntryCommonPrepend('foo')
+          .setEntry('bar')
+          .transform()
+    if('function' !== typeof opt) return false
+    assert.deepStrictEqual([{ main: ['foo', 'bar'] }, ['foo']], opt())
   })
 
   it('Entry.transfrom with prepends', () => {

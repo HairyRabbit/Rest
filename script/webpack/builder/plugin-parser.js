@@ -1,7 +1,5 @@
 /**
- * plugin parser
- *
- * parse webpackOptions.plugins
+ * parse webpack options.plugins, just pick class constructor name
  *
  * @flow
  */
@@ -13,8 +11,8 @@ import type { Plugins } from './webpack-options-type'
 
 type Result = {
   name: string,
-  constructor: any,
-  entity: any
+  constructor: Function,
+  entity: *
 }
 
 function parse(plugins: Plugins = []): Array<Result> {
@@ -26,7 +24,6 @@ function parse(plugins: Plugins = []): Array<Result> {
 }
 
 
-
 /// export
 
 export default parse
@@ -36,33 +33,31 @@ export default parse
 
 import assert from 'assert'
 
-describe('Function pluginParse', () => {
+describe('Function pluginParse()', () => {
   it('parse plugin', () => {
     class Foo { apply() {} }
     class Bar { apply() {} }
-    const foo = new Foo
-    const bar = new Bar
-
+    const foo = new Foo()
+    const bar = new Bar()
     assert.deepStrictEqual(
-      [
-        { name: 'Foo', constructor: Foo, entity: foo },
-        { name: 'Bar', constructor: Bar, entity: bar }
-      ],
-
+      [{ name: 'Foo', constructor: Foo, entity: foo },
+       { name: 'Bar', constructor: Bar, entity: bar }],
       parse([ foo, bar ])
     )
   })
 
   it('parse plugin with options', () => {
-    class Foo { apply() {} }
-    const foo = new Foo()
-
+    class Foo {
+      bar: number
+      constructor(a) { this.bar = a }
+      apply() {}
+    }
+    const foo = new Foo(42)
+    const parsed = parse([ foo ])
     assert.deepStrictEqual(
-      [
-        { name: 'Foo', constructor: Foo, entity: foo },
-      ],
-
-      parse([ foo ])
+      [{ name: 'Foo', constructor: Foo, entity: foo }],
+      parsed
     )
+    assert.deepStrictEqual(42, parsed[0].entity.bar)
   })
 })

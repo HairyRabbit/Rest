@@ -1,7 +1,6 @@
 /**
  * entry parser, parse webpackOptions.entry
  *
- * @todo function type was invaild
  * @flow
  */
 
@@ -17,19 +16,20 @@ import TplEntryOptionEmptyError from './txt/entry-option-empty-array-error.txt'
 
 /// code
 
-type EntryResult = {
+type Result$Value = {
   name: string,
   entry: string,
   prepends: Array<string>,
 }
 
-type Result =
-  | [false, Array<EntryResult>]
-  | [true, null]
+type Result = Array<Result$Value> | Function
 
 function parse(entry: Entry, name?: string = 'main', subtype?: boolean = false): Result {
   switch(typeof entry) {
     case 'function': {
+      /**
+       * function subtype was invalid
+       */
       if(subtype) {
         throw new Error(
           TplEntryOptionSubtypeError
@@ -38,15 +38,15 @@ function parse(entry: Entry, name?: string = 'main', subtype?: boolean = false):
         )
       }
 
-      return [true, null]
+      return entry
     }
 
     case 'string': {
-      return [false, [{
+      return [{
         name,
         entry,
         prepends: []
-      }]]
+      }]
     }
 
     case 'object': {
@@ -66,11 +66,11 @@ function parse(entry: Entry, name?: string = 'main', subtype?: boolean = false):
            * only one element, like string type
            */
           case 1: {
-            return [false, [{
+            return [{
               name,
               entry: entry[0],
               prepends: []
-            }]]
+            }]
           }
 
           /**
@@ -92,11 +92,11 @@ function parse(entry: Entry, name?: string = 'main', subtype?: boolean = false):
               )
             }
 
-            return [false, [{
+            return [{
               name,
               entry: entry.slice(-1)[0],
               prepends: entry.slice(0, -1)
-            }]]
+            }]
           }
         }
       } else if(subtype) {
@@ -117,13 +117,12 @@ function parse(entry: Entry, name?: string = 'main', subtype?: boolean = false):
 
         for(let key in entry) {
           /**
-           * just fix the [true, null] type
+           * unwrap data
            */
-          const sub = parse(entry[key], key, true)[1]
-          if(sub) acc.push(sub[0])
+          acc.push(parse(entry[key], key, true)[0])
         }
 
-        return [false, acc]
+        return acc
       } else {
         /**
          * invalid object type, like RegExp, Date etc..
@@ -157,19 +156,20 @@ import assert from 'assert'
 
 describe('Function entryOptionParse()', () => {
   it('should parse dynamic entry', () => {
-    assert.deepStrictEqual([true, null], parse(() => 'foo'))
+    const ref = () => 'foo'
+    assert.deepStrictEqual(ref, parse(ref))
   })
 
   it('should parse string', () => {
     assert.deepStrictEqual(
-      [false, [{ name: 'main', entry: 'foo', prepends: [] }]],
+      [{ name: 'main', entry: 'foo', prepends: [] }],
       parse('foo')
     )
   })
 
   it('should parse array', () => {
     assert.deepStrictEqual(
-      [false, [{ name: 'main', entry: 'bar', prepends: ['foo'] }]],
+      [{ name: 'main', entry: 'bar', prepends: ['foo'] }],
       parse(['foo', 'bar'])
     )
   })
@@ -185,36 +185,36 @@ describe('Function entryOptionParse()', () => {
 
   it('should parse array only one element', () => {
     assert.deepStrictEqual(
-      [false, [{ name: 'main', entry: 'foo', prepends: [] }]],
+      [{ name: 'main', entry: 'foo', prepends: [] }],
       parse(['foo'])
     )
   })
 
   it('should parse object', () => {
     assert.deepStrictEqual(
-      [false, [{ name: 'foo', entry: 'bar', prepends: [] }]],
+      [{ name: 'foo', entry: 'bar', prepends: [] }],
       parse({ foo: 'bar' })
     )
   })
 
   it('should parse object with keys', () => {
     assert.deepStrictEqual(
-      [false, [{ name: 'foo', entry: 'bar', prepends: [] },
-               { name: 'baz', entry: 'qux', prepends: [] }]],
+      [{ name: 'foo', entry: 'bar', prepends: [] },
+       { name: 'baz', entry: 'qux', prepends: [] }],
       parse({ foo: 'bar', baz: 'qux' })
     )
   })
 
   it('should parse object type with array type property', () => {
     assert.deepStrictEqual(
-      [false, [{ name: 'foo', entry: 'baz', prepends: ['bar'] }]],
+      [{ name: 'foo', entry: 'baz', prepends: ['bar'] }],
       parse({ foo: ['bar', 'baz'] })
     )
   })
 
   it('should parse object with array type property, array only one element', () => {
     assert.deepStrictEqual(
-      [false, [{ name: 'foo', entry: 'bar', prepends: [] }]],
+      [{ name: 'foo', entry: 'bar', prepends: [] }],
       parse({ foo: ['bar'] })
     )
   })

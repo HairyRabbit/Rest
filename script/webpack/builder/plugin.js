@@ -6,65 +6,83 @@
 
 import { isEmpty, isMap, isPlainObject } from 'lodash'
 import parse from './plugin-parser'
+import typeof { Builder } from './builder'
 import type { Plugins as WebpackPlugin } from './webpack-options-type'
 
 
 /// code
 
+type Plugin$Option = Map<any, any>
+
+type Plugin$Value = {
+  constructor: any,
+  entity: any,
+  options: Plugin$Option
+}
+
+type Plugin$Name = string
+type Plugin$Index = number
+
 class Plugin {
-  value: Map<string, Map<number, { constructor: any, entity: any, options: Object }>>
+  value: Map<Plugin$Name, Map<Plugin$Index, Plugin$Value>>
 
   constructor(plugins?: WebpackPlugin) {
     this.value = new Map()
 
     if(plugins) {
-      const parsed = parse(plugins)
-      for(let i = 0; i < parsed.length; i++) {
-        const { name, constructor, entity } = parsed[i]
-        this[
-          this.value.get(name) ? 'addPlugin' : 'setPlugin'
-        ](name, constructor, undefined, entity)
-      }
+      /**
+       * parse plugins, if plugin already set, add plugin to set
+       * if not, set plugin first
+       */
+      parse(plugins).forEach(({ name, constructor, entity }) => {
+        this.value.get(name)
+          ? this.addPlugin(name, constructor, undefined, entity)
+          : this.setPlugin(name, constructor, undefined, entity)
+      })
     }
   }
 
-  ensure(name: string) {
-    if(name && !this.value.get(name)) {
-      this.value.set(name, new Map())
-    }
-
-    return this
-  }
-
-  setPlugin(name: string, constructor?: any, options?: Object, entity?: any) {
-    return this
-      .ensure(name)
-      .clearPlugins(name)
-      .addPlugin(name, constructor, options, entity)
+  /**
+   * ensure plugin avaiable by name
+   *
+   * @private
+   */
+  ensure(name: Plugin$Name) {
+    if(name && !this.value.get(name)) this.value.set(name, new Map())
+    const value = this.value.get(name)
+    if(!value) throw new Error(`Plugin "${name}" not found`)
+    return value
   }
 
   deletePlugin(name: string) {
-    this.ensure(name).value.delete(name)
+    this.value.delete(name)
     return this
   }
 
+  /**
+   * clear all plugin
+   */
   clearPlugin() {
     this.value.clear()
     return this
   }
 
   /**
-   * clear all plugins by name
-   *
-   * @private
+   * clear all sub plugins by name
    */
   clearPlugins(name: string) {
-    this.ensure(name).value.get(name).clear()
+    this.ensure(name).clear()
     return this
   }
 
+  /**
+   * add plugin, push plugin to set by name, the plugin shape:
+   *
+   * { 0: Plugin, 1: Plugin }
+   */
   addPlugin(name: string, constructor?: any, options?: Object, entity?: any) {
-    this.ensure(name).value.get(name).set(this.value.get(name).size, {
+    const plugins = this.ensure(name)
+    plugins.set(plugins.size, {
       constructor,
       options: new Map(Object.entries(options || {})),
       entity
@@ -72,8 +90,17 @@ class Plugin {
     return this
   }
 
+  /**
+   * set plugin, just clearnPlugins + addPlugin
+   */
+  setPlugin(name: string, constructor?: any, options?: Object, entity?: any) {
+    return this
+      .clearPlugins(name)
+      .addPlugin(name, constructor, options, entity)
+  }
+
   setPluginOptions(name: string, options: Object) {
-    const plugins = this.ensure(name).value.get(name)
+    const plugins = this.ensure(name)
     for(let [_, plugin] of plugins) {
       plugin.options = new Map(Object.entries(options || {}))
     }
@@ -82,7 +109,7 @@ class Plugin {
   }
 
   clearPluginOptions(name: string) {
-    const plugins = this.ensure(name).value.get(name)
+    const plugins = this.ensure(name)
     for(let [_, plugin] of plugins) {
       plugin.options.clear()
     }
@@ -91,7 +118,7 @@ class Plugin {
   }
 
   setPluginOption(name: string, key: string, value: *) {
-    const plugins = this.ensure(name).value.get(name)
+    const plugins = this.ensure(name)
     for(let [_, plugin] of plugins) {
       plugin.options.set(key, value)
     }
@@ -100,7 +127,7 @@ class Plugin {
   }
 
   deletePluginOption(name: string, key: string) {
-    const plugins = this.ensure(name).value.get(name)
+    const plugins = this.ensure(name)
     for(let [_, plugin] of plugins) {
       plugin.options.delete(key)
     }
@@ -130,6 +157,25 @@ class Plugin {
 
     return acc
   }
+
+  static init(self: Builder): Builder {
+    self.plugin = new Plugin(self.webpackOptions.plugin)
+    return self.export(self.plugin, [
+      'setPlugin',
+      'deletePlugin',
+      'clearPlugin',
+      'setPluginOptions',
+      'clearPluginOptions',
+      'setPluginOption',
+      'deletePluginOption'
+    ])
+  }
+
+  static setOption(self: Builder): Builder {
+    const options = self.plugin.transform()
+    if(isEmpty(options)) return self
+    return self._set('plugins', options)
+  }
 }
 
 
@@ -146,14 +192,13 @@ describe('Class Plugin', () => {
   it('Plugin.constructor', () => {
     assert.deepStrictEqual(
       new Map(),
-
       new Plugin().value
     )
   })
 
   it('Plugin.constructor parse plugins', () => {
-    class Foo {}
-    class Bar {}
+    class Foo { apply() {} }
+    class Bar { apply() {} }
     const foo = new Foo()
     const bar = new Bar()
 
@@ -172,7 +217,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.constructor parse duplicate plugins', () => {
-    class Foo {}
+    class Foo { apply() {} }
     const foo = new Foo()
 
     assert.deepStrictEqual(
@@ -188,7 +233,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.setPlugin', () => {
-    class Foo {}
+    class Foo { apply() {} }
 
     assert.deepStrictEqual(
       new Map([
@@ -208,7 +253,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.setPlugin override by name', () => {
-    class Foo {}
+    class Foo { apply() {} }
 
     assert.deepStrictEqual(
       new Map([
@@ -230,7 +275,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.deletePlugin', () => {
-    class Foo {}
+    class Foo { apply() {} }
 
     assert.deepStrictEqual(
       new Map(),
@@ -242,7 +287,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.clearPlugin', () => {
-    class Foo {}
+    class Foo { apply() {} }
 
     assert.deepStrictEqual(
       new Map(),
@@ -254,7 +299,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.addPlugin', () => {
-    class Foo {}
+    class Foo { apply() {} }
 
     assert.deepStrictEqual(
       new Map([
@@ -292,7 +337,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.clearPlugins', () => {
-    class Foo {}
+    class Foo { apply() {} }
 
     assert.deepStrictEqual(
       new Map([
@@ -306,7 +351,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.setPluginOptions', () => {
-    class Foo {}
+    class Foo { apply() {} }
 
     assert.deepStrictEqual(
       new Map([
@@ -326,7 +371,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.clearPluginOptions', () => {
-    class Foo {}
+    class Foo { apply() {} }
 
     assert.deepStrictEqual(
       new Map([
@@ -345,7 +390,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.setPluginOption', () => {
-    class Foo {}
+    class Foo { apply() {} }
 
     assert.deepStrictEqual(
       new Map([
@@ -374,7 +419,7 @@ describe('Class Plugin', () => {
   })
 
   it('Plugin.deletePluginOption', () => {
-    class Foo {}
+    class Foo { apply() {} }
 
     assert.deepStrictEqual(
       new Map([
@@ -396,9 +441,9 @@ describe('Class Plugin', () => {
 
   it('Plugin.transform', () => {
     class Foo {
-      constructor(...args) {
-        this.options = args
-      }
+      options: any
+      constructor(...args) { this.options = args }
+      apply() {}
     }
 
     assert.deepStrictEqual(
@@ -414,9 +459,9 @@ describe('Class Plugin', () => {
 
   it('Plugin.transform duplicate plugins', () => {
     class Foo {
-      constructor(...options) {
-        this.options = options
-      }
+      options: any
+      constructor(...options) { this.options = options }
+      apply() {}
     }
 
     assert.deepStrictEqual(
@@ -434,37 +479,23 @@ describe('Class Plugin', () => {
 
   it('Plugin.transform override entity by options', () => {
     class Foo {
-      constructor(...options) {
-        this.options = options
-      }
+      options: any
+      constructor(...options) { this.options = options }
+      apply() {}
     }
 
     assert.deepStrictEqual(
-      [
-        new Foo({ bar: 42 })
-      ],
-
-      new Plugin([ new Foo() ])
-        .setPluginOption('Foo', 'bar', 42)
-        .transform()
+      [ new Foo({ bar: 42 }) ],
+      new Plugin([ new Foo() ]).setPluginOption('Foo', 'bar', 42).transform()
     )
   })
 
   it('Plugin.transform ignore null constructor', () => {
     class Foo {
-      constructor(...options) {
-        this.options = options
-      }
+      options: any
+      constructor(...options) { this.options = options }
+      apply() {}
     }
-
-    assert.deepStrictEqual(
-      [
-
-      ],
-
-      new Plugin()
-        .setPlugin('Foo')
-        .transform()
-    )
+    assert.deepStrictEqual([], new Plugin().setPlugin('Foo').transform())
   })
 })
