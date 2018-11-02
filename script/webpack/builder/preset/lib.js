@@ -4,12 +4,9 @@
  * @flow
  */
 
-import typeof Builder from '../builder'
-
-
 /// code
 
-function preset(builder: Builder): Builder {
+export default function preset(builder: *): * {
   const { libraryName, libraryTarget = 'umd' } = builder.options
 
   builder
@@ -19,11 +16,6 @@ function preset(builder: Builder): Builder {
 
   return builder
 }
-
-
-/// export
-
-export default preset
 
 
 /// test

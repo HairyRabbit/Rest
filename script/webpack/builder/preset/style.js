@@ -21,7 +21,6 @@ import path from 'path'
 import MiniCssExtractPlugin from 'mini-css-extract-plugin'
 import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin'
 import postcssPresetEnv from 'postcss-preset-env'
-import typeof Builder from '../builder'
 import type { Condition } from '../webpack-options-type'
 
 
@@ -32,12 +31,12 @@ export type Options = {
   disableGuessGcss?: boolean
 }
 
-function preset(builder: Builder): Builder {
+export default function preset(builder: *): * {
   const {
     gcssEntry,
     disableGuess,
     disableGuessGcss
-  } = builder.options
+  } = builder.options.style || {}
 
   builder
     .setRuleLoaderDev('css', 'style-loader')
@@ -147,7 +146,7 @@ function preset(builder: Builder): Builder {
    * - postcss-loader
    * - sass-loader
    */
-  function setupLoader(builder: Builder, name: string): void {
+  function setupLoader(builder: *, name: string): void {
     builder
       .setRuleLoader(name, 'css-loader')
       .setRuleLoader(name, 'postcss-loader')
@@ -157,7 +156,7 @@ function preset(builder: Builder): Builder {
   /**
    * set source map for dev
    */
-  function setupSourceMap(builder: Builder, name: string): void {
+  function setupSourceMap(builder: *, name: string): void {
     builder
       .setRuleLoaderOptionDev(name, 'style-loader', 'sourceMap', true)
       .setRuleLoaderOption(name, 'css-loader', 'sourceMap', true)
@@ -165,12 +164,12 @@ function preset(builder: Builder): Builder {
       .setRuleLoaderOption(name, 'sass-loader', 'sourceMap', true)
   }
 
-  function setupCss(builder: Builder, name: string): void {
+  function setupCss(builder: *, name: string): void {
     builder
       .setRuleLoaderOption(name, 'css-loader', 'importLoaders', 2)
   }
 
-  function setupPostcss(builder: Builder, name: string): void {
+  function setupPostcss(builder: *, name: string): void {
     builder
       .setRuleLoaderOption(name, 'postcss-loader', 'options', {})
       .setRuleLoaderOption(name, 'postcss-loader', 'plugins', [
@@ -181,7 +180,7 @@ function preset(builder: Builder): Builder {
   /**
    * @todo env injection
    */
-  function setupSass(builder: Builder, name: string): void {
+  function setupSass(builder: *, name: string): void {
     builder
       .setRuleLoaderOption(name, 'sass-loader', 'data', `$env: ${process.env.NODE_ENV};`)
   }
@@ -194,9 +193,6 @@ function guessGCSSEntry(context: string): ?string {
   return fs.existsSync(gcssFilePath) ? gcssFilePath : null
 }
 
-
-/// export
-
 export const dependencies = [
   'css-loader',
   'style-loader',
@@ -208,4 +204,3 @@ export const dependencies = [
   'optimize-css-assets-webpack-plugin',
   'postcss-preset-env'
 ]
-export default preset

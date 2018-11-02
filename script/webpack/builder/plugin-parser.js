@@ -58,6 +58,7 @@ describe('Function pluginParse()', () => {
       [{ name: 'Foo', constructor: Foo, entity: foo }],
       parsed
     )
+    // $FlowFixMe
     assert.deepStrictEqual(42, parsed[0].entity.bar)
   })
 })

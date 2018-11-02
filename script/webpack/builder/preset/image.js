@@ -4,12 +4,9 @@
  * @flow
  */
 
-import typeof Builder from '../builder'
-
-
 /// code
 
-function preset(builder: Builder): Builder {
+export default function preset(builder: *): * {
   builder
     .setRuleLoader('img', 'url-loader', {
       options: {
@@ -34,4 +31,3 @@ export const dependencies = [
   'url-loader',
   ''
 ]
-export default preset

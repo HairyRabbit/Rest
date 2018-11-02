@@ -5,12 +5,11 @@
  */
 
 import LodashModuleReplacementPlugin from 'lodash-webpack-plugin'
-import typeof Builder from '../builder'
 
 
 /// code
 
-function preset(builder: Builder): Builder {
+export default function preset(builder: *): * {
   builder
     .setPlugin('lodash', LodashModuleReplacementPlugin)
 
@@ -19,13 +18,12 @@ function preset(builder: Builder): Builder {
 
 
 /// export
-export const install = 'babel'
+export const use = 'babel'
 export const dependencies = [
   'lodash-webpack-plugin',
   'babel-plugin-lodash',
   'lodash'
 ]
-export default preset
 
 
 /// test

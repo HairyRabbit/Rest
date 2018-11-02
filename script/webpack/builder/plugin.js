@@ -6,7 +6,7 @@
 
 import { isEmpty, isMap, isPlainObject } from 'lodash'
 import parse from './plugin-parser'
-import typeof { Builder } from './builder'
+import { Builder } from './builder'
 import type { Plugins as WebpackPlugin } from './webpack-options-type'
 
 
@@ -99,12 +99,24 @@ class Plugin {
       .addPlugin(name, constructor, options, entity)
   }
 
-  setPluginOptions(name: string, options: Object) {
+  ensurePlugin(name: string, index: number) {
     const plugins = this.ensure(name)
+    const plugin = plugins.get(index)
+    if(!plugin) throw new Error(`Unknow plugins[${index}]`)
+    return plugin
+  }
+
+  setPluginOptions(name: string, options: Object, index?: number) {
+    const plugins = this.ensure(name)
+    if(index) {
+      const plugin = this.ensurePlugin(name, index)
+      plugin.options = new Map(Object.entries(options || {}))
+      return this
+    }
+
     for(let [_, plugin] of plugins) {
       plugin.options = new Map(Object.entries(options || {}))
     }
-
     return this
   }
 
@@ -159,7 +171,7 @@ class Plugin {
   }
 
   static init(self: Builder): Builder {
-    self.plugin = new Plugin(self.webpackOptions.plugin)
+    self.plugin = new Plugin(self.webpackOptions.plugins)
     return self.export(self.plugin, [
       'setPlugin',
       'deletePlugin',

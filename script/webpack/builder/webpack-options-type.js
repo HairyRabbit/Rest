@@ -19,7 +19,7 @@ export type Mode =
   | 'production'
   | 'none'
 
-type Plugin = {
+interface Plugin {
   apply(compiler: any): void
 }
 
@@ -50,21 +50,16 @@ type Condition$Base =
 export type Condition =
   | Condition$Base
   | Array<Condition$Base>
-  | {
-    [string]: Condition$Base
-  }
+  | { [string]: Condition$Base }
 
 type Rule$UseEntry =
   | string
-  | {
-    loader?: string,
-    options?: string | Object
-  }
+  | { loader: string, options?: Object }
 
 export type Rule = {
-  use?: Array<Rule$UseEntry>,
+  use?: Rule$UseEntry | Array<Rule$UseEntry>,
   loader?: string | Object,
-  options?: string | Object,
+  options?: Object,
   enforce?: 'pre' | 'post',
   parser?: boolean | {
     amd?: boolean,

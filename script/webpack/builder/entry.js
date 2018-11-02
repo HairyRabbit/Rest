@@ -13,7 +13,7 @@
 
 import { isEmpty } from 'lodash'
 import parse from './entry-parser'
-import typeof { Builder } from './builder'
+import { Builder } from './builder'
 import type { Entry as WebpackEntry } from './webpack-options-type'
 
 

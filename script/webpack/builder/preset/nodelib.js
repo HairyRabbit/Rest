@@ -5,35 +5,38 @@
  */
 
 import WebpackNodeExternals from 'webpack-node-externals'
-import typeof Builder from '../builder'
 
 
 /// code
 
-function preset(builder: Builder): Builder {
-  const { libraryName, libraryTarget = 'commonjs2' } = builder.options
+export type Options = {
+  libraryName?: string,
+  libraryTarget?: string
+}
+
+export default function preset(builder: *): * {
+  const {
+    libraryName = 'main',
+    libraryTarget = 'commonjs2',
+    buildLibraries = []
+  } = builder.options.nodelib || {}
 
   builder
+    .set('name', libraryName)
+    .renameEntry('main', libraryName)
+    .set('output.filename', '[name].js')
+    .set('output.library', libraryName)
     .set('output.libraryTarget', libraryTarget)
     .set('target', 'node')
     .set('node', false)
     .set('externals', WebpackNodeExternals())
 
-  if(libraryName) {
-    builder
-      .set('library', libraryName)
-  }
-
   return builder
 }
 
-
-/// export
 export const dependencies = [
   'webpack-node-externals'
 ]
-
-export default preset
 
 
 /// test

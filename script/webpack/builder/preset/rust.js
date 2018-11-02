@@ -6,12 +6,9 @@
  * @flow
  */
 
-import typeof Builder from '../builder'
-
-
 /// code
 
-function preset(builder: Builder): Builder {
+export default function preset(builder: *): * {
   builder
     .setRuleLoader('js', 'babel-loader')
     .setRuleLoaderOption('js', 'babel-loader', 'cacheDirectory', true)
@@ -25,11 +22,8 @@ function preset(builder: Builder): Builder {
   return builder
 }
 
-
-/// export
 export const dependencies = [
   'babel-loader',
   '@babel/core',
   '@babel/preset-env'
 ]
-export default preset

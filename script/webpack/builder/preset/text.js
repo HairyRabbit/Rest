@@ -3,15 +3,13 @@
  * the template use nunjucks, a powerful "jinja2"
  * like template system
  *
+ * @todo impl jinja2 template system
  * @flow
  */
 
-import typeof Builder from '../builder'
-
-
 /// code
 
-function preset(builder: Builder): Builder {
+export default function preset(builder: *): * {
   builder
     .setRuleLoader('txt', 'raw-loader')
 
@@ -24,5 +22,3 @@ function preset(builder: Builder): Builder {
 export const dependencies = [
   'raw-loader'
 ]
-
-export default preset

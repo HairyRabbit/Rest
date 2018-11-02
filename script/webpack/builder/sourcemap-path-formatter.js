@@ -11,7 +11,7 @@ import path from 'path'
 
 /// code
 
-function format(info): string {
+function format(info: Object): string {
   const prepend = 'file:///'
   const fmt = 'win32' === process.platform
         ? path.resolve(info.resourcePath)

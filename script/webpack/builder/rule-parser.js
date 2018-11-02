@@ -1,7 +1,7 @@
 /**
- * rule parser
- *
- * parse webpackOptions.module.rules
+ * rule parser, parse webpackOptions.module.rules. if rule
+ * can't parsed, the check would be false; if parsed, add
+ * `type`, `loaders`, `props` properties to Result
  *
  * @flow
  */
@@ -12,12 +12,15 @@ import type { Rule } from './webpack-options-type'
 
 /// code
 
-type Result = {
-  loaders: Array<{ loader: string, options: Object }>,
-  props: Object
+export type Result = {
+  check: boolean,
+  rule: Rule,
+  type?: Array<string>,
+  loaders?: Array<{ loader: string, options?: Object, name?: string }>,
+  options?: Object
 }
 
-function parse(rules: Array<Rule>): Array<Result> {
+export default function parse(rules: Array<Rule>): Array<Result> {
   return rules.map(rule => {
     const { test, use, options = {}, ...rest } = rule
 
@@ -61,16 +64,13 @@ function parse(rules: Array<Rule>): Array<Result> {
         options: rest
       }
     } else {
+      /**
+       * parse fail
+       */
       return { check: false, rule }
     }
   })
 }
-
-
-
-/// export
-
-export default parse
 
 
 /// test
@@ -80,80 +80,42 @@ import assert from 'assert'
 describe('Function parseRule()', () => {
   it('should parse faild, test not match', () => {
     assert.deepStrictEqual(
-      [
-        {
-          check: false,
-          rule: { test: /foo/ }
-        }
-      ],
-
-      parse([
-        { test: /foo/ }
-      ])
+      [{ check: false, rule: { test: /foo/ } }],
+      parse([ { test: /foo/ } ])
     )
   })
 
   it('should parse faild, test not RegExp', () => {
     assert.deepStrictEqual(
-      [
-        {
-          check: false,
-          rule: { test: 'foo' }
-        }
-      ],
-
-      parse([
-        { test: 'foo' }
-      ])
+      [{ check: false, rule: { test: 'foo' } }],
+      parse([ { test: 'foo' } ])
     )
   })
 
   it('should parse faild, use not string or array', () => {
     assert.deepStrictEqual(
-      [
-        {
-          check: false,
-          rule: { test: /\.foo$/, use: {} }
-        }
-      ],
-
-      parse([
-        { test: /\.foo$/, use: {} }
-      ])
+      [{ check: false, rule: { test: /\.foo$/, use: {} }}],
+      // $FlowFixMe
+      parse([{ test: /\.foo$/, use: {} }])
     )
   })
 
   it('should parse rules without use', () => {
     assert.deepStrictEqual(
-      [
-        {
-          check: true,
-          rule: { test: /\.foo$/ },
-          type: 'foo',
-          loaders: [],
-          options: {}
-        }
-      ],
-
-      parse([
-        { test: /\.foo$/ }
-      ])
+      [{ check: true, rule: { test: /\.foo$/ }, type: 'foo', loaders: [], options: {} }],
+      parse([ { test: /\.foo$/ } ])
     )
   })
 
   it('should parse rules string type use', () => {
     assert.deepStrictEqual(
-      [
-        {
-          check: true,
-          rule: { test: /\.js$/, use: 'babel-loader' },
-          type: 'js',
-          loaders: [
-            { loader: 'babel-loader', options: {} }
-          ],
-          options: {}
-        }
-      ],
+      [{
+        check: true,
+        rule: { test: /\.js$/, use: 'babel-loader' },
+        type: 'js',
+        loaders: [{ loader: 'babel-loader', options: {} }],
+        options: {}
+      }],
 
       parse([
         { test: /\.js$/, use: 'babel-loader' }
@@ -163,91 +125,51 @@ describe('Function parseRule()', () => {
 
   it('should parse rules array type use', () => {
     assert.deepStrictEqual(
-      [
-        {
-          check: true,
-          rule: {
-            test: /\.css$/,
-            use: [
-              'style-loader',
-              {
-                loader: 'css-loader'
-              }
-            ]
-          },
-          type: 'css',
-          loaders: [
-            { loader: 'style-loader', options: {} },
-            { loader: 'css-loader', options: {} }
-          ],
-          options: {}
-        }
-      ],
-
-      parse([
-        {
+      [{
+        check: true,
+        rule: {
           test: /\.css$/,
-          use: [
-            'style-loader',
-            {
-              loader: 'css-loader'
-            }
-          ]
-        }
-      ])
+          use: ['style-loader', { loader: 'css-loader' }]
+        },
+        type: 'css',
+        loaders: [{ loader: 'style-loader', options: {} },
+                  { loader: 'css-loader', options: {} }],
+        options: {}
+      }],
+
+      parse([{
+        test: /\.css$/,
+        use: ['style-loader', { loader: 'css-loader' }]
+      }])
     )
   })
 
   it('should parse rules merge options', () => {
     assert.deepStrictEqual(
-      [
-        {
-          check: true,
-          rule: {
-            test: /\.css$/,
-            include: ['foo'],
-            use: [
-              'style-loader',
-              {
-                loader: 'css-loader',
-                options: {
-                  qux: 'quxx'
-                }
-              }
-            ],
-            options: {
-              bar: 42
-            }
-          },
-          type: 'css',
-          loaders: [
-            { loader: 'style-loader', options: { bar: 42 } },
-            { loader: 'css-loader', options: { bar: 42, qux: 'quxx' } }
-          ],
-          options: {
-            include: ['foo']
-          }
-        }
-      ],
-
-      parse([
-        {
+      [{
+        check: true,
+        rule: {
           test: /\.css$/,
           include: ['foo'],
-          use: [
-            'style-loader',
-            {
-              loader: 'css-loader',
-              options: {
-                qux: 'quxx'
-              }
-            }
-          ],
-          options: {
-            bar: 42
-          }
-        }
-      ])
+          use: [ 'style-loader',
+                 { loader: 'css-loader', options: { qux: 'quxx' }}],
+          options: { bar: 42 }
+        },
+        type: 'css',
+        loaders: [
+          { loader: 'style-loader', options: { bar: 42 } },
+          { loader: 'css-loader', options: { bar: 42, qux: 'quxx' } }
+        ],
+        options: { include: ['foo'] }
+      }],
+
+      parse([{
+        test: /\.css$/,
+        include: ['foo'],
+        use: ['style-loader',
+              { loader: 'css-loader', options: { qux: 'quxx' }}],
+        options: { bar: 42 }
+      }])
     )
   })
 })

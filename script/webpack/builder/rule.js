@@ -1,19 +1,20 @@
 /**
- * rule helpers and transformor
+ * rule helpers and transformor, the rule shape:
  *
- * supports:
+ * type - transform to rule.test, e.g. ['jpg', 'png'] => /\.(jpg|png)$/
+ * loaders - transform to rule.use
+ * options - transform rule options, like include, exclude
+ * extract - not impl yet
  *
- * - setRule
- * - setRuleOptions
- * - setRuleOption
- *
+ * @link [webpack/lib/RuleSet](https://github.com/webpack/webpack/blob/master/lib/RuleSet.js)
  * @flow
  */
 
 import { isEmpty } from 'lodash'
-// import ExtractTextPlugin from 'extract-text-webpack-plugin'
 import parse from './rule-parser'
+import { Builder } from './builder'
 import type { Rule as WebpackRule } from './webpack-options-type'
+// import ExtractTextPlugin from 'extract-text-webpack-plugin'
 
 
 /// code
@@ -21,57 +22,54 @@ import type { Rule as WebpackRule } from './webpack-options-type'
 type Loader = {
   loader: string,
   name?: string,
-  options: Map<string, Object>
+  options?: Map<string, mixed>
 }
 
-class Rule {
-  value: Map<string, {
-    type: Set<string>,
-    loaders: Map<string, Loader>,
-    options: Map<string, Object>,
-    extract: boolean
-  }>
+type Value$Rule = {
+  type: Set<string>,
+  loaders: Map<string, { name?: string, options?: Map<string, mixed> }>,
+  options: Map<string, mixed>,
+  extract: boolean
+}
 
-  constructor(rules?: WebpackRule) {
+type Value = Map<string, Value$Rule>
+
+export default class Rule {
+  noParsed: Array<WebpackRule>
+  value: Value
+
+  constructor(rules?: Array<WebpackRule>) {
     this.value = new Map()
 
     if(rules) {
       this.noParsed = []
-
-      const parsed = parse(rules)
-      for(let i = 0; i < parsed.length; i++) {
-        const { check, rule, ...loader } = parsed[i]
-
-        if(!check) {
+      parse(rules).forEach(({ check, rule, loaders, options, type }) => {
+        if(!check || !Array.isArray(type)) {
           this.noParsed.push(rule)
           return
         }
 
-        const { loaders, options, type } = loader
-        this.setRule(type, loaders, options)
-      }
+        this.setRule(type[0], loaders, options, type)
+      })
     }
   }
 
-  ensure(name: string) {
-    if(name && !this.value.get(name)) {
-      this.setRule(name)
-    }
+  /**
+   * rule
+   */
 
-    return this
+  ensure(name: string): Value$Rule {
+    if(name && !this.value.get(name)) this.setRule(name)
+    const rule = this.value.get(name)
+    if(!rule) throw new Error(`Unknow rule`)
+    return rule
   }
 
-  ensureLoadersLoader(name: string, loader: string) {
-    this.ensure(name)
-
-    if(loader && !this.value.get(name).loaders.get(loader)) {
-      this.setRuleLoader(name, loader)
-    }
-
-    return this
-  }
-
-  setRule(name: string, loaders?: Array<Loader>, options?: Object, type?: string | Array<string>, extract: boolean = false) {
+  setRule(name: string,
+          loaders?: Array<{ loader: string, options?: Object, name?: string }>,
+          options?: Object,
+          type?: string | Array<string>,
+          extract: boolean = false) {
     this.value.set(name, {
       loaders: new Map(),
       options: new Map(),
@@ -79,10 +77,10 @@ class Rule {
       extract
     })
 
-    this.setRuleLoaders(name, loaders)
-    this.setRuleOptions(name, options)
-    this.setRuleTypes(name, type)
     return this
+      .setRuleLoaders(name, loaders)
+      .setRuleOptions(name, options)
+      .setRuleTypes(name, type)
   }
 
   deleteRule(name: string) {
@@ -95,41 +93,35 @@ class Rule {
     return this
   }
 
-  setRuleTypes(name: string, type?: string | Array<string> = []) {
-    this
-      .ensure(name)
-      .value.get(name)
-      .type = new Set(Array.isArray(type) ? type : [type])
+  /**
+   * rule type
+   */
 
+  setRuleTypes(name: string, type?: string | Array<string> = []) {
+    this.ensure(name).type = new Set(
+      Array.isArray(type) ? type : [type]
+    )
     return this
   }
 
   clearRuleTypes(name: string) {
-    this
-      .ensure(name)
-      .value.get(name)
-      .type.clear()
-
+    this.ensure(name).type.clear()
     return this
   }
 
   addRuleType(name: string, type: string) {
-    this
-      .ensure(name)
-      .value.get(name)
-      .type.add(type)
-
+    this.ensure(name).type.add(type)
     return this
   }
 
   deleteRuleType(name: string, type: string) {
-    this
-      .ensure(name)
-      .value.get(name)
-      .type.delete(type)
-
+    this.ensure(name).type.delete(type)
     return this
   }
+
+  /**
+   * rule loaders
+   */
 
   setRuleLoaders(name: string, loaders?: Array<Loader> = []) {
     loaders.forEach(({ loader, name: loaderName, options }) => {
@@ -142,118 +134,103 @@ class Rule {
   }
 
   clearRuleLoaders(name: string) {
-    this
-      .ensure(name)
-      .value.get(name).loaders
-      .clear()
-
+    this.ensure(name).loaders.clear()
     return this
   }
 
-  setRuleLoader(name: string, loader: string, { name: loaderName, options } = {}) {
-    this
-      .ensure(name)
-      .value.get(name).loaders
-      .set(loader, {
-        name: loaderName,
-        options: new Map(Object.entries(options || {}))
-      })
+  ensureLoadersLoader(name: string, loader: string) {
+    const rule = this.ensure(name)
+    if(loader && !rule.loaders.get(loader)) this.setRuleLoader(name, loader)
+    const ld = rule.loaders.get(loader)
+    if(!ld) throw new Error(`Unknow loader`)
+    return ld
+  }
 
+  setRuleLoader(name: string,
+                loader: string,
+                { name: loaderName, options = {} }: { name?: string, options?: Object } = {}) {
+    this.ensure(name).loaders.set(loader, {
+      name: loaderName,
+      options: new Map(Object.entries(options || {}))
+    })
     return this
   }
 
   deleteRuleLoader(name: string, loader: string) {
-    this
-      .ensure(name)
-      .value.get(name).loaders
-      .delete(loader)
-
-    return this
-  }
-
-  setRuleLoaderOptions(name: string, loader: string, options?: Object) {
-    this
-      .ensureLoadersLoader(name, loader)
-      .value.get(name).loaders.get(loader)
-      .options = new Map(Object.entries(options || {}))
-
-    return this
-  }
-
-  clearRuleLoaderOptions(name: string, loader: string) {
-    this
-      .ensureLoadersLoader(name, loader)
-      .value.get(name).loaders.get(loader)
-      .options.clear()
-
-    return this
-  }
-
-  setRuleLoaderOption(name: string, loader: string, key: string, value: *) {
-    this
-      .ensureLoadersLoader(name, loader)
-      .value.get(name).loaders.get(loader)
-      .options.set(key, value)
-
-    return this
-  }
-
-  deleteRuleLoaderOption(name: string, loader: string, key: string) {
-    this
-      .ensureLoadersLoader(name, loader)
-      .value.get(name).loaders.get(loader)
-      .options.delete(key)
-
-    return this
-  }
-
-  setRuleOptions(name: string, options: Object) {
-    this
-      .ensure(name)
-      .value.get(name)
-      .options = new Map(Object.entries(options || {}))
-
-    return this
-  }
-
-  clearRuleOptions(name: string) {
-    this
-      .ensure(name)
-      .value.get(name)
-      .options.clear()
-
-    return this
-  }
-
-  setRuleOption(name: string, key: string, value: *) {
-    this
-      .ensure(name)
-      .value.get(name)
-      .options.set(key, value)
-
-    return this
-  }
-
-  deleteRuleOption(name: string, key: string) {
-    this
-      .ensure(name)
-      .value.get(name)
-      .options.delete(key)
-
-    return this
-  }
-
-  setRuleExtract(name: string, extract: boolean) {
-    this
-      .ensure(name)
-      .value.get(name)
-      .extract = extract
-
+    this.ensure(name).loaders.delete(loader)
     return this
   }
 
   /**
-   * transform rules
+   * rule loader options
+   */
+  ensureRuleLoaderOptions(name: string, loader: string): Map<string, mixed> {
+    const ld = this.ensureLoadersLoader(name, loader)
+    if(!ld.options) this.setRuleLoaderOptions(name, loader)
+    const options = ld.options
+    if(!options) throw new Error('Unknow rule loader options')
+    return options
+  }
+
+  setRuleLoaderOptions(name: string, loader: string, options?: Object = {}) {
+    const ld = this.ensureLoadersLoader(name, loader)
+    ld.options = new Map(Object.entries(options))
+    return this
+  }
+
+  clearRuleLoaderOptions(name: string, loader: string) {
+    this.ensureRuleLoaderOptions(name, loader).clear()
+    return this
+  }
+
+  setRuleLoaderOption(name: string, loader: string, key: string, value: *) {
+    this.ensureRuleLoaderOptions(name, loader).set(key, value)
+    return this
+  }
+
+  deleteRuleLoaderOption(name: string, loader: string, key: string) {
+    this.ensureRuleLoaderOptions(name, loader).delete(key)
+    return this
+  }
+
+  /**
+   * rule options
+   */
+  ensureRuleOptions(name: string): Map<string, mixed> {
+    const rule = this.ensure(name)
+    if(!rule.options) this.setRuleOptions(name)
+    const options = rule.options
+    if(!options) throw new Error(`No options`)
+    return rule.options
+  }
+
+  setRuleOptions(name: string, options?: Object = {}) {
+    this.ensure(name).options = new Map(Object.entries(options))
+    return this
+  }
+
+  clearRuleOptions(name: string) {
+    this.ensureRuleOptions(name).clear()
+    return this
+  }
+
+  setRuleOption(name: string, key: string, value: *) {
+    this.ensureRuleOptions(name).set(key, value)
+    return this
+  }
+
+  deleteRuleOption(name: string, key: string) {
+    this.ensureRuleOptions(name).delete(key)
+    return this
+  }
+
+  setRuleExtract(name: string, extract: boolean) {
+    this.ensure(name).extract = extract
+    return this
+  }
+
+  /**
+   * transform to webpack options.module.rules
    */
   transform(): Array<WebpackRule> {
     const acc = []
@@ -263,9 +240,12 @@ class Rule {
 
       loaders.forEach(({ name: loaderName, options: loaderOptions }, loader) => {
         const loaderOpts = {}
-        loaderOptions.forEach((optv, optk) => {
-          loaderOpts[optk] = optv
-        })
+
+        if(loaderOptions) {
+          loaderOptions.forEach((optv, optk) => {
+            loaderOpts[optk] = optv
+          })
+        }
 
         uses.push({
           loader: loaderName || loader,
@@ -304,12 +284,39 @@ class Rule {
 
     return acc
   }
+
+  static init(self: Builder): Builder {
+    self.rule = new Rule(self.webpackOptions.module && self.webpackOptions.module.rules)
+    return self.export(self.rule, [
+      'setRule',
+      'deleteRule',
+      'clearRule',
+      'setRuleTypes',
+      'clearRuleTypes',
+      'addRuleType',
+      'deleteRuleType',
+      'setRuleLoaders',
+      'clearRuleLoaders',
+      'setRuleLoader',
+      'deleteRuleLoader',
+      'setRuleLoaderOptions',
+      'clearRuleLoaderOptions',
+      'setRuleLoaderOption',
+      'deleteRuleLoaderOption',
+      'setRuleOptions',
+      'clearRuleOptions',
+      'setRuleOption',
+      'deleteRuleOption',
+      'setRuleExtract'
+    ])
+  }
+
+  static setOption(self: Builder): Builder {
+    const options = self.rule.transform()
+    if(isEmpty(options)) return self
+    return self._set('module.rules', options)
+  }
 }
-
-
-/// export
-
-export default Rule
 
 
 /// test
@@ -320,9 +327,7 @@ describe('Class Rule', () => {
   it('Rule.constructor', () => {
     assert.deepStrictEqual(
       new Map(),
-
-      new Rule()
-        .value
+      new Rule().value
     )
   })
 

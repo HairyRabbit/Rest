@@ -4,16 +4,17 @@
  * @flow
  */
 
-import fs from 'fs'
-import path from 'path'
+import * as fs from 'fs'
+import * as path from 'path'
 import { set, isEmpty, uniq, groupBy } from 'lodash'
-import modulePath from './module-resolver'
 import Entry from './entry'
 import Rule from './rule'
 import Plugin from './plugin'
 import readEnv from './read-env'
 import type { WebpackOptions, Mode as WebpackMode } from './webpack-options-type'
-import type { Options as PresetStyleOptions } from './preset/style.js'
+import type { Options as PresetStyleOptions } from './preset/style'
+import type { Options as PresetServerOptions } from './preset/server'
+import type { Options as PresetNodelibOptions } from './preset/nodelib'
 
 
 /// code
@@ -23,16 +24,20 @@ declare var __non_webpack_require__: Function
 /**
  * packages all build-in presets under "./presets"
  */
+// $FlowFixMe require.context was webpack only
 const presetsContext = require.context('./preset', true, /\.js$/)
 
 type Options = {
   debug?: boolean,
   logger?: Function,
   disableGuess?: boolean,
-  disableCheck?: boolean
-} & PresetStyleOptions
+  disableCheck?: boolean,
+  server?: PresetServerOptions,
+  style?: PresetStyleOptions,
+  nodelib?: PresetNodelibOptions
+}
 
-class Builder {
+export class Builder {
   webpackOptions: WebpackOptions
   options: Options
   mode: ?WebpackMode
@@ -46,24 +51,24 @@ class Builder {
   shared: Object
   checked: Array<{
     preset: string,
-    dependencies: string,
+    dependency: string,
     result: boolean
   }>
   transforms: Array<any>
   $key: string
+  $value: Function
 
-  constructor(webpackOptions?: mixed, options?: Options) {
+
+  constructor(webpackOptions?: string | WebpackOptions, options?: Options) {
     this.options = options || {}
     this.webpackOptions = 'string' === typeof webpackOptions
       ? {}
       : (webpackOptions || {})
     this.mode = this.webpackOptions.mode || this.guessMode()
-
-    this.rule = new Rule(this.webpackOptions.module && this.webpackOptions.module.rules)
-    this.presets = []
+    this.presets = {}
     this.jobs = []
     this.shared = {}
-    this.transforms = [ Entry, Plugin ]
+    this.transforms = [ Entry, Plugin, Rule ]
 
     this.init()
 
@@ -79,34 +84,14 @@ class Builder {
       .export(this, [
         'set'
       ])
-      .export(this.rule, [
-        'setRule',
-        'deleteRule',
-        'clearRule',
-        'setRuleTypes',
-        'clearRuleTypes',
-        'addRuleType',
-        'deleteRuleType',
-        'setRuleLoaders',
-        'clearRuleLoaders',
-        'setRuleLoader',
-        'deleteRuleLoader',
-        'setRuleLoaderOptions',
-        'clearRuleLoaderOptions',
-        'setRuleLoaderOption',
-        'deleteRuleLoaderOption',
-        'setRuleOptions',
-        'clearRuleOptions',
-        'setRuleOption',
-        'deleteRuleOption',
-        'setRuleExtract'
-      ])
+
+    this.use('default')
 
     /**
      * if "webpackOptions" was string, call install
      */
     if('string' === typeof webpackOptions) {
-      this.install(webpackOptions)
+      this.use(webpackOptions)
     }
   }
 
@@ -125,7 +110,7 @@ class Builder {
    *
    * @todo Add BUILDER_PATH env for searcher
    */
-  install(input: string) {
+  use(input: string) {
     const paths = process.env.WEBPACK_BUILDER_PATH
 
     uniq(input.split(',')).forEach(preset => {
@@ -175,22 +160,12 @@ class Builder {
         })
       }
 
-      const { default: call, install, dependencies } = lib
+      const { default: call, use, dependencies } = lib
       this.presets[preset] = dependencies || []
-      install && this.install(install)
+      use && this.use(use)
       call(this)
     })
 
-    return this
-  }
-
-  setMode(mode: WebpackMode) {
-    this.mode = mode
-    return this
-  }
-
-  resetMode() {
-    this.mode = undefined
     return this
   }
 
@@ -200,7 +175,15 @@ class Builder {
    * @private
    */
   guessMode(): WebpackMode {
-    return readEnv('NODE_ENV') || 'development'
+    const mode = readEnv('NODE_ENV')
+    switch(mode) {
+      case 'development':
+      case 'production':
+      case 'none':
+        return mode
+      default:
+        return 'development'
+    }
   }
 
   /**
@@ -213,7 +196,16 @@ class Builder {
     return (...args: Array<any>): * => {
       if(mode && mode !== this.mode) return this
       // fn.apply(entity || this, args)
-      this.jobs[proc](() => fn.apply(entity || this, args))
+      const thunk = () => fn.apply(entity || this, args)
+      switch(proc) {
+        case 'push':
+          this.jobs.push(thunk)
+          break
+        case 'unshift':
+          this.jobs.unshift(thunk)
+          break
+        default: break
+      }
       return this
     }
   }
@@ -223,7 +215,7 @@ class Builder {
    *
    * @private
    */
-  export(entity: any, fns: Array<string>, proc = 'push') {
+  export(entity: any, fns: Array<string>, proc: string = 'push') {
     fns.forEach(name => {
       const fn = entity[name]
       this[name] = this.callWithMode(proc, fn, entity)
@@ -315,29 +307,8 @@ class Builder {
    * @private
    */
   check() {
-    type Acc = {
-      preset: string,
-      dependencies: string,
-      result: boolean
-    }
-
-    const acc: Array<Acc> = []
-    const failed: Array<[string, string, string]> = []
-
-    /**
-     * check "webpack"
-     */
-    Array.from(['webpack', 'webpack-cli']).forEach(dep => {
-      const preset = 'default'
-      const res = modulePath(dep)
-      if(!res) failed.push([preset, dep, 'D'])
-
-      acc.push({
-        preset,
-        dependency: dep,
-        result: Boolean(res)
-      })
-    })
+    const acc = []
+    const failed = []
 
     /**
      * check all presets
@@ -346,8 +317,12 @@ class Builder {
       const deps = this.presets[preset]
       deps.length && deps.forEach(dep => {
         const [ depen, flag ] = Array.isArray(dep) ? dep : [dep, 'D']
-        const res = modulePath(depen)
-        if(!res) failed.push([preset, depen, flag])
+        let res
+        try {
+          res = __non_webpack_require__.resolve(depen)
+        } catch(e) {
+          failed.push([preset, depen, flag])
+        }
 
         acc.push({
           preset,
@@ -405,7 +380,7 @@ ${cmd}
       this.check()
     }
 
-    this._set('mode', this.webpackOptions.mode || this.guessMode())
+    this._set('mode', this.mode)
     this.context && this._set('context', this.context)
     this.output && this._set('output.path', this.output)
 
@@ -414,28 +389,18 @@ ${cmd}
       setOption(this)
     })
 
-    // const transformPlugin = this.plugin.transform()
-    // !isEmpty(transformPlugin) && this._set('plugins', transformPlugin)
-
-    const transformRule = this.rule.transform()
-    !isEmpty(transformRule) && this._set('module.rules', transformRule)
-
     if(report) {
       this.report()
     }
 
+    // console.log(this.webpackOptions)
     return this.webpackOptions
   }
 }
 
-function builder(...args: Array<*>): Builder {
+export default function builder(...args: Array<*>): Builder {
   return new Builder(...args)
 }
-
-
-/// export
-
-export default builder
 
 
 /// test
@@ -457,36 +422,19 @@ describe('Class Builder', () => {
     assert(new Builder('spa-spa'))
   })
 
-  it('Builder.setMode', () => {
-    assert.deepStrictEqual(
-      'development',
-      new Builder().setMode('development').mode
-    )
-  })
-
-  it('Builder.resetMode', () => {
-    assert.deepStrictEqual(
-      undefined,
-      new Builder()
-        .setMode('development')
-        .resetMode()
-        .mode
-    )
-  })
-
   it('Builder.callWithMode', () => {
     const fake = sinon.fake()
     new Builder().callWithMode('push', fake)()
     assert(1 === fake.callCount)
   })
 
-  it('Builder.callWithMode', () => {
-    const fake = sinon.fake()
-    new Builder()
-      .setMode('development')
-      .callWithMode('push', fake, undefined, 'development')()
-    assert(1 === fake.callCount)
-  })
+  // it('Builder.callWithMode', () => {
+  //   const fake = sinon.fake()
+  //   new Builder()
+  //     .setMode('development')
+  //     .callWithMode('push', fake, undefined, 'development')()
+  //   assert(1 === fake.callCount)
+  // })
 
   it('Builder.callWithMode not match Builder.mode', () => {
     const builder = new Builder()
@@ -506,11 +454,7 @@ describe('Class Builder', () => {
 
   it('Builder.set', () => {
     assert.deepStrictEqual(
-      {
-        mode: 'test',
-        foo: 'bar'
-      },
-
+      { mode: 'test', foo: 'bar'},
       new Builder(undefined, { disableGuess: true })
         .set('foo', 'bar')
         .transform()
@@ -533,14 +477,10 @@ describe('Class Builder', () => {
   })
 
   it('Builder.setEntryModule', () => {
-    assert.deepStrictEqual({
-        mode: 'test',
-        entry: {
-          main: ['foo']
-        }
-      },
-
+    assert.deepStrictEqual(
+      { mode: 'test', entry: { main: ['foo'] }},
       new Builder(undefined, { disableGuess: true })
+        // $FlowFixMe
         .setEntryModule('foo')
         .transform()
     )

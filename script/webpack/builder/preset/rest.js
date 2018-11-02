@@ -9,12 +9,11 @@
 import fs from 'fs'
 import path from 'path'
 import webpack from 'webpack'
-import Builder from '../'
 
 
 /// code
 
-function preset(builder: Builder): Builder {
+export default function preset(builder: *): * {
   const context = builder.context
   const initial = initialScriptPath(builder.context)
 
@@ -47,8 +46,4 @@ function initialScriptPath(context: string): ?string {
   return initialPath
 }
 
-
-/// export
-
-export const install = "spa"
-export default preset
+export const use = "spa"

@@ -14,11 +14,12 @@ import WebpackNodeExternals from 'webpack-node-externals'
 
 /// code
 
-export default Builder('lodash,text,nodelib')
-  .setContext(__dirname)
+export default Builder('lodash,text,nodelib', {
+  nodelib: {
+    libraryName: 'webpack-builder'
+  }
+}).setContext(__dirname)
   .setOutput(path.resolve('lib'))
-  .set('optimization.noEmitOnErrors', true)
-  .set('output.filename', 'webpack-builder.js')
   .transform()
 
 // export default {
