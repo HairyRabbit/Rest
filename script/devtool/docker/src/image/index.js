@@ -9,145 +9,178 @@
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { Layout, withMount } from '~component'
-import { toISODate } from '~util'
+import { Avatar, Layout, withMount } from '~component'
+import { classnames as cs } from '~util'
 import style from './style.css'
+import UnNameIcon from '../../assets/icon/Layer.svg'
+import NamedIcon from '../../assets/icon/Docker.svg'
+import logos from '../../data/logo/logos.json'
 
 
 /// code
 
-const data = [
-  {
-    "Id": "sha256:e216a057b1cb1efc11f8a268f37ef62083e70b1b38323ba252e25ac88904a7e8",
-    "ParentId": "",
-    "RepoTags": [
-      "ubuntu:12.04",
-      "ubuntu:precise"
-    ],
-    "RepoDigests": [
-      "ubuntu@sha256:992069aee4016783df6345315302fa59681aae51a8eeb2f889dea59290f21787"
-    ],
-    "Created": 1474925151,
-    "Size": 103579269,
-    "VirtualSize": 103579269,
-    "SharedSize": 0,
-    "Labels": {},
-    "Containers": 2
-  },
-  {
-    "Id": "sha256:3e314f95dcace0f5e4fd37b10862fe8398e3c60ed36600bc0ca5fda78b087175",
-    "ParentId": "",
-    "RepoTags": [
-      "ubuntu:12.10",
-      "ubuntu:quantal"
-    ],
-    "RepoDigests": [
-      "ubuntu@sha256:002fba3e3255af10be97ea26e476692a7ebed0bb074a9ab960b2e7a1526b15d7",
-      "ubuntu@sha256:68ea0200f0b90df725d99d823905b04cf844f6039ef60c60bf3e019915017bd3"
-    ],
-    "Created": 1403128455,
-    "Size": 172064416,
-    "VirtualSize": 172064416,
-    "SharedSize": 0,
-    "Labels": {},
-    "Containers": 5
-  }
-]
-
-function Image(): React.Node {
-  return (
-    <Layout vertical>
-      <Header>IMAGE</Header>
-
-      <List />
-    </Layout>
-  )
+function transformDockerImageId(input: string, { length = 20 }: Object = {}): string {
+  return input.split(':')[1].substr(0, 20)
 }
 
-function Header({ children, ...props }): React.Node {
+function transformSize(input: string, { digits = 2 }: Object = {}): string {
+  const byteStack = ['B', 'KB', 'MB', 'MB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+  let num = parseInt(input)
+  let unit = byteStack.shift()
+  let flag = 1000
+  while(num >= flag) {
+    num = num / flag
+    unit = byteStack.shift()
+    flag = 1024
+  }
+
+  if('B' === unit) {
+    return num + ' ' + unit
+  }
+
+  return num.toFixed(digits) + ' ' + unit
+}
+
+function transformDateAgo(input: number): string {
+  const comp = [
+    [31536e6, 'year'],
+    [2592e6, 'month'],
+    [6048e5, 'week'],
+    [864e5, 'day'],
+    [36e5, 'hour'],
+    [6e4, 'min'],
+    [1e3, 'sec']
+  ]
+  const now = Date.now()
+  const diff = now - input * 1000
+
+  for(let i = 0; i < comp.length; i++) {
+    const item = comp[i]
+    if(diff / item[0] > 1) {
+      const num = parseInt(diff / item[0])
+      return `${num} ${item[1]}${num > 1 ? 's' : ''} ago`
+    }
+  }
+
+  return 'just now'
+}
+
+function isUnname(input): boolean {
+  return '<none>' === input
+}
+
+function transformDockerImageTag(input: string): string {
+  if(isUnname(input)) return 'none'
+  return input
+}
+
+function transformDockerImageName(input: string): string {
+  if(isUnname(input)) return 'Unknow'
+  return input
+}
+
+
+function Header({ children, data, ...props }): React.Node {
   return (
     <h2 {...props} className={style.header}>
-      {children}
+      {children} ({data.length})
     </h2>
   )
 }
 
-function List(): React.Node {
+function List({ data }): React.Node {
   return (
     <Layout list size="33.3333%">
-      {data.map((item, idx) => (
+      {data.length && data.map((item, idx) => (
         <Item {...item} key={idx} />
       ))}
     </Layout>
   )
 }
 
-function Item({ idx,
-                Id,
-                ParentId,
-                Size,
-                VirtualSize,
-                SharedSize,
-                Created,
-                RepoTags,
-                Containers }): React.Node {
-  const name = RepoTags[0].split(':')[0]
-  const createAt = toISODate(new Date(Created * 1000))
+function findLogo(target) {
+  const str = target.trim()
+  const logo = logos.find(
+    ({ name, shortname }) =>
+      // ~target.indexOf(name) || ~target.indexOf(shortname)
+      // new RegExp(`^(${name}|${shortname})|(${name}|${shortname})$`).test(target)
+      str === name || str === shortname
+  )
+  if(!logo) return undefined
+  return logo.files[0]
+}
+
+function Logo({ data }): React.Node {
+  if(isUnname(data)) return (<NamedIcon className={style.icon} />)
+  const findName = data.split('/').map(findLogo).reverse().find(Boolean)
+  if(!findName) return (<NamedIcon className={cs(style.icon, style.custom)} />)
+  const LogoIcon = require(`../../data/logo/${findName}`).default
+  return (<LogoIcon className={style.icon} />)
+}
+
+
+function Item({ Id, ParentId, Size, VirtualSize, SharedSize, Created, RepoTags, Containers }): React.Node {
+  const [name, tag] = RepoTags && RepoTags.length
+        ? RepoTags[0].split(':')
+        : 'undefined:undefined'
+  const createAt = transformDateAgo(Created)
 
   return (
     <div className={style.main}>
-      <Layout vertical className={style.card}>
-        <Layout size="0:1:0">
-          <Layout center className={style.avatar}>
-            {name.substr(0, 1)}
-          </Layout>
-          <Link to={`/image/${Id}`} className={style.name}>
-            {name}
-          </Link>
-          <div className={style.date}>
-            {createAt}
+      <Layout vertical gutter="xs">
+        <Link to={`/image/${Id}`} className={style.name}>
+          {transformDockerImageName(name)}
+          <div className={style.id}>
+            {transformDockerImageId(Id)}
           </div>
+        </Link>
+
+        <Layout size="0:1:0" gutter="xs" align=",center">
+          <Logo data={name} />
+          <span className={style.size}>
+            {transformSize(Size)}
+          </span>
+          <span className={style.date}>
+            {createAt}
+          </span>
         </Layout>
 
-        <div className={style.date}>
-          Containers Number: {Containers}
-        </div>
-
-        <div className={style.date}>
-          <div>Size: {Size}</div>
-          <div>Virtual Size: {VirtualSize}</div>
-          <div>Shared Size: {SharedSize}</div>
-        </div>
-
-        <div className={style.date}>
-          <div>Repo Tags:</div>
-          {RepoTags.map((tag, idx) => (<div key={idx}>{tag}</div>))}
+        <div className={style.tag}>
+          Tag: {transformDockerImageTag(tag)}
         </div>
       </Layout>
     </div>
   )
 }
 
-
-/// hoc:connect
-
-function mapp(state) {
-  return {}
-}
-
-function mapd(dispatch) {
-  return {}
+function ToolBar() {
+  return (
+    <div className={style.toolbar}>
+      <input type="text" placeholder="type s" />
+    </div>
+  )
 }
 
 
-/// hoc:withMount
+function Image(): React.Node {
+  const [data, setData] = React.useState([])
+  React.useEffect(() => {
+    fetch('/api/images/json')
+      .then(res => res.json())
+      .then(setData)
+  }, data.length)
 
-function mount() {
-  fetch('/api/images/json')
-    .then(res => res.json()).then(console.log)
+  return (
+    <Layout vertical>
+      <Header data={data}>Docker Image</Header>
+      <ToolBar />
+      <List data={data} />
+    </Layout>
+  )
 }
 
 
 /// export
 
-export default connect(mapp, mapd)(withMount(mount)(Image))
+// export default connect(mapp, mapd)(withMount(mount)(Image))
+export default Image

@@ -6,10 +6,10 @@
 @import '~@style/dashboard.css';
 
 body {
-  background-color: white;
+  background-color: #eee; // #f3f4f3;
   color: #555;
 }
 
 :root {
-  --primary-color: #4a9ef1;
+  --primary-color: #346494;
 }

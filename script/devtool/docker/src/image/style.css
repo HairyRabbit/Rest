@@ -5,23 +5,10 @@
  */
 
 .main {
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
   background-color: white;
   box-shadow: 0px 6px 20px -16px #000;
-}
-
-.card {
-  & > * {
-    padding: 1rem;
-    border-bottom: 1px solid #eee;
-  }
-}
-
-.avatar {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background-color: var(--primary-color);
-  color: white;
 }
 
 .header {
@@ -32,9 +19,50 @@
 
 .name {
   composes: link from '~style/reset.css';
+  font-size: 1.25rem;
+  font-weight: lighter;
+  color: black;
+}
+
+.size {
+  font-size: 12px;
+  color: gray;
 }
 
 .date {
   font-size: 12px;
-  color: #aaa;
+  color: gray;
+}
+
+.tag {
+  font-size: 12px;
+  color: darkgray;
+}
+
+.id {
+  font-size: 10px;
+  color: lightgray;
+  font-weight: normal;
+}
+
+$LogoSize: 1.5rem;
+
+.icon {
+  max-width: $LogoSize;
+  max-height: $LogoSize;
+  width: 100%;
+  height: 100%;
+  color: #9ea8bf;
+  &.custom {
+    color: #80a0e8;
+  }
+}
+
+.logo {
+  width: 1.25rem;
+  height: 100%;
+}
+
+.toolbar {
+
 }
