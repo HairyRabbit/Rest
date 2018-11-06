@@ -139,16 +139,16 @@ function Layout({ gutter,
   })
 
   const [ RowWrapper, ColWrapper ] = list
-        ? [makeWrapper('ul'), makeWrapper('li')]
+        ? ['ul', 'li']
         : wrappers
-        ? [wrappers.row || makeWrapper(), wrappers.col || makeWrapper]
+        ? [wrappers.row || 'div', wrappers.col || 'div']
         : wrapper
-        ? [wrapper || makeWrapper(), makeWrapper()]
+        ? [wrapper || 'div', 'div']
         : tags
-        ? [makeWrapper(tags.row), makeWrapper(tags.col)]
+        ? [tags.row, tags.col]
         : tag
-        ? [makeWrapper(tag), makeWrapper()]
-        : [makeWrapper(), makeWrapper()]
+        ? [tag, 'div']
+        : ['div', 'div']
 
   return (
     <RowWrapper className={rowClass}
