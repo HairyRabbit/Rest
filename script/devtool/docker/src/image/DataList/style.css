@@ -1,7 +1,5 @@
 /**
- * <Image />
- *
- * styles
+ * <DataList /> styles
  */
 
 .main {
@@ -9,12 +7,6 @@
   margin-bottom: 1rem;
   background-color: white;
   box-shadow: 0px 6px 20px -16px #000;
-}
-
-.header {
-  composes: header from '~style/reset.css';
-  font-size: 1.5rem;
-  font-weight: lighter;
 }
 
 .name {
@@ -77,8 +69,4 @@ $LogoSize: 1.5rem;
   &:focus {
     outline: 0;
   }
-}
-
-.control {
-  font-size: 12px;
 }

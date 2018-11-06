@@ -1,0 +1,40 @@
+type: object
+required:
+  - Id
+  - ParentId
+  - RepoTags
+  - RepoDigests
+  - Created
+  - Size
+  - SharedSize
+  - VirtualSize
+  - Labels
+  - Containers
+properties:
+  Id:
+    type: string
+  ParentId:
+    type: string
+  Created:
+    type: timestamp
+  Containers:
+    type: integer
+  RepoDigests:
+    type: array
+    items:
+      type: string
+  RepoTags:
+    type: array
+    items:
+      type: string
+  SharedSize:
+    type: integer
+    format: size
+  Size:
+    type: integer
+    format: size
+  VirtualSize:
+    type: integer
+    format: size
+  Lables:
+    type: object

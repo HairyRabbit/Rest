@@ -1,0 +1,21 @@
+Containers: -1
+Created: 1541046953
+Id: "sha256:d77d7853dc0c13bf9973bba9fa6fc39022a2da6bde638aa697e4ef0d2b2b97d3"
+Labels: null
+ParentId: "sha256:3ab4be604abcdb506ef67466faf5fb43193622ff6d321005c29f854b16edb220"
+RepoDigests: null
+RepoTags: ["ansible:latest"]
+SharedSize: -1
+Size: 2726925519
+VirtualSize: 2726925519
+{
+  "type": "object",
+  "properties": {
+    "Id": {
+      "type": "number"
+    },
+    "Created": {
+      "type": "date"
+    }
+  }
+}

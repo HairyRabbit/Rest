@@ -12,13 +12,9 @@ import Root from './'
 
 /// code
 
-function main() {
+export default function main() {
   return render(<Root />, ensureNode('app'))
 }
-
-/// export
-
-export default main
 
 
 /// run
