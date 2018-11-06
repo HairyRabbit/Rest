@@ -18,7 +18,7 @@ export default function preset(builder: *): * {
 
       }
     })
-    .setRuleTypes('img', ['jpg', 'jpeg', 'png', 'gif', 'webp'])
+    .setRuleTypes('img', ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])
   // .setRuleOption('img', 'include', path.resolve(__dirname, 'assert'))
 
   return builder
@@ -28,6 +28,5 @@ export default function preset(builder: *): * {
 /// export
 export const dependencies = [
   'file-loader',
-  'url-loader',
-  ''
+  'url-loader'
 ]

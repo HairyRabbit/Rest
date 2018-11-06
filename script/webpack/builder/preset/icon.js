@@ -17,8 +17,6 @@ export default function preset(builder: *): * {
   return builder
 }
 
-
-/// export
 export const dependencies = [
   'react-svg-loader'
 ]

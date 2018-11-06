@@ -6,18 +6,20 @@
  * @flow
  */
 
-import fs from 'fs'
-import path from 'path'
-import webpack from 'webpack'
+import * as fs from 'fs'
+import * as path from 'path'
+import { DefinePlugin } from 'webpack'
 
 
 /// code
+
+export const use = "spa"
 
 export default function preset(builder: *): * {
   const context = builder.context
   const initial = initialScriptPath(builder.context)
 
-  builder.setPlugin('boot', webpack.DefinePlugin, {
+  builder.setPlugin('boot', DefinePlugin, {
     'global.__BOOT_NODE__': JSON.stringify('app'),
     'global.__BOOT_CONTEXT__': JSON.stringify('{}'),
     'global.__BOOT_INITIAL__': JSON.stringify(initial)
@@ -45,5 +47,3 @@ function initialScriptPath(context: string): ?string {
 
   return initialPath
 }
-
-export const use = "spa"

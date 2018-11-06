@@ -122,7 +122,6 @@ export class Builder {
        * 1. webpack/builder/preset/{name}.js
        * 2. WEBPACK_BUILDER_PATH/{name}.js
        * 3. node_modules/webpack-builder-preset-{name}
-       *
        */
       let lib
 

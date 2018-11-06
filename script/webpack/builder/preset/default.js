@@ -29,3 +29,12 @@ export const dependencies = [
   'webpack',
   'webpack-cli'
 ]
+
+
+/// test
+
+import * as assert from 'assert'
+
+describe('webpack/builder default preset', () => {
+
+})

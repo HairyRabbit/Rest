@@ -89,6 +89,7 @@ export default function preset(builder: *): * {
       .setRuleOption('css', 'exclude', gcssEntry)
       .setRuleOption('gcss', 'include', gcssEntry)
       .setRuleTypes('gcss', ['css'])
+      .addEntryCommonPrependProd(gcssEntry)
       .setRuleLoaderDev('gcss', 'style-loader')
       .setRuleLoaderProd('gcss', 'file-loader', {
         options: {
@@ -130,7 +131,7 @@ export default function preset(builder: *): * {
       },
       canPrint: true
     })
-    .set('optimization.splitChunks.cacheGroups.style', {
+    .setProd('optimization.splitChunks.cacheGroups.style', {
       name: 'style',
       test: /\.css$/,
       chunks: 'all',
