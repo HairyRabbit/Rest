@@ -20,18 +20,18 @@ export type Props<T> = {
     list?: string,
     item?: string
   },
+  className?: string,
   classNames?: {
     list?: string,
     item?: string
   }
 }
 
-function DefaultEmptyView() {
+export function DefaultEmptyView() {
   return null
 }
 
-
-export default function CollectView<T>({ value = [], emptyView: EmptyView = DefaultEmptyView, itemView: ItemView = 'div' }: Props<T> = {}, tags, classNames = {}): React.Node {
+export default function CollectView<T>({ value = [], emptyView: EmptyView = DefaultEmptyView, itemView: ItemView = 'div', tags, classNames = {}, className, ...props }: Props<T> = {}): React.Node {
   if(value && !Array.isArray(value)) throw new Error(`<CollectView /> value should be array`)
   /**
    * `null`, `undefined`, `[]` render empty view
@@ -43,7 +43,7 @@ export default function CollectView<T>({ value = [], emptyView: EmptyView = Defa
         : ['ul', 'li']
 
   return (
-    <ListWrapper className={cs(style.list, classNames.list)}>
+    <ListWrapper className={cs(style.list, className, classNames.list)} {...props}>
       {value.map((item, idx) => {
         return (
           <ItemWrapper key={idx} className={cs(classNames.item)}>
