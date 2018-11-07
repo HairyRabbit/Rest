@@ -5,12 +5,16 @@
 .main {
   position: relative;
   display: inline-block;
-  padding: 0.25rem 1.25rem;
+  padding: 0.35rem 1.25rem;
   border: none;
   vertical-align: middle;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
+  border-radius: 2px;
   &:focus {
     outline: none;
   }
+
+  background-color: var(--primary-color);
+  color: #fff;
 }
