@@ -24,7 +24,12 @@ export type Props<T> = {
   }
 }
 
-export default function CollectView<T>({ value = [], emptyView: EmptyView = null, itemView: ItemView = 'div' }: Props<T> = {}, tags, classNames): React.Node {
+function DefaultEmptyView() {
+  return null
+}
+
+
+export default function CollectView<T>({ value = [], emptyView: EmptyView = DefaultEmptyView, itemView: ItemView = 'div' }: Props<T> = {}, tags, classNames): React.Node {
   if(!Array.isArray(value)) throw new Error(`<CollectView /> value should be array`)
   if(!value.length) return (<EmptyView />)
 
