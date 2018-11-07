@@ -6,7 +6,7 @@
  */
 
 import * as React from 'react'
-import { classnames as cs } from '../../util/classnames'
+import { classnames as cs } from '../../util'
 import style from '../../style/reset.css'
 
 
