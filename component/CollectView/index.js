@@ -6,6 +6,8 @@
  */
 
 import * as React from 'react'
+import { classnames as cs } from '../../util/classnames'
+import style from '../../style/reset.css'
 
 
 /// code
@@ -29,18 +31,24 @@ function DefaultEmptyView() {
 }
 
 
-export default function CollectView<T>({ value = [], emptyView: EmptyView = DefaultEmptyView, itemView: ItemView = 'div' }: Props<T> = {}, tags, classNames): React.Node {
-  if(!Array.isArray(value)) throw new Error(`<CollectView /> value should be array`)
-  if(!value.length) return (<EmptyView />)
+export default function CollectView<T>({ value = [], emptyView: EmptyView = DefaultEmptyView, itemView: ItemView = 'div' }: Props<T> = {}, tags, classNames = {}): React.Node {
+  if(value && !Array.isArray(value)) throw new Error(`<CollectView /> value should be array`)
+  /**
+   * `null`, `undefined`, `[]` render empty view
+   */
+  if(!value || !value.length) return (<EmptyView />)
 
   const [ ListWrapper, ItemWrapper ] = tags
         ? [tags.list || 'ul', tags.item || 'li']
         : ['ul', 'li']
 
   return (
-    <ListWrapper>
+    <ListWrapper className={cs(style.list, classNames.list)}>
       {value.map((item, idx) => {
-        return (<ItemWrapper key={idx}><ItemView {...item} /></ItemWrapper>)
+        return (
+          <ItemWrapper key={idx} className={cs(classNames.item)}>
+            <ItemView {...item} />
+          </ItemWrapper>)
       })}
     </ListWrapper>
   )
