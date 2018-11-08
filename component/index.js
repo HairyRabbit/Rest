@@ -14,6 +14,11 @@ export { default as Layout } from './layout'
 export { default as Tag } from './Tag'
 
 /**
+ * router
+ */
+export { default as Nav } from './Nav'
+
+/**
  * collect
  */
 export { default as CollectView } from './CollectView'
