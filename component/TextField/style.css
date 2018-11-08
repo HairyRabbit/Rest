@@ -4,6 +4,6 @@
 
 .main {
   composes: box from '../../style/box.css';
-  border: 1px solid; lightgray;
+  border: 1px solid lightgray;
   width: 100%;
 }
