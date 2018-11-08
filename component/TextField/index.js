@@ -16,12 +16,17 @@ export type Props = {
   className?: string,
   value?: string,
   onChange?: Function
+} & AreaProps
+
+export type AreaProps = {
+  rows?: number
 }
 
-export default function TextField({ type = 'text', className, value, onChange, ...props }:Props = {}): React.Node {
+export default function TextField({ type = 'text', className, value, onChange, rows = 8, ...props }: Props = {}): React.Node {
   if('area' === type) return (
-    <textarea className={cs(style.main, className)}
+    <textarea className={cs(style.main, style.area, className)}
               value={value}
+              rows={rows}
               onChange={onChange}></textarea>
   )
 
