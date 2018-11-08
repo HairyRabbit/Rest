@@ -9,6 +9,11 @@ export { default as Avatar } from './avatar'
 export { default as Layout } from './layout'
 
 /**
+ * box
+ */
+export { default as Tag } from './Tag'
+
+/**
  * collect
  */
 export { default as CollectView } from './CollectView'

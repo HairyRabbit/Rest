@@ -1,0 +1,23 @@
+/**
+ * <Tag /> styles
+ */
+
+$TagPadding: 0.65rem;
+$TagHeight: 1rem;
+$TagFontSize: 0.625rem; // 10px
+
+$TagPaddingX: ($TagHeight - $TagFontSize) / 2;
+
+.main {
+  display: inline-block;
+  padding: $TagPaddingX $TagPadding;
+  vertical-align: middle;
+  background-color: #eee;
+  color: var(--primary-color);
+  font-size: $TagFontSize;
+  border-radius: 4px;
+  cursor: pointer;
+  &:hover {
+    background-color: darken(#eee, 5%);
+  }
+}
