@@ -3,16 +3,7 @@
  */
 
 .main {
-  position: relative;
-  display: inline-block;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 2px;
+  composes: box from '../../style/box.css';
+  border: 1px solid; lightgray;
   width: 100%;
-  font-family: inherit;
-  font-size: 12px;
-  color: inherit;
-  &:focus {
-    outline: none;
-  }
 }
