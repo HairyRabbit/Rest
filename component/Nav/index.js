@@ -28,7 +28,7 @@ export default function Nav({ children, classNames = {}, className }: Props = {}
   return (
     <ul className={cs(reset.list, style.main, classNames.list, className)}>
       {React.Children.map(children, (child, idx) => (
-        <li className={cs(style.item, className.item)} key={idx}>
+        <li className={cs(style.item, classNames.item)} key={idx}>
           {child}
         </li>
       ))}
