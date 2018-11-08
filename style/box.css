@@ -1,0 +1,19 @@
+/**
+ * box style
+ */
+
+.box {
+  position: relative;
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 2px;
+  vertical-align: middle;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+
+  &:focus {
+    outline: none;
+  }
+}
