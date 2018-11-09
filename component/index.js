@@ -29,3 +29,9 @@ export { default as CollectView } from './CollectView'
 export { default as TextField } from './TextField'
 export { default as Button } from './Button'
 export { default as Switch } from './Switch'
+
+
+/**
+ * helper
+ */
+export { default as withDraggable } from './Draggable'

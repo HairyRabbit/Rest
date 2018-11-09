@@ -2,25 +2,16 @@
  * <Switch /> styles
  */
 
-$SwitchHeight: 0.85rem;
-$SwitchWidth: $SwitchHeight * 2.618;
-$SwitchCursorOffset: 0.25;
-$SwitchCursorSize: $SwitchHeight * (1 + $SwitchCursorOffset);
-
 .main {
   display: inline-block;
-  padding-right: $SwitchCursorSize;
-  border-radius: $SwitchHeight;
-  width: $SwitchWidth;
-  height: $SwitchHeight;
   cursor: pointer;
   vertical-align: middle;
   transition: background-color 0.28s ease-in-out 0s;
-  &.on {
-    background-color: #afcbe6;
-  }
   &.off {
     background-color: lightgray;
+  }
+  &.on {
+    background-color: #afcbe6;
   }
 }
 
@@ -31,20 +22,15 @@ $SwitchCursorSize: $SwitchHeight * (1 + $SwitchCursorOffset);
 
 .cursor {
   position: absolute;
-  top: -1rem * $SwitchCursorOffset / 2;
   border-radius: 50%;
-  width: $SwitchCursorSize;
-  height: $SwitchCursorSize;
-  transition: background-color 0.28s ease-in-out 0s,
-  left 0.28s ease-in-out 0s,
-  right 0.28s ease-in-out 0s;
-  &.on {
-    left: 0;
-    background-color: var(--primary-color);
-  }
+  transition: background-color 0.28s ease-in-out 0s, left 0.28s ease-in-out 0s;
   &.off {
-    left: 100%;
+    left: 0;
     background-color: darkgray;
+  }
+  &.on {
+    left: 100%;
+    background-color: var(--primary-color);
   }
 }
 

@@ -1,0 +1,22 @@
+/**
+ * <Switch />
+ */
+
+$SwitchHeight: 0.85rem;
+$SwitchWidth: $SwitchHeight * 2.618;
+$SwitchCursorOffset: 0.25;
+$SwitchCursorSize: $SwitchHeight * (1 + $SwitchCursorOffset);
+
+.main {
+  padding-right: $SwitchCursorSize;
+  border-radius: $SwitchHeight;
+  width: $SwitchWidth;
+  height: $SwitchHeight;
+}
+
+.cursor {
+  top: -1rem * $SwitchCursorOffset / 2;
+  width: $SwitchCursorSize;
+  height: $SwitchCursorSize;
+  background-color: white;
+}

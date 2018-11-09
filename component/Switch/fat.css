@@ -1,0 +1,21 @@
+/**
+ * <Switch /> fat style
+ */
+
+$SwitchHeight: 0.85rem;
+$SwitchWidth: $SwitchHeight * 2.618;
+$SwitchCursorOffset: 0.25;
+$SwitchCursorSize: $SwitchHeight * (1 + $SwitchCursorOffset);
+
+.main {
+  padding: 1rem * $SwitchCursorOffset / 2;
+  padding-right: $SwitchCursorSize + 1rem * $SwitchCursorOffset / 2;
+  border-radius: $SwitchHeight;
+  width: $SwitchWidth;
+  height: $SwitchHeight + $SwitchCursorOffset * 2;
+}
+
+.cursor {
+  width: $SwitchCursorSize;
+  height: $SwitchCursorSize;
+}
