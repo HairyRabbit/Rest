@@ -27,11 +27,13 @@ declare var __non_webpack_require__: Function
 // $FlowFixMe require.context was webpack only
 const presetsContext = require.context('./preset', true, /\.js$/)
 
+
 type Options = {
   debug?: boolean,
   logger?: Function,
   disableGuess?: boolean,
   disableCheck?: boolean,
+  noDefault: boolean,
   server?: PresetServerOptions,
   style?: PresetStyleOptions,
   nodelib?: PresetNodelibOptions
@@ -85,7 +87,9 @@ export class Builder {
         'set'
       ])
 
-    this.use('default')
+    if(!this.options.noDefault) {
+      this.use('default')
+    }
 
     /**
      * if "webpackOptions" was string, call install
@@ -142,13 +146,6 @@ export class Builder {
       }
 
       /**
-       * search preset failed
-       */
-      if(!lib) {
-        throw new Error(`Search Preset not found, "${preset}"`)
-      }
-
-      /**
        * search paths
        */
       if(paths) {
@@ -159,9 +156,16 @@ export class Builder {
         })
       }
 
+      /**
+       * search preset failed
+       */
+      if(!lib) {
+        throw new Error(`Search Preset not found, "${preset}"`)
+      }
+
       const { default: call, use, dependencies } = lib
       this.presets[preset] = dependencies || []
-      use && this.use(use)
+      use && this.use(use, this.options.preset)
       call(this)
     })
 
