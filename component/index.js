@@ -12,6 +12,7 @@ export { default as Layout } from './layout'
  * box
  */
 export { default as Tag } from './Tag'
+export { default as Icon } from './Icon'
 
 /**
  * router
