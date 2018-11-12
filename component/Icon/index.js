@@ -22,16 +22,17 @@ export type Props = {
 /**
  * use React <svg /> component when mode was development
  */
-function SVGComponent({ children, className, size = 'md', value, ...props }: Props = {}) {
+function IconSVGComponent({ children, className, size = 'md', value, ...props }: Props = {}) {
   const SVGComponent = require(`${process.env.ICON_CONTEXT}/${value}.svg`).default
+  SVGComponent.displayName = 'SVGComponent'
   return <SVGComponent role="img"
                        className={cs(style.main, style[`size-${size}`], className)} />
 }
 
 /**
- * use <svg><use xlinkhref></svg> at production mode
+ * use <svg><use xlink:href></svg> at production mode
  */
-function SVGStoreComponent({ children, className, size = 'md', value, ...props }: Props = {}) {
+function IconSVGStoreComponent({ children, className, size = 'md', value, ...props }: Props = {}) {
   const name = process.env.ICON_STORE || '/icons.svg'
   const inline = process.env.ICON_STORE_INLINE || false
   return (
@@ -41,9 +42,6 @@ function SVGStoreComponent({ children, className, size = 'md', value, ...props }
   )
 }
 
-
-export default function Icon(props: Props = {}): React.Node {
-  return 'production' === process.env.NODE_ENV
-    ? <SVGStoreComponent {...props}/>
-    : <SVGComponent {...props} />
-}
+export default 'production' !== process.env.NODE_ENV
+  ? IconSVGComponent
+  : IconSVGStoreComponent

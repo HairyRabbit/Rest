@@ -9,6 +9,11 @@ export { default as Avatar } from './avatar'
 export { default as Layout } from './layout'
 
 /**
+ * layout
+ */
+export { default as  FormItem } from './FormItem'
+
+/**
  * box
  */
 export { default as Tag } from './Tag'

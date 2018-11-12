@@ -1,0 +1,18 @@
+/**
+ * <FormItem /> styles
+ */
+
+.label {
+  // composes: box from '../../style/box.css';
+  display: block;
+}
+
+.helper {
+  font-size: 12px;
+  color: gray;
+}
+
+.align {
+  &-left { text-align: left; }
+  &-right { text-align: right; }
+}
