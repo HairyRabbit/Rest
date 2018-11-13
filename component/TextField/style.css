@@ -4,11 +4,12 @@
 
 .main {
   composes: box from '../../style/box.css';
+  border: 1px solid lightgray;
   width: 100%;
 }
 
-.bd {
-  border: 1px solid lightgray;
+.nobd {
+  border: none;
 }
 
 .area {

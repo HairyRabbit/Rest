@@ -3,7 +3,6 @@
  */
 
 .label {
-  // composes: box from '../../style/box.css';
   display: block;
 }
 
@@ -15,4 +14,8 @@
 .align {
   &-left { text-align: left; }
   &-right { text-align: right; }
+}
+
+.box {
+  composes: box from '../../style/box.css';
 }

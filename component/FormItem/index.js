@@ -16,7 +16,6 @@ import style from './style.css'
 
 export type Props = {
   type?: 'vertical' | 'horizontal' | 'between',
-  name?: string,
   label?: string,
   required?: boolean | string,
   children?: React.Node
@@ -26,11 +25,9 @@ export type HorizontalProps = {
   align?: 'left' | 'right'
 }
 
-export default function FormItem({ type = 'vertical', name, align = 'right', label, required, helper, children, ...props }: Props = {}): React.Node {
-  const child = React.Children.only(React.cloneElement(
-    children,
-    { name, ...props }
-  ))
+export default function FormItem({ type = 'vertical', align = 'right', label, required, helper, children, ...props }: Props = {}): React.Node {
+  const { name } = children.props
+  const componetType = children.type.name
 
   switch(type) {
     case 'vertical':
@@ -39,20 +36,22 @@ export default function FormItem({ type = 'vertical', name, align = 'right', lab
           <label htmlFor={name} className={style.label}>
             {label}
           </label>
-          {child}
+          {children}
           <Layout>
             {helper && (<div className={style.helper}>{helper}</div>)}
           </Layout>
         </Layout>
       )
     case 'horizontal':
+      // 16.6667%
       return (
-        <Layout size="16.6667%:1" {...props}>
-          <label htmlFor={name} className={cs(style.label, style[`align-${align}`])}>
+        <Layout size="25%:50%:25%" {...props}>
+          <label htmlFor={name}
+                 className={cs(style.label, 'TextField' === componetType && style.box, style[`align-${align}`])}>
             {label}
           </label>
           <Layout vertical gutter="xs">
-            {child}
+            {children}
             {helper && (<div className={style.helper}>{helper}</div>)}
           </Layout>
         </Layout>
@@ -66,7 +65,7 @@ export default function FormItem({ type = 'vertical', name, align = 'right', lab
             </label>
             <div className={style.helper}>{helper}</div>
           </Layout>
-          {child}
+          {children}
         </Layout>
       )
     default:

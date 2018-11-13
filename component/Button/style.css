@@ -4,9 +4,18 @@
 
 .main {
   composes: box from '../../style/box.css';
+  min-width: 7.5rem;
   vertical-align: middle;
   cursor: pointer;
-  background-color: var(--primary-color);
-  color: #fff;
-  min-width: 8rem;
+}
+
+.theme {
+  &-primary {
+    background-color: var(--primary-color);
+    color: #fff;
+  }
+  &-default {
+    background-color: lightgray;
+    color: gray;
+  }
 }

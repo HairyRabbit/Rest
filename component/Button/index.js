@@ -13,13 +13,14 @@ import style from './style.css'
 
 export type Props = {
   type?: 'button' | 'submit',
+  theme?: 'default' | 'primary' | 'secondary' | 'info' | 'error' | 'warning',
   className?: string,
   children?: React.Node
 }
 
-export default function Button({ children, type = 'button', className, ...props }: Props = {}): React.Node {
+export default function Button({ children, type = 'button', theme = 'primary', className, ...props }: Props = {}): React.Node {
   return (
-    <button className={cs(style.main, className)}
+    <button className={cs(style.main, style[`theme-${theme}`], className)}
             type={type}
             {...props}>
       {children}
