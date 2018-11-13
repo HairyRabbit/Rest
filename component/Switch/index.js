@@ -5,7 +5,7 @@
  */
 
 import * as React from 'react'
-import { classnames as cs } from '../../util'
+import { classnames as cs, randomString as rs } from '../../util'
 import style from './style.css'
 import thinStyle from './thin.css'
 import fatStyle from './fat.css'
@@ -22,10 +22,6 @@ export type Props = {
   className?: string
 }
 
-function randomString(length: number = 7): string {
-  return Math.random().toString(16).substr(2, length)
-}
-
 const themeStyle = {
   thin: thinStyle,
   fat: fatStyle
@@ -33,7 +29,7 @@ const themeStyle = {
 
 export default function Switch({ name, checked, onChange, className, theme = 'fat', ...props }: Props = {}): React.Node {
   const state = checked ? 'on' : 'off'
-  const id = name || '__SWITCH_ID__' + randomString()
+  const id = name || '__SWITCH_ID__' + rs()
   return (
     <label htmlFor={id} className={cs(style.main, themeStyle[theme].main, style[state], className)} {...props}>
       <div className={style.container}>

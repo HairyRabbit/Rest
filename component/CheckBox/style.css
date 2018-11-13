@@ -1,0 +1,28 @@
+/**
+ * <CheckBox /> styles
+ */
+
+$CheckBoxSize: 1.125rem;
+
+.main {
+  display: inline-block;
+  border-radius: 4px;
+  width: $CheckBoxSize;
+  height: $CheckBoxSize;
+  vertical-align: middle;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: $CheckBoxSize;
+  text-align: center;
+  color: white;
+  cursor: pointer;
+  background-color: lightgray;
+  transition: background-color 0.28s ease-in-out 0s;
+  &.active {
+    background-color: var(--primary-color);
+  }
+}
+
+.field {
+  display: none;
+}
