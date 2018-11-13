@@ -3,10 +3,31 @@
  */
 
 .field {
-  padding: 0.5rem;
-  border: 0;
-  width: 100%;
-  &:focus {
-    outline: 0;
-  }
+  padding: 1rem 0;
+  border: none;
+  font-size: 24px;
+  font-weight: lighter;
+}
+
+.between {
+  width: 75%;
+}
+
+.helper {
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.icon {
+  color: lightgray;
+}
+
+.container {
+  border-top: 1px solid #ddd;
+  padding: 2rem;
+}
+
+.header {
+  font-weight: bolder;
 }

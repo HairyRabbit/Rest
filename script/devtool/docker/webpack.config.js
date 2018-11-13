@@ -13,6 +13,9 @@ export default Builder('icon,rest', {
     gcssEntry: [
       path.resolve(__dirname, 'src/style.css')
     ]
+  },
+  icon: {
+    context: path.resolve(__dirname, 'assets/icon')
   }
 })
   .setContext(__dirname, 'src')

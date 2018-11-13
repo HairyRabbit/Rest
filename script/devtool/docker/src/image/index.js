@@ -9,7 +9,7 @@
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { Avatar, Layout, Switch, Button } from '~component'
+import { Avatar, Layout, Switch, Button, TextField, FormItem } from '~component'
 import { api, classnames as cs } from '~util'
 import style from './style.css'
 import UnNameIcon from '../../assets/icon/Layer.svg'
@@ -33,20 +33,7 @@ function ToolBar({ loadData }): React.Node {
   const [checked, setChecked] = React.useState(false)
   return (
     <div className={style.toolbar}>
-      <Layout>
-        <SearchBar />
-        <Button>
-          Query
-        </Button>
-        <div className={style.control}>
-          <span>Show all images</span>
-          <Switch name="all" checked={checked}
-                  onChange={() => {
-                    setChecked(!checked)
-                    // api.get('images/json', { params: { all: !checked } }).then(loadData)
-            }} />
-        </div>
-      </Layout>
+      <SearchBar />
     </div>
   )
 }

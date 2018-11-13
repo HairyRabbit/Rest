@@ -7,7 +7,7 @@
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { Layout } from '~component'
+import { Layout, Tag, CollectView } from '~component'
 import { classnames as cs } from '~util'
 import style from './style.css'
 import UnNameIcon from '../../../assets/icon/Layer.svg'
@@ -125,7 +125,7 @@ function Item({ Id, ParentId, Size, VirtualSize, SharedSize, Created, RepoTags, 
         </Layout>
 
         <div className={style.tag}>
-          Tag: {transformDockerImageTag(tag)}
+          Tag: <Tag value={transformDockerImageTag(tag)} />
         </div>
       </Layout>
     </div>

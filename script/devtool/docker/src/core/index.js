@@ -52,11 +52,49 @@ function imageData(model = { data: [], filter: []}, action) {
   }
 }
 
+const initImageSearchBarQueryParamsModel = {
+  all: false,
+  digests: false,
+  before: {
+    tags: [],
+    value: ''
+  },
+  reference: {
+    tags: [],
+    value: ''
+  },
+  since: {
+    tags: [],
+    value: ''
+  },
+  dangling: false,
+  label: {
+    tags: [],
+    value: ''
+  }
+}
+
+function imageSearchBarQueryParamsReducer(model = initImageSearchBarQueryParamsModel, action) {
+  switch(action.type) {
+    case 'SetValue':
+      return {
+        ...model,
+        [action.payload.field]: action.payload.value
+      }
+    case 'ClearValues': {
+      return initImageSearchBarQueryParamsModel
+    }
+    default: return model
+  }
+}
 
 const reducer = combineReducers({
   ui: combineReducers({
     image: changeSearchBarValue,
-    data: imageData
+    data: imageData,
+    imageSearchBar: combineReducers({
+      queryParams: imageSearchBarQueryParamsReducer
+    })
   }),
   data: a => null,
   sesson: a => null
@@ -68,6 +106,9 @@ const init = {
     data: {
       data: [],
       filter: []
+    },
+    imageSearchBar: {
+      queryParams: initImageSearchBarQueryParamsModel
     }
   },
   data: {},

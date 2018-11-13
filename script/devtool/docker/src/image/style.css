@@ -64,7 +64,7 @@ $LogoSize: 1.5rem;
 }
 
 .toolbar {
-  padding: 0.5rem 1rem;
+  // padding: 0.5rem 1rem;
   margin-bottom: 1rem;
   background-color: white;
   box-shadow: 0px 6px 20px -16px #000;
@@ -81,4 +81,23 @@ $LogoSize: 1.5rem;
 
 .control {
   font-size: 12px;
+}
+
+.text {
+  font-size: 14px;
+  text-align: right;
+}
+
+.subtext {
+  font-size: 10px;
+  color: gray;
+}
+
+.form {
+  width: 80%;
+  margin: 0 auto;
+}
+
+.label {
+  display: block;
 }

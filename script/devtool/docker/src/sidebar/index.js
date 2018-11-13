@@ -8,26 +8,23 @@
 
 import * as React from 'react'
 import { NavLink } from 'react-router-dom'
-import { Layout } from '~component'
+import { Layout, Icon } from '~component'
 import style from './style.css'
-import Core from '../../assets/icon/Core.svg'
-import Image from '../../assets/icon/Layer.svg'
-import Container from '../../assets/icon/Container.svg'
 
 
 /// code
 
 const nav = [{
   href: '/dashboard',
-  icon: Core,
+  icon: 'Core',
   content: 'Dashboard'
 },{
   href: '/image',
-  icon: Image,
+  icon: 'Layer',
   content: 'Images'
 },{
   href: '/container',
-  icon: Container,
+  icon: 'Container',
   content: 'Containers'
 }]
 
@@ -38,14 +35,14 @@ function Sidebar(): React.Node {
         <Logo />
 
         <Layout list vertical size="1" gutter="sm">
-          {nav.map(({ href, icon: Icon, content }, idx) => (
+          {nav.map(({ href, icon, content }, idx) => (
             <NavLink to={href}
                      activeClassName={style.active}
                      className={style.link}
                      key={idx}>
               <Layout center size="0:1">
                 <div className={style.icon}>
-                  <Icon />
+                  <Icon value={icon} />
                 </div>
                 {content}
               </Layout>
