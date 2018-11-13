@@ -6,7 +6,7 @@
 
 import * as React from 'react'
 import { connect } from 'react-redux'
-import { FormItem, Switch, Layout, TextField, Button, Icon } from '~component'
+import { FormItem, CheckBox, Switch, Layout, TextField, Button, Icon } from '~component'
 import { api, classnames as cs } from '~util'
 import style from './style.css'
 
@@ -80,9 +80,9 @@ function SearchFilters({ queryParams: { all, digests, before, reference, since, 
                          onChange={evt => updateQueryParams('since', { tags: since.tags, value: evt.target.value })} />
             </FormItem>
             <FormItem type="horizontal" label="Dangling">
-              <Switch name="dangling"
-                      checked={dangling}
-                      onChange={evt => updateQueryParams('dangling', evt.target.checked)} />
+              <CheckBox name="dangling"
+                        checked={dangling}
+                        onChange={evt => updateQueryParams('dangling', CheckBox.nextState(dangling))} />
             </FormItem>
             <FormItem type="horizontal"
                       label="Label"
@@ -96,14 +96,14 @@ function SearchFilters({ queryParams: { all, digests, before, reference, since, 
               <Layout size="0">
                 <Button onClick={() => {
                   api.get('images/json', { params: {
-                    ...(all && { all: true }),
-                    ...(digests && { digests: true }),
+                    all,
+                    digests,
                     filters: JSON.stringify({
-                      ...(before.tags.length && { before: before.tags }),
-                      ...(reference.tags.length && { reference: before.tags }),
-                      ...(since.tags.length && { since: before.tags }),
-                      ...(label.tags.length && { label: before.tags }),
-                      ...(dangling && { dangling: [JSON.stringify(dangling)] })
+                      before: before.tags.length ? before.tags : undefined,
+                      reference: reference.tags.length ? reference.tags : undefined,
+                      since: since.tags.length ? since.tags : undefined,
+                      label: label.tags.length ? label.tags : undefined,
+                      dangling: undefined !== dangling ? [JSON.stringify(dangling)] : undefined
                     })
                   }}).then(loadData)
                 }}>Search</Button>

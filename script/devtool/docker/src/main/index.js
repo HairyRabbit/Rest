@@ -13,7 +13,7 @@ import { Layout } from '~component'
 import style from './style.css'
 import Sidebar from '../sidebar'
 import Dashboard from '../dashboard'
-import Image from '../image'
+import Image from '../Image'
 import Container from '../container'
 
 function Main(): React.Node {

@@ -67,7 +67,7 @@ const initImageSearchBarQueryParamsModel = {
     tags: [],
     value: ''
   },
-  dangling: false,
+  dangling: undefined,
   label: {
     tags: [],
     value: ''
