@@ -1,0 +1,24 @@
+/**
+ * <TagInput /> styles
+ */
+
+.main {
+  border: 1px solid lightgray;
+  border-radius: 2px;
+}
+
+.list {
+  display: inline-block;
+  padding: 0 0.25rem;
+}
+
+.tag {
+  display: inline-block;
+  margin: 0 0.25rem;
+  vertical-align: middle;
+}
+
+.field {
+  width: auto;
+  border: none;
+}

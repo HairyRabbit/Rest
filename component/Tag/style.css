@@ -2,22 +2,56 @@
  * <Tag /> styles
  */
 
-$TagPadding: 0.65rem;
+$TagPaddingX: 0.65rem;
 $TagHeight: 1rem;
 $TagFontSize: 0.625rem; // 10px
 
-$TagPaddingX: ($TagHeight - $TagFontSize) / 2;
+$TagPaddingY: ($TagHeight - $TagFontSize) / 2;
 
 .main {
   display: inline-block;
-  padding: $TagPaddingX $TagPadding;
+  position: relative;
+  padding: $TagPaddingY $TagPaddingX;
   vertical-align: middle;
-  background-color: #eee;
-  color: var(--primary-color);
   font-size: $TagFontSize;
   border-radius: 4px;
+  color: white;
+  background-color: var(--primary-color);
   cursor: pointer;
+  user-select: none;
+  transition: background-color 0.28s ease-in-out 0s;
+
   &:hover {
-    background-color: darken(#eee, 5%);
+    background-color: var(--primary-color-darken);
   }
+  &.closable {
+    padding-right: $TagPaddingX + $TagFontSize;
+  }
+  &.editable {
+    padding: 0;
+  }
+}
+
+.close {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: $TagPaddingX + $TagFontSize;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.icon {
+  width: 10px;
+  height: 10px;
+}
+
+.field {
+  padding: $TagPaddingY $TagPaddingX;
+  width: auto;
+  color: black;
+  border-color: var(--primary-color);
+  border-radius: 4px;
 }
