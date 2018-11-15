@@ -1,0 +1,27 @@
+/**
+ * <TagsGroup /> styles
+ */
+
+.list {
+  /* display: inline-block; */
+  /* padding: 0 0.25rem; */
+}
+
+.tag {
+  display: inline-block;
+  margin: 0 0.25rem;
+  vertical-align: middle;
+}
+
+.new {
+  border: 1px dashed;
+  border-color: gray;
+  background-color: transparent;
+  color: gray;
+
+  &:hover {
+    border-color: var(--primary-color);
+    background-color: transparent;
+    color: var(--primary-color);
+  }
+}

@@ -14,20 +14,45 @@ import style from './style.css'
 
 /// code
 
-export default function TagInput({ tags = [], value, onChange, onTagsChange, ...props }: Props = {}): React.Node {
-  // const [ tagsState, setTagsState ] = React.useState(tags)
+export type TagEntity = {
+  id: string,
+  value: string,
+  isEdit: boolean
+}
 
+export type TagChangeAction = {
+  type: 'create' | 'delete' | 'update',
+  payload: {
+    tag: TagEntity,
+    index: number,
+    _tag?: TagEntity
+  }
+}
+
+export type Props = {
+  tags?: Array<TagEntity>,
+  whenblur?: 'push' | 'cancel' | boolean,
+  value?: string,
+  onChange?: SyntheticEvent<HTMLInputElement> => void,
+  onTagsChange?: ($PropertyType<Props, 'tags'>, TagChangeAction) => void,
+  onBlur?: SyntheticEvent<HTMLInputElement> => void,
+}
+
+export default function TagsInput({ tags = [], whenblur = true, value, onChange, onTagsChange, onBlur, ...props }: Props = {}): React.Node {
+  const _whenblur = transformWhenBlur(whenblur)
   return (
     <div className={style.main}>
       {tags.length > 0 && (
         <ul className={cs(reset.list, style.list)}>
-          {tags.map((tag, idx) => (
-            <li key={`${tag}-${idx}`} className={style.tag}>
+          {tags.map(({ id, value, isEdit }, idx) => (
+            <li key={id} className={style.tag}>
               <Tag closable
                    editable
-                   value={tag}
+                   value={value}
+                   isEdit={isEdit}
                    onClose={handleClose(idx)}
-                   onChange={handleChange(idx)} />
+                   onChange={handleChange(idx)}
+                   onEditChange={handleTagEditChange(idx)} />
             </li>
           ))}
         </ul>
@@ -36,6 +61,7 @@ export default function TagInput({ tags = [], value, onChange, onTagsChange, ...
                  onChange={onChange}
                  onKeyDown={handleKeyDown(onChange, tags, value, onTagsChange)}
                  className={style.field}
+                 onBlur={handleBlur}
                  {...props} />
     </div>
   )
@@ -46,7 +72,7 @@ export default function TagInput({ tags = [], value, onChange, onTagsChange, ...
       const left = tags.slice(0, idx)
       const right = tags.slice(idx + 1)
       onTagsChange && onTagsChange(
-        left.concat(right), { type: 'remove', payload: { tag, index: idx } }
+        left.concat(right), { type: 'delete', payload: { tag, index: idx } }
       )
     }
   }
@@ -56,15 +82,40 @@ export default function TagInput({ tags = [], value, onChange, onTagsChange, ...
       const _tag = tags[idx]
       const left = tags.slice(0, idx)
       const right = tags.slice(idx + 1)
-      const tag = evt.target.value
-      tags[idx] = tag
+      const tag = { ..._tag, value: evt.target.value.trim() }
       onTagsChange && onTagsChange(
-        tags, { type: 'update', payload: { tag, index: idx, _tag } }
+        left.concat(tag, right), { type: 'update', payload: { tag, index: idx, _tag } }
       )
-      // onTagsChange && onTagsChange(
-      //   left.concat(tag, right), { type: 'update', payload: { tag, index: idx, _tag } }
-      // )
     }
+  }
+
+  function handleTagEditChange(idx) {
+    return function handleTagEditChange1(isEdit) {
+      const _tag = tags[idx]
+      const left = tags.slice(0, idx)
+      const right = tags.slice(idx + 1)
+      const tag = { ..._tag, isEdit }
+      onTagsChange && onTagsChange(
+        left.concat(tag, right), { type: 'update', payload: { tag, index: idx, _tag } }
+      )
+    }
+  }
+
+  function handleBlur(evt) {
+    let newTags = tags
+    if(_whenblur) {
+      const tag = {
+        id: rs(),
+        value: evt.target.value.trim(),
+        isEdit: false
+      }
+      newTags = tags.concat(tag)
+      isFunction(onTagsChange) && onTagsChange(
+        newTags, { type: 'create', payload: { tag, index: -1 } }
+      )
+    }
+
+    isFunction(onBlur) && onBlur(evt, newTags)
   }
 }
 
@@ -72,11 +123,13 @@ function handleKeyDown(changeValue, tags, value, onTagsChange) {
   return function handleKeyDown1(evt) {
     if(9 === evt.which) {
       evt.preventDefault()
-      const tag = evt.target.value
-      // evt.target.value = ''
-      // changeValue({ ...evt, target: { ...evt.target, value: '' }})
+      const tag = {
+        id: rs(),
+        value: evt.target.value.trim(),
+        isEdit: false
+      }
       onTagsChange && onTagsChange(
-        tags.concat(value), { type: 'add', payload: { tag, index: -1 } }
+        tags.concat(tag), { type: 'create', payload: { tag, index: -1 } }
       )
     } else if(8 === evt.which) {
       if(!tags.length || value) return
@@ -88,10 +141,23 @@ function handleKeyDown(changeValue, tags, value, onTagsChange) {
       const lst = len - 1
       const tag = tags[lst]
       onTagsChange && onTagsChange(
-        tags.slice(0, -1), { type: 'remove', payload: { tag, index: lst } }
+        tags.slice(0, -1), { type: 'delete', payload: { tag, index: lst } }
       )
     } else {
       return
     }
+  }
+}
+
+function transformWhenBlur(whenblur: $PropertyType<Props, 'whenblur'>): boolean {
+  switch(whenblur) {
+    case true:
+    case 'push':
+      return true
+    case false:
+    case 'cancle':
+      return false
+    default:
+      throw new Error(`Unknow whenblur value, "${whenblur}"`)
   }
 }
