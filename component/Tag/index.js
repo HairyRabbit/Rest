@@ -8,7 +8,7 @@
 import * as React from 'react'
 import { isFunction } from 'lodash'
 import { classnames as cs } from '../../util'
-import { TextField } from '../'
+import { TextField, Button } from '../'
 import style from './style.css'
 
 
@@ -22,7 +22,10 @@ export type Props = {
   onChange?: SyntheticEvent<HTMLInputElement> => void,
   onEditChange?: $PropertyType<Props, 'isEdit'> => void,
   className?: string,
-  value?: string
+  value?: string,
+  classNames?: {
+    [key: 'button' | 'input' | 'close']: string
+  }
 }
 
 export default function Tag(props: Props = {}): React.Node {
@@ -34,18 +37,19 @@ export default function Tag(props: Props = {}): React.Node {
 Tag.Controlled = ControlledTag
 Tag.UnControlled = UnControlledTag
 
-export function UnControlledTag({ closable, onClose, editable, isEdit = false, onChange, value, className }: Props = {}): React.Node {
+export function UnControlledTag({ closable, onClose, editable, isEdit = false, onChange, value, className, classNames = {}, ...props }: Props = {}): React.Node {
   const [ _isEdit, setIsEdit ] = React.useState(isEdit)
   const [ _value, setValue ] = React.useState(value)
   const containerClassName = cs(
     style.main,
     closable && style.closable,
     editable && _isEdit && style.editable,
-    className
+    className,
+    classNames.button
   )
   return (
-    <div className={containerClassName}
-         onDoubleClick={handleMouseDoubleClick}>
+    <Button size="sm" className={containerClassName}
+            onDoubleClick={handleMouseDoubleClick}>
       {editable && _isEdit ? (
         <TextField value={_value}
                    onChange={handleChange}
@@ -53,7 +57,8 @@ export function UnControlledTag({ closable, onClose, editable, isEdit = false, o
                    onKeyDown={handleKeyDown}
                    className={style.field}
                    autosize
-                   autoFocus />
+                   autoFocus
+                   {...props} />
       ) : (
         <>
           {_value}
@@ -65,7 +70,7 @@ export function UnControlledTag({ closable, onClose, editable, isEdit = false, o
           )}
         </>
       )}
-    </div>
+    </Button>
   )
 
   function handleChange(evt) {
@@ -90,7 +95,7 @@ export function UnControlledTag({ closable, onClose, editable, isEdit = false, o
   }
 }
 
-export function ControlledTag({ closable, onClose, editable, isEdit = false, onChange, value, onEditChange, onBlur, onKeyDown, onDoubleClick, className }: Props = {}): React.Node {
+export function ControlledTag({ closable, onClose, editable, isEdit = false, onChange, value, onEditChange, onBlur, onKeyDown, onDoubleClick, className, ...props }: Props = {}): React.Node {
   const containerClassName = cs(
     style.main,
     closable && style.closable,
@@ -98,8 +103,8 @@ export function ControlledTag({ closable, onClose, editable, isEdit = false, onC
     className
   )
   return (
-    <div className={containerClassName}
-         onDoubleClick={handleMouseDoubleClick}>
+    <Button size="sm" className={containerClassName}
+            onDoubleClick={handleMouseDoubleClick}>
       {editable && isEdit ? (
         <TextField value={value}
                    onChange={handleChange}
@@ -107,7 +112,8 @@ export function ControlledTag({ closable, onClose, editable, isEdit = false, onC
                    onKeyDown={handleKeyDown}
                    className={style.field}
                    autosize
-                   autoFocus />
+                   autoFocus
+                   {...props} />
       ) : (
         <>
           {value}
@@ -119,7 +125,7 @@ export function ControlledTag({ closable, onClose, editable, isEdit = false, onC
           )}
         </>
       )}
-    </div>
+    </Button>
   )
 
   function handleChange(evt) {

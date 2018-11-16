@@ -15,32 +15,39 @@ import style from './style.css'
 /// code
 
 export type Props = {
-  tags: Array<string>
+  tags?: Array<string>,
+  active?: boolean,
+  creator?: string,
+  isCreatorEdit?: boolean,
+  onCreatorChange?: Function,
+  onCreatorEditChange?: $PropertyType<Props, 'isCreatorEdit'> => void
 }
 
-export default function TagsGroup({ tags = [], creator = 'new tag', onTagsChange, onCreatorChange }) {
+export default function TagsGroup({ tags = [], active = 'false', creator = 'new tag', onTagsChange, isCreatorEdit, onCreatorChange, onCreatorEditChange, ...props }) {
+  const [ _active, setActive ] = React.useState(active)
+  const [ initCreator ] = React.useState(creator)
+  const [ _creator, setCreator ] = React.useState(creator)
+  const [ _isCreatorEdit, setIsCreatorEdit ] = React.useState(isCreatorEdit)
+  React.useEffect(() => setIsCreatorEdit(isCreatorEdit), [isCreatorEdit])
+  React.useEffect(() => setCreator(creator), [creator])
+
   return (
-    <Layout gutter="xs" size="0">
+    <Layout gutter="xs" size="0" className={style.main}
+            onMouseEnter={hoverSetActive(true)}
+            onMouseLeave={hoverSetActive(false)}>
       {tags.length > 0 && (
         <Layout list gutter="xs" size="0">
-          {tags.map(({ id, value, isEdit }, idx) => (
-            <Tag closable
-                 editable
-                 key={id}
-                 value={value}
-                 isEdit={isEdit}
-                 onClose={handleClose(idx)}
-                 onChange={handleChange(idx)}
-                 onEditChange={handleTagEditChange(idx)} />
+          {tags.map(({ id, value, isEdit, ...rest }, idx) => (
+            <Tag key={id} value={value} {...rest} />
           ))}
         </Layout>
       )}
-
       <Tag editable
-           value={creator}
-           className={style.new}
+           value={_creator}
+           isEdit={_isCreatorEdit}
+           className={cs(style.new, _active && style.active)}
            onChange={handleCreatorChange}
-           onEditChange={handleCreatorEditChange}/>
+           onEditChange={handleCreatorEditChange} />
     </Layout>
   )
 
@@ -79,11 +86,45 @@ export default function TagsGroup({ tags = [], creator = 'new tag', onTagsChange
     }
   }
 
-  function handleCreatorChange() {
+  function handleCreatorChange(evt) {
+    const changeValue = isFunction(onCreatorChange)
+          ? onCreatorChange
+          : setCreator
 
+     changeValue(evt)
   }
 
-  function handleCreatorEditChange() {
+  function handleCreatorEditChange(state) {
+    const changeEdit = isFunction(onCreatorEditChange)
+          ? onCreatorEditChange
+          : setIsCreatorEdit
 
+    changeEdit(state)
+
+    const changeValue = isFunction(onCreatorChange)
+          ? onCreatorChange
+          : setCreator
+
+    if(state) {
+      changeValue({ target: { value: '' }})
+    } else {
+      changeValue({ target: { value: initCreator }})
+
+      const tag = {
+        id: rs(),
+        value: _creator.trim(),
+        isEdit: false
+      }
+
+      // onTagsChange && onTagsChange(
+      //   tags.concat(tag), { type: 'create', payload: { tag, index: -1 } }
+      // )
+    }
+  }
+
+  function hoverSetActive(state) {
+    return function hoverSetActive() {
+      setActive(state)
+    }
   }
 }
