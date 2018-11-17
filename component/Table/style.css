@@ -1,0 +1,31 @@
+/**
+ * <Table /> styles
+ */
+
+.main {
+  composes: table from '../../style/reset.css';
+}
+
+.cell {
+  padding: 0.875rem 1.875rem;
+}
+
+.th {
+  composes: cell;
+  text-align: left;
+}
+
+.header {
+  border-bottom: 1px solid #ddd;
+  font-size: 12px;
+  font-weight: normal;
+  color: darkgray;
+  box-shadow: 0px 2px 20px -10px #000;
+}
+
+.row {
+  transition: background-color 0.28s ease 0s;
+  &:hover {
+    background-color: #eee;
+  }
+}
