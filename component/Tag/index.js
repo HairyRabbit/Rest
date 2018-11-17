@@ -1,13 +1,12 @@
 /**
  * <Tag />, tag component
  *
- * @todo add "new" tag
  * @flow
  */
 
 import * as React from 'react'
 import { isFunction } from 'lodash'
-import { classnames as cs } from '../../util'
+import { classnames as cs, useProp } from '../../util'
 import { TextField, Button } from '../'
 import style from './style.css'
 
@@ -18,28 +17,22 @@ export type Props = {
   closable?: boolean,
   onClose?: SyntheticEvent<HTMLDivElement> => void,
   editable?: boolean,
-  isEdit?: boolean,
-  onChange?: SyntheticEvent<HTMLInputElement> => void,
-  onEditChange?: $PropertyType<Props, 'isEdit'> => void,
-  className?: string,
   value?: string,
+  onChange?: SyntheticEvent<HTMLInputElement> => void,
+  isEdit?: boolean,
+  onEditChange?: $PropertyType<Props, 'isEdit'> => void,
+  onBlur?: SyntheticEvent<HTMLInputElement> => void,
+  onKeyDown?: SyntheticEvent<HTMLInputElement> => void,
+  onDoubleClick?: SyntheticEvent<HTMLButtonElement> => void,
+  className?: string,
   classNames?: {
     [key: 'button' | 'input' | 'close']: string
   }
 }
 
-export default function Tag(props: Props = {}): React.Node {
-  return isFunction(props.onChange) && isFunction(props.onEditChange)
-    ? <ControlledTag {...props} />
-    : <UnControlledTag {...props} />
-}
-
-Tag.Controlled = ControlledTag
-Tag.UnControlled = UnControlledTag
-
-export function UnControlledTag({ closable, onClose, editable, isEdit = false, onChange, value, className, classNames = {}, ...props }: Props = {}): React.Node {
-  const [ _isEdit, setIsEdit ] = React.useState(isEdit)
-  const [ _value, setValue ] = React.useState(value)
+export default function Tag({ closable, onClose, editable, isEdit, onEditChange, value, onChange, onBlur, onKeyDown, onDoubleClick, className, classNames = {}, ...props }: Props = {}): React.Node {
+  const [ _isEdit, setIsEdit ] = useProp(isEdit, onEditChange, false)
+  const [ _value, setValue ] = useProp(value, onChange, '')
   const containerClassName = cs(
     style.main,
     closable && style.closable,
@@ -48,7 +41,7 @@ export function UnControlledTag({ closable, onClose, editable, isEdit = false, o
     classNames.button
   )
   return (
-    <Button size="sm" className={containerClassName}
+    <Button size="xs" className={containerClassName}
             onDoubleClick={handleMouseDoubleClick}>
       {editable && _isEdit ? (
         <TextField value={_value}
@@ -76,79 +69,24 @@ export function UnControlledTag({ closable, onClose, editable, isEdit = false, o
   function handleChange(evt) {
     const val = evt.target.value
     if(!val.trim()) isFunction(onClose) && onClose()
-    setValue(val)
-  }
-
-  function handleBlur() {
-    setIsEdit(false)
-  }
-
-  function handleKeyDown(evt) {
-    if(13 !== evt.which) return
-    evt.preventDefault()
-    setIsEdit(false)
-  }
-
-  function handleMouseDoubleClick() {
-    if(!editable) return
-    setIsEdit(true)
-  }
-}
-
-export function ControlledTag({ closable, onClose, editable, isEdit = false, onChange, value, onEditChange, onBlur, onKeyDown, onDoubleClick, className, ...props }: Props = {}): React.Node {
-  const containerClassName = cs(
-    style.main,
-    closable && style.closable,
-    editable && isEdit && style.editable,
-    className
-  )
-  return (
-    <Button size="sm" className={containerClassName}
-            onDoubleClick={handleMouseDoubleClick}>
-      {editable && isEdit ? (
-        <TextField value={value}
-                   onChange={handleChange}
-                   onBlur={handleBlur}
-                   onKeyDown={handleKeyDown}
-                   className={style.field}
-                   autosize
-                   autoFocus
-                   {...props} />
-      ) : (
-        <>
-          {value}
-          {closable && (
-            <div className={style.close}
-                 onClick={onClose}>
-              <Close className={style.icon} />
-            </div>
-          )}
-        </>
-      )}
-    </Button>
-  )
-
-  function handleChange(evt) {
-    const val = evt.target.value
-    if(!val.trim()) isFunction(onClose) && onClose()
-    isFunction(onChange) && onChange(evt)
+    setValue(evt)
   }
 
   function handleBlur(evt) {
-    onEditChange(false)
+    setIsEdit(false)
     isFunction(onBlur) && onBlur(evt)
   }
 
   function handleKeyDown(evt) {
     if(13 !== evt.which) return
     evt.preventDefault()
-    onEditChange(false)
+    setIsEdit(false)
     isFunction(onKeyDown) && onKeyDown(evt)
   }
 
   function handleMouseDoubleClick(evt) {
     if(!editable) return
-    onEditChange(true)
+    setIsEdit(true)
     isFunction(onDoubleClick) && onDoubleClick(evt)
   }
 }
