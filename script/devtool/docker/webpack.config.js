@@ -1,5 +1,5 @@
 /**
- * docker ui webapck configs
+ * docker gui webapck configs
  *
  * @flow
  */

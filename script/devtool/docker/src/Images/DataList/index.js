@@ -7,8 +7,8 @@
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { Layout, Tag, CollectView } from '~component'
-import { classnames as cs } from '~util'
+import { Layout, Tag, CollectView } from '@component'
+import { classnames as cs, toShortSize, toDateAgo } from '@util'
 import style from './style.css'
 import UnNameIcon from '../../../assets/icon/Layer.svg'
 import NamedIcon from '../../../assets/icon/Docker.svg'
@@ -19,48 +19,6 @@ import logos from '../../../data/logo/logos.json'
 
 function transformDockerImageId(input: string, { length = 20 }: Object = {}): string {
   return input.split(':')[1].substr(0, 20)
-}
-
-function transformSize(input: string, { digits = 2 }: Object = {}): string {
-  const byteStack = ['B', 'KB', 'MB', 'MB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-  let num = parseInt(input)
-  let unit = byteStack.shift()
-  let flag = 1000
-  while(num >= flag) {
-    num = num / flag
-    unit = byteStack.shift()
-    flag = 1024
-  }
-
-  if('B' === unit) {
-    return num + ' ' + unit
-  }
-
-  return num.toFixed(digits) + ' ' + unit
-}
-
-function transformDateAgo(input: number): string {
-  const comp = [
-    [31536e6, 'year'],
-    [2592e6, 'month'],
-    [6048e5, 'week'],
-    [864e5, 'day'],
-    [36e5, 'hour'],
-    [6e4, 'min'],
-    [1e3, 'sec']
-  ]
-  const now = Date.now()
-  const diff = now - input * 1000
-
-  for(let i = 0; i < comp.length; i++) {
-    const item = comp[i]
-    if(diff / item[0] > 1) {
-      const num = parseInt(diff / item[0])
-      return `${num} ${item[1]}${num > 1 ? 's' : ''} ago`
-    }
-  }
-
-  return 'just now'
 }
 
 function isUnname(input): boolean {
@@ -102,7 +60,7 @@ function Item({ Id, ParentId, Size, VirtualSize, SharedSize, Created, RepoTags, 
   const [name, tag] = RepoTags && RepoTags.length
         ? RepoTags[0].split(':')
         : 'undefined:undefined'
-  const createAt = transformDateAgo(Created)
+  const createAt = toDateAgo(Created)
 
   return (
     <div className={style.main}>
@@ -117,7 +75,7 @@ function Item({ Id, ParentId, Size, VirtualSize, SharedSize, Created, RepoTags, 
         <Layout size="0:1:0" gutter="xs" align=",center">
           <Logo data={name} />
           <span className={style.size}>
-            {transformSize(Size)}
+            {toShortSize(Size)}
           </span>
           <span className={style.date}>
             {createAt}
@@ -125,7 +83,7 @@ function Item({ Id, ParentId, Size, VirtualSize, SharedSize, Created, RepoTags, 
         </Layout>
 
         <div className={style.tag}>
-          Tag: <Tag value={transformDockerImageTag(tag)} />
+          Tag: <Tag editable value={transformDockerImageTag(tag)} />
         </div>
       </Layout>
     </div>
@@ -135,7 +93,7 @@ function Item({ Id, ParentId, Size, VirtualSize, SharedSize, Created, RepoTags, 
 export function DataList({ data }): React.Node {
   return (
     <Layout list size="33.3333%">
-      {data.length && data.map((item, idx) => (
+      {data.length > 0 && data.map((item, idx) => (
         <Item {...item} key={idx} />
       ))}
     </Layout>
@@ -153,4 +111,3 @@ function mapd(dispatch) {
 }
 
 export default connect(mapp, mapd)(DataList)
-// export default DataList

@@ -1,0 +1,7 @@
+/**
+ * css variables
+ */
+
+$PrimaryColor: #2282e0;
+$PrimaryColorDarken: darken($PrimaryColor, 5%);
+$PrimaryColorDarken2: darken($PrimaryColor, 10%);

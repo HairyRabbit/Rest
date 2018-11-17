@@ -11,8 +11,9 @@ import { Switch, Route } from 'react-router-dom'
 import Loadable from 'react-loadable'
 import { Layout } from '~component'
 import style from './style.css'
-import Sidebar from '../sidebar'
+import Sidebar from '../Sidebar'
 import Dashboard from '../dashboard'
+import Images from '../Images'
 import Image from '../Image'
 import Container from '../container'
 
@@ -24,7 +25,8 @@ function Main(): React.Node {
       <div className={style.main}>
         <Switch>
           <Route path="/" component={Dashboard} exact />
-          <Route path="/image" component={Image} exact />
+          <Route path="/image" component={Images} exact />
+          <Route path="/image/:id" component={Image} exact />
           <Route path="/container" component={Container} exact />
           <Route component={Dashboard} />
         </Switch>

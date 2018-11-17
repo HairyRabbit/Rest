@@ -24,15 +24,6 @@ const enhancer = 'production' !== process.env.NODE_ENV ?
 
       )
 
-function changeSearchBarValue(model = '', action) {
-  switch(action.type) {
-    case 'ChangeValue': {
-      return action.payload
-    }
-    default: return model
-  }
-}
-
 function imageData(model = { data: [], filter: []}, action) {
   switch(action.type) {
     case 'LoadData': {
@@ -52,67 +43,17 @@ function imageData(model = { data: [], filter: []}, action) {
   }
 }
 
-const initImageSearchBarQueryParamsModel = {
-  all: false,
-  digests: false,
-  before: {
-    tags: [],
-    value: ''
-  },
-  reference: {
-    tags: [],
-    value: ''
-  },
-  since: {
-    tags: [],
-    value: ''
-  },
-  dangling: undefined,
-  label: {
-    tags: [],
-    value: ''
-  }
-}
-
-function imageSearchBarQueryParamsReducer(model = initImageSearchBarQueryParamsModel, action) {
-  switch(action.type) {
-    case 'SetValue':
-      return {
-        ...model,
-        [action.payload.field]: action.payload.value
-      }
-    case 'ClearValues': {
-      return initImageSearchBarQueryParamsModel
-    }
-    default: return model
-  }
-}
+import images from './images'
+import image from './image'
 
 const reducer = combineReducers({
   ui: combineReducers({
-    image: changeSearchBarValue,
-    data: imageData,
-    imageSearchBar: combineReducers({
-      queryParams: imageSearchBarQueryParamsReducer
-    })
+    images,
+    image,
+    data: imageData
   }),
   data: a => null,
   sesson: a => null
 })
 
-const init = {
-  ui: {
-    image: '',
-    data: {
-      data: [],
-      filter: []
-    },
-    imageSearchBar: {
-      queryParams: initImageSearchBarQueryParamsModel
-    }
-  },
-  data: {},
-  sesson: {}
-}
-
-export default createStore(reducer, init, enhancer)
+export default createStore(reducer, enhancer)

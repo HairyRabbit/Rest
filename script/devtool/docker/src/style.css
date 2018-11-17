@@ -10,6 +10,17 @@ body {
   color: #555;
 }
 
+// @include 'var.css';
+$PrimaryColor: #2282e0;
+$PrimaryColorDarken: darken($PrimaryColor, 5%);
+$PrimaryColorDarken2: darken($PrimaryColor, 10%);
+$PrimaryColorLighten: lighten($PrimaryColor, 5%);
+$PrimaryColorLighten2: lighten($PrimaryColor, 10%);
+
 :root {
-  --primary-color: #2282e0; // #346494;
+  #{--primary-color}: $PrimaryColor; // #346494;
+  #{--primary-color-darken}: $PrimaryColorDarken;
+  #{--primary-color-darken-2}: $PrimaryColorDarken2;
+  #{--primary-color-lighten}: $PrimaryColorLighten;
+  #{--primary-color-lighten-2}: $PrimaryColorLighten2;
 }

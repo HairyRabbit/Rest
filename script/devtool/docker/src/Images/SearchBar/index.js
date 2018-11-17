@@ -6,14 +6,16 @@
 
 import * as React from 'react'
 import { connect } from 'react-redux'
-import { FormItem, CheckBox, Switch, Layout, TextField, Button, Icon } from '~component'
+import { FormItem, CheckBox, Switch, Layout, TagsInput, TextField, Button, Icon } from '~component'
 import { api, classnames as cs } from '~util'
+import { ActionType as QueryParamsActionType } from '../../core/images/searchBar/queryParams'
+import { ActionType as ResultsFilterActionType } from '../../core/images/searchBar/resultsFilter'
 import style from './style.css'
 
 /// code
 
 export function SearchBar({ value, changeHandle, ...props }) {
-  const [ toggle, setToggle ] = React.useState(true)
+  const [ toggle, setToggle ] = React.useState(false)
   return (
     <>
       <Layout nogutter align=",center" size="0:1:0">
@@ -62,10 +64,13 @@ function SearchFilters({ queryParams: { all, digests, before, reference, since, 
         <Section header="Configure Filters">
           <Layout vertical gutter="sm">
             <FormItem type="horizontal" label="Before">
-              <TextField name="before"
+              <TagsInput name="before"
                          placeholder="Type before"
                          value={before.value}
-                         onChange={evt => updateQueryParams('before', { tags: before.tags, value: evt.target.value })} />
+                         tags={before.tags}
+                         onBlur={(evt, tags) => updateQueryParams('before', { tags, value: '' })}
+                         onChange={evt => updateQueryParams('before', { tags: before.tags, value: evt.target.value })}
+                         onTagsChange={tags => updateQueryParams('before', { tags, value: '' })} />
             </FormItem>
             <FormItem type="horizontal" label="Reference">
               <TextField name="reference"
@@ -99,11 +104,15 @@ function SearchFilters({ queryParams: { all, digests, before, reference, since, 
                     all,
                     digests,
                     filters: JSON.stringify({
-                      before: before.tags.length ? before.tags : undefined,
+                      before: before.tags.length
+                        ? before.tags.map(tag => tag.value)
+                        : undefined,
                       reference: reference.tags.length ? reference.tags : undefined,
                       since: since.tags.length ? since.tags : undefined,
                       label: label.tags.length ? label.tags : undefined,
-                      dangling: undefined !== dangling ? [JSON.stringify(dangling)] : undefined
+                      dangling: undefined !== dangling
+                        ? [JSON.stringify(dangling)]
+                        : undefined
                     })
                   }}).then(loadData)
                 }}>Search</Button>
@@ -130,8 +139,8 @@ function Section({ header, children }): React.Node {
 
 function mapp(state) {
   return {
-    value: state.ui.image,
-    queryParams: state.ui.imageSearchBar.queryParams
+    value: state.ui.images.searchBar.resultsFilter,
+    queryParams: state.ui.images.searchBar.queryParams
   }
 }
 
@@ -139,22 +148,22 @@ function mapd(dispatch) {
   return {
     changeHandle: evt => {
       const value = evt.target.value
-      dispatch({ type: 'ChangeValue', payload: value })
+      dispatch({ type: ResultsFilterActionType.SetValue, payload: value })
       dispatch({ type: 'FilterData', payload(data) {
         if(!value.trim()) return true
         const re = new RegExp(value)
         const { RepoTags } = data
         const [name, tag] = RepoTags && RepoTags.length
-        ? RepoTags[0].split(':')
-        : 'undefined:undefined'
+              ? RepoTags[0].split(':')
+              : 'undefined:undefined'
         return re.test(name)
       } })
     },
     updateQueryParams(field, value) {
-      dispatch({ type: 'SetValue', payload: { field, value } })
+      dispatch({ type: QueryParamsActionType.SetValue, payload: { field, value } })
     },
     clearQueryParams() {
-      dispatch({ type: 'ClearValues' })
+      dispatch({ type: QueryParamsActionType.ResetValues })
     },
     loadData(data) {
       dispatch({ type: 'LoadData', payload: data })

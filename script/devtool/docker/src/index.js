@@ -10,7 +10,7 @@ import { BrowserRouter } from 'react-router-dom'
 // import { hot } from 'react-hot-loader'
 import './style.css'
 import store from './core'
-import Main from './main'
+import Main from './Main'
 
 function Root(): React.Node {
   return (
