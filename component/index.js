@@ -27,12 +27,18 @@ export { default as Icon } from './Icon'
  */
 export { default as Nav } from './Nav'
 
+/**
+ * notity
+ */
+export { default as Modal } from './Modal'
+
 
 /**
  * collects view
  */
 export { default as CollectView } from './CollectView'
 export { default as TimeLine } from './TimeLine'
+export { default as Table } from './Table'
 
 
 /**
@@ -50,3 +56,4 @@ export { default as TagsGroup } from './TagsGroup'
  * helper
  */
 export { default as withDraggable } from './Draggable'
+export { default as Close } from './Close'

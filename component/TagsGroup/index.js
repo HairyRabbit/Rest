@@ -6,7 +6,7 @@
 
 import * as React from 'react'
 import { isFunction } from 'lodash'
-import { classnames as cs, randomString as rs } from '../../util'
+import { classnames as cs, randomString as rs, useProp } from '../../util'
 import { Layout, Tag } from '../'
 import reset from '../../style/reset.css'
 import style from './style.css'
@@ -17,19 +17,22 @@ import style from './style.css'
 export type Props = {
   tags?: Array<string>,
   active?: boolean,
+  onToggleNew?: $PropertyType<Props, 'active'> => void,
   creator?: string,
+  onCreatorChange?: SyntheticEvent<HTMLInputElement> => void,
   isCreatorEdit?: boolean,
-  onCreatorChange?: Function,
   onCreatorEditChange?: $PropertyType<Props, 'isCreatorEdit'> => void
 }
 
-export default function TagsGroup({ tags = [], active = 'false', creator = 'new tag', onTagsChange, isCreatorEdit, onCreatorChange, onCreatorEditChange, ...props }) {
-  const [ _active, setActive ] = React.useState(active)
-  const [ initCreator ] = React.useState(creator)
-  const [ _creator, setCreator ] = React.useState(creator)
-  const [ _isCreatorEdit, setIsCreatorEdit ] = React.useState(isCreatorEdit)
-  React.useEffect(() => setIsCreatorEdit(isCreatorEdit), [isCreatorEdit])
-  React.useEffect(() => setCreator(creator), [creator])
+function getEventTargetValue(evt) {
+  return evt.target.value
+}
+
+
+export default function TagsGroup({ tags = [], active, onToggleNew, creator, onTagsChange, isCreatorEdit, onCreatorChange, onCreatorEditChange, ...props }) {
+  const [ _creator, setCreator, initCreator ] = useProp(creator, onCreatorChange, 'new tag', getEventTargetValue)
+  const [ _isCreatorEdit, setIsCreatorEdit ] = useProp(isCreatorEdit, onCreatorEditChange, false)
+  const [ _active, setActive ] = useProp(active, onToggleNew, false)
 
   return (
     <Layout gutter="xs" size="0" className={style.main}
@@ -46,7 +49,7 @@ export default function TagsGroup({ tags = [], active = 'false', creator = 'new 
            value={_creator}
            isEdit={_isCreatorEdit}
            className={cs(style.new, _active && style.active)}
-           onChange={handleCreatorChange}
+           onChange={setCreator}
            onEditChange={handleCreatorEditChange} />
     </Layout>
   )
@@ -86,30 +89,12 @@ export default function TagsGroup({ tags = [], active = 'false', creator = 'new 
     }
   }
 
-  function handleCreatorChange(evt) {
-    const changeValue = isFunction(onCreatorChange)
-          ? onCreatorChange
-          : setCreator
-
-     changeValue(evt)
-  }
-
   function handleCreatorEditChange(state) {
-    const changeEdit = isFunction(onCreatorEditChange)
-          ? onCreatorEditChange
-          : setIsCreatorEdit
-
-    changeEdit(state)
-
-    const changeValue = isFunction(onCreatorChange)
-          ? onCreatorChange
-          : setCreator
-
+    setIsCreatorEdit(state)
     if(state) {
-      changeValue({ target: { value: '' }})
+      setCreator({ target: { value: '' }})
     } else {
-      changeValue({ target: { value: initCreator }})
-
+      setCreator({ target: { value: initCreator.current }})
       const tag = {
         id: rs(),
         value: _creator.trim(),

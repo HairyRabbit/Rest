@@ -1,0 +1,36 @@
+/**
+ * <Modal /> component styles
+ */
+
+.main {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 99;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  background-color: black;
+  opacity: 0.28;
+}
+
+.container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  background-color: white;
+}
+
+.overflow {
+  overflow: hidden;
+}

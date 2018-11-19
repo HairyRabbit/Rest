@@ -26,6 +26,19 @@
       color: #fff;
     }
   }
+
+  &-error {
+    border-color: var(--error-color);
+    background-color: var(--error-color);
+    color: #fff;
+
+    &:hover {
+      border-color: var(--error-color-darken);
+      background-color: var(--error-color-darken);
+      color: #fff;
+    }
+  }
+
   &-default {
     border-color: lightgray;
     background-color: lightgray;
