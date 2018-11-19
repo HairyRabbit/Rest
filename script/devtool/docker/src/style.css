@@ -11,16 +11,31 @@ body {
 }
 
 // @include 'var.css';
-$PrimaryColor: #2282e0;
+$PrimaryColor: #2282e0; // #346494;
 $PrimaryColorDarken: darken($PrimaryColor, 5%);
 $PrimaryColorDarken2: darken($PrimaryColor, 10%);
 $PrimaryColorLighten: lighten($PrimaryColor, 5%);
 $PrimaryColorLighten2: lighten($PrimaryColor, 10%);
 
+$ErrorColor: #e44e4e;
+$ErrorColorDarken: darken($ErrorColor, 5%);
+$ErrorColorDarken2: darken($ErrorColor, 10%);
+$ErrorColorLighten: lighten($ErrorColor, 5%);
+$ErrorColorLighten2: lighten($ErrorColor, 10%);
+
+$Shadow: 0px 6px 20px -16px #000;
+
 :root {
-  #{--primary-color}: $PrimaryColor; // #346494;
+  #{--primary-color}: $PrimaryColor;
   #{--primary-color-darken}: $PrimaryColorDarken;
   #{--primary-color-darken-2}: $PrimaryColorDarken2;
   #{--primary-color-lighten}: $PrimaryColorLighten;
   #{--primary-color-lighten-2}: $PrimaryColorLighten2;
+  #{--error-color}: $ErrorColor;
+  #{--error-color-darken}: $ErrorColorDarken;
+  #{--error-color-darken-2}: $ErrorColorDarken2;
+  #{--error-color-lighten}: $ErrorColorLighten;
+  #{--error-color-lighten-2}: $ErrorColorLighten2;
+
+  #{--shadow}: $Shadow;
 }

@@ -1,0 +1,49 @@
+/**
+ * <Dashboard /> styles
+ */
+
+.card {
+  background-color: white;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+}
+
+.numbers {
+  width: 100%;
+  text-align: center;
+}
+
+.number {
+  font-size: 4rem;
+  font-weight: lighter;
+  line-height: 1;
+  color: black;
+}
+
+.smallNumber {
+  font-size: 1rem;
+}
+
+.div {
+  display: inline-block;
+  vertical-align: text-bottom;
+  width: 2rem;
+}
+
+.icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 3rem;
+  height: 3rem;
+  color: var(--primary-color-lighten-2);
+  border-radius: 50%;
+  background-color: #dae7f3;
+  box-shadow: var(--shadow);
+}
+
+.text {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: gray;
+}

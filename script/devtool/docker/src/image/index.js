@@ -9,7 +9,7 @@
 import * as React from 'react'
 import { connect } from 'react-redux'
 import { Link, withRouter } from 'react-router-dom'
-import { Avatar, Layout, Button, TextField, Table, Icon } from '@component'
+import { Avatar, Layout, Button, TextField, Table, Icon, Modal, Close } from '@component'
 import { api, classnames as cs, toDateAgo, toShortSize } from '@util'
 import { parseImageRepoTag, parseImageId } from '../util'
 import style from './style.css'
@@ -20,14 +20,15 @@ import Tags from './Tags'
 
 /// code
 
-function Display({ Id, RepoTags, pushTag }): React.Node {
+function Display({ Id, RepoTags, Os, Architecture, DockerVersion, Created, Size, VirtualSize, pushTag }): React.Node {
   const { repo } = parseImageRepoTag(RepoTags[0])
   const { id, short } = parseImageId(Id)
+  const [ modalActive, setModalActive ] = React.useState(false)
 
   return (
     <div className={style.main}>
       <Layout vertical>
-        <Layout size="0:1">
+        <Layout size="0:1:1:1">
           <Icon value="Layer" className={style.icon} />
           <Layout vertical gutter="sm">
             <Layout vertical nogutter>
@@ -36,48 +37,63 @@ function Display({ Id, RepoTags, pushTag }): React.Node {
             </Layout>
             <Tags id={id} repo={repo} tags={RepoTags} />
           </Layout>
+          <Layout vertical gutter="xs">
+            <Layout size="33.3333%:1" align=",center">
+              <div className={style.label}>OS Info</div>
+              <div className={style.text}>{Os} {Architecture}</div>
+            </Layout>
+            <Layout size="33.3333%:1" align=",center">
+              <div className={style.label}>Docker</div>
+              <div className={style.text}>{DockerVersion}</div>
+            </Layout>
+            <Layout size="33.3333%:1" align=",center">
+              <div className={style.label}>Create at</div>
+              <div className={style.text}>{toDateAgo(new Date(Created))}</div>
+            </Layout>
+            <Layout size="33.3333%:1" align=",center">
+              <div className={style.label}>Image Size</div>
+              <div className={style.text}>{toShortSize(Size)} / {toShortSize(VirtualSize)}</div>
+            </Layout>
+          </Layout>
+          <Layout vertical align=",end" gutter="xs">
+            <Button>Create</Button>
+            <Button onClick={downloadTar(id)}>Export</Button>
+            <Button theme="error" onClick={() => setModalActive(true)}>
+              Delete
+            </Button>
+            <Modal active={modalActive} onActiveChange={setModalActive} className={style.confirm}>
+              <header className={style.modalHeader}>
+                <Layout align="between,center" size="0">
+                  <span className={style.modalTitle}>Confirm</span>
+                  <Close className={style.modalClose} onClick={() => setModalActive(false)} />
+                </Layout>
+              </header>
+              <section className={style.modalBody}>
+                Would you really want to delete this image ?
+              </section>
+              <footer className={style.modalFooter}>
+                <Layout align="end,center" size="0" gutter="xs">
+                  <Button theme="default" onClick={() => setModalActive(false)}>Close</Button>
+                  <Button>Sure</Button>
+                </Layout>
+              </footer>
+            </Modal>
+          </Layout>
         </Layout>
       </Layout>
     </div>
   )
 }
 
-function DataView({ Id, Architecture, Os, DockerVersion, Created, Size, VirtualSize }) {
-  return (
-    <div className={style.main}>
-      <Layout vertical gutter="xs">
-        <Layout size="16.6667%:1">
-          <div>System Infomation</div>
-          <div>{Os} {Architecture}</div>
-        </Layout>
-        <Layout size="16.6667%:1">
-          <div>Docker Version</div>
-          <div>{DockerVersion}</div>
-        </Layout>
-        <Layout size="16.6667%:1">
-          <div>Create at</div>
-          <div>{toDateAgo(new Date(Created))}</div>
-        </Layout>
-        <Layout size="16.6667%:1">
-          <div>Size</div>
-          <div>{toShortSize(Size)}</div>
-        </Layout>
-      </Layout>
-    </div>
-  )
-}
+// import saveAs from 'file-saver'
 
-function ToolBar() {
-  return (
-    <div>
-      <Button>History</Button>
-      <Button>Push</Button>
-      <Button>Delete</Button>
-      <Button>Export</Button>
-    </div>
-  )
+function downloadTar(id) {
+  return function downloadTar1() {
+    // api.get(`images/${id}/get`, { headers: 'Content-Type': ''})
+    //   .then()
+    // saveAs(`http://localhost:23333/api/images/${id}/get`, 'image.tar')
+  }
 }
-
 
 function VerticalLine({ Parent }) {
   const [data, setData] = React.useState([])
@@ -158,8 +174,6 @@ export function Image({ data, match, loadData, pushTag, ...props }): React.Node 
   return data && (
     <Layout vertical>
       <Display {...data} pushTag={pushTag} />
-      <DataView {...data} />
-      <ToolBar />
       <History id={id} />
     </Layout>
   )
