@@ -1,0 +1,16 @@
+/**
+ * <Card /> view styles
+ */
+
+.main {
+  background-color: white;
+  box-shadow: var(--shadow);
+}
+
+.section {
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #eee;
+  &:last-child {
+    border: none;
+  }
+}

@@ -1,0 +1,9 @@
+/**
+ * <Center /> view styles
+ */
+
+.main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

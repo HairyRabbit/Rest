@@ -1,0 +1,11 @@
+/**
+ * <Pie /> chart styles
+ */
+
+.main {
+  transform: rotate(-0.25turn);
+}
+
+.other {
+  fill: lightgray
+}

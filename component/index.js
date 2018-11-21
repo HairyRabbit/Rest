@@ -12,6 +12,8 @@ export { default as Layout } from './layout'
 /**
  * layout
  */
+export { default as  Center } from './Center'
+export { default as  Card } from './Card'
 export { default as  FormItem } from './FormItem'
 
 
@@ -39,6 +41,11 @@ export { default as Modal } from './Modal'
 export { default as CollectView } from './CollectView'
 export { default as TimeLine } from './TimeLine'
 export { default as Table } from './Table'
+
+/**
+ * chart
+ */
+export { default as Pie } from './Pie'
 
 
 /**
