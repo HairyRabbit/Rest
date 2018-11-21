@@ -2,7 +2,7 @@
  * make-wrapper
  *
  * make wrapper with given tag, default to "div"
- *  
+ *
  * @flow
  */
 
@@ -15,7 +15,7 @@ type Props = {
   children?: React.Node
 }
 
-function makeWrapper(Tag?: string | React.ComponentType<*> = 'div'): * {
+function makeWrapper(Tag?: string | React.ComponentType<*> = 'div', props, children): * {
   return ({ children, ...props }: Props = {}): React.Node => (
     <Tag {...props}>{children}</Tag>
   )

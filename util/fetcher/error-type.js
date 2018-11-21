@@ -27,7 +27,7 @@ type Options = {
   error: Error
 }
 
-class FetcherError extends Error {
+export default class FetcherError extends Error {
   message: string
   error: Error
   type: ErrorType
@@ -36,7 +36,7 @@ class FetcherError extends Error {
     super(...args)
 
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, RequestError)
+      Error.captureStackTrace(this, FetcherError)
     }
 
     this.type = type
@@ -59,8 +59,3 @@ function mapToMessage(type: ErrorType): string {
       )
   }
 }
-
-
-/// export
-
-export default FetcherError
