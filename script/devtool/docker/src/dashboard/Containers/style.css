@@ -1,0 +1,20 @@
+/**
+ * <Containers /> view styles, part of Dashboard
+ */
+
+.chart {
+  width: 12.5rem;
+  &-running { fill: var(--primary-color-lighten-2); }
+  &-paused { fill: var(--primary-color-lighten); }
+  &-stopped { fill: lightgray; }
+}
+
+.state {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  vertical-align: middle;
+  &-running { background-color: var(--primary-color-lighten-2); }
+  &-exited { background-color: lightgray; }
+}

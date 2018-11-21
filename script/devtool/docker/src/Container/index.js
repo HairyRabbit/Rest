@@ -7,15 +7,16 @@
  */
 
 import * as React from 'react'
-
+import Log from './Log'
 
 /// code
 
-function Container(): React.Node {
-  return (42)
+export default function Container({ match }): React.Node {
+  const id = match.params.id
+
+  return (
+    <div>
+      <Log id={id} />
+    </div>
+  )
 }
-
-
-/// export
-
-export default Container

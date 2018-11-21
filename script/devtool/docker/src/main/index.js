@@ -15,7 +15,9 @@ import Sidebar from '../Sidebar'
 import Dashboard from '../Dashboard'
 import Images from '../Images'
 import Image from '../Image'
-import Container from '../container'
+import Containers from '../Containers'
+import Container from '../Container'
+
 
 function Main(): React.Node {
   return (
@@ -27,7 +29,8 @@ function Main(): React.Node {
           <Route path="/" component={Dashboard} exact />
           <Route path="/image" component={Images} exact />
           <Route path="/image/:id" component={Image} exact />
-          <Route path="/container" component={Container} exact />
+          <Route path="/container" component={Containers} exact />
+          <Route path="/container/:id" component={Container} exact />
           <Route component={Dashboard} />
         </Switch>
       </div>
