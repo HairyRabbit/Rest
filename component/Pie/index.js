@@ -12,6 +12,8 @@ import style from './style.css'
 
 /// code
 
+export type Point = [number, number]
+
 export type Value = {
   value: number,
   color?: string
@@ -27,7 +29,7 @@ export default function Pie({ value = [], close, className, ...props }: Props = 
   if(close) {
     const sum = sumBy(value, 'value')
     const rest = 1 - sum
-    value.push({ value: rest, ...close })
+    value.push({ value: rest, className: style.other, ...close })
   }
 
   return (
@@ -37,7 +39,7 @@ export default function Pie({ value = [], close, className, ...props }: Props = 
   )
 }
 
-function makePoint(percent) {
+function makePoint(percent: number): Point {
   const x = Math.cos(2 * Math.PI * percent)
   const y = Math.sin(2 * Math.PI * percent)
   return [ x, y ]
@@ -58,7 +60,7 @@ function mapDataToPath(value: Value): Array<React.Node> {
   }, { paths: [], last: 0 })
 }
 
-function makePath([ startX, startY ], [ endX, endY ], largeArcFlag) {
+function makePath([ startX, startY ]: Point, [ endX, endY ]: Point, largeArcFlag: number): string {
   return [
     `M ${startX} ${startY}`,
     `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`,

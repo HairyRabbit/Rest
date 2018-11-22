@@ -1,0 +1,29 @@
+/**
+ * <ScrollView /> styles
+ */
+
+.main {
+  position: relative;
+  overflow: hidden;
+}
+
+.container {
+  position: relative;
+  margin-right: -17px;
+}
+
+$ScrollerSize: 0.25rem;
+$ScrollerOffset: 0.25rem;
+
+.scroller {
+  position: absolute;
+  background-color: white;
+  opacity: 0.56;
+  &-vertical {
+    right: $ScrollerOffset;
+    top: $ScrollerOffset;
+    bottom: $ScrollerOffset;
+    border-radius: $ScrollerSize;
+    width: $ScrollerSize;
+  }
+}

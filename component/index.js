@@ -29,6 +29,13 @@ export { default as Icon } from './Icon'
  */
 export { default as Nav } from './Nav'
 
+
+/**
+ * scroll
+ */
+export { default as ScrollView } from './ScrollView'
+
+
 /**
  * notity
  */
@@ -52,6 +59,7 @@ export { default as Pie } from './Pie'
  * form
  */
 export { default as Button } from './Button'
+export { default as ButtonGroup } from './ButtonGroup'
 export { default as Switch } from './Switch'
 export { default as CheckBox } from './CheckBox'
 export { default as TextField } from './TextField'
@@ -60,7 +68,7 @@ export { default as TagsGroup } from './TagsGroup'
 
 
 /**
- * helper
+ * helpers
  */
 export { default as withDraggable } from './Draggable'
 export { default as Close } from './Close'
