@@ -1,0 +1,9 @@
+/**
+ * <Info /> view styles
+ */
+
+.main {
+  padding: 2rem;
+  background-color: white;
+  box-shadow: var(--shadow);
+}
