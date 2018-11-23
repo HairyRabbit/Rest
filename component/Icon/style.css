@@ -12,6 +12,7 @@ $IconSize: (
 
 .main {
   display: inline-block;
+  line-height: 0;
   vertical-align: middle;
 }
 
@@ -19,5 +20,6 @@ $IconSize: (
   .size-#{$name} {
     width: $value;
     height: $value;
+    font-size: $value;
   }
 }

@@ -2,6 +2,20 @@
  * <Button /> styles
  */
 
+$ButtonSurface: (
+  outline,
+  flat,
+  text
+);
+
+$ButtonTheme: (
+  primary,
+  error,
+  success,
+  info,
+  warning
+);
+
 .main {
   composes: box from '../../style/box.css';
   border: 1px solid;
@@ -13,36 +27,78 @@
   transition: background-color 0.28s ease-in-out 0s,
   color 0.28s ease-in-out 0s,
   border-color 0.28s ease-in-out 0s;
-  /* transition: all 0.28s ease-in-out 0s; */
-
-  &-primary {
-    border-color: var(--primary-color);
-    background-color: var(--primary-color);
-    color: #fff;
-
-    &:hover {
-      border-color: var(--primary-color-darken);
-      background-color: var(--primary-color-darken);
-      color: #fff;
-    }
-  }
-
-  &-error {
-    border-color: var(--error-color);
-    background-color: var(--error-color);
-    color: #fff;
-
-    &:hover {
-      border-color: var(--error-color-darken);
-      background-color: var(--error-color-darken);
-      color: #fff;
-    }
-  }
 
   &-default {
     border-color: lightgray;
     background-color: lightgray;
     color: gray;
+  }
+}
+
+@mixin make-surface-theme($surface, $theme) {
+  @if $surface == flat {
+    @include make-surface-flat($theme);
+  } @else if $surface == outline {
+    @include make-surface-outline($theme);
+  } @else if $surface == text {
+    @include make-surface-text($theme);
+  } @else {
+    @error 'Unknow surface #{$surface}';
+  }
+}
+
+@mixin make-surface-flat($color) {
+  border-color: var(--#{$color}-color);
+  background-color: var(--#{$color}-color);
+  color: white;
+
+  &:hover,&.hover {
+    border-color: var(--#{$color}-color-darken);
+    background-color: var(--#{$color}-color-darken);
+  }
+
+  &:active,&.active {
+    border-color: var(--#{$color}-color-darken-2);
+    background-color: var(--#{$color}-color-darken-2);
+  }
+}
+
+@mixin make-surface-outline($color) {
+  border-color: var(--#{$color}-color);
+  color: var(--#{$color}-color);
+  background-color: transparent;
+
+
+  &:hover,&.hover {
+    border-color: var(--#{$color}-color-darken);
+    color: var(--#{$color}-color-darken);
+  }
+
+  &:active,&.active {
+    border-color: var(--#{$color}-color-darken-2);
+    color: var(--#{$color}-color-darken-2);
+  }
+}
+
+@mixin make-surface-text($color) {
+  border-color: transparent;
+  background-color: transparent;
+  color: var(--#{$color}-color);
+
+  &:hover,&.hover {
+    color: var(--#{$color}-color-darken);
+  }
+
+  &:active,&.active {
+    color: var(--#{$color}-color-darken-2);
+  }
+}
+
+@each $surface in $ButtonSurface {
+  @each $theme in $ButtonTheme {
+    .theme-#{$theme}.surface-#{$surface} {
+      @include make-surface-theme($surface, $theme);
+    }
   }
 }
 

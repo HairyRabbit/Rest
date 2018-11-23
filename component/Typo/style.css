@@ -1,0 +1,37 @@
+/**
+ * <Typo /> styles
+ */
+
+$TypoSize: (
+  xs: 10,
+  sm: 14,
+  md: 16,
+  lg: 18,
+  xl: 24,
+  xxl: 32,
+  xxxl: 48
+);
+
+$TypoTheme: (
+  default,
+  primary,
+  warning,
+  error,
+  success,
+  info
+);
+
+@each $k, $v in $TypoSize {
+  .size-#{$k} {
+    font-size: #{$v}px;
+    @if $v > 20 {
+      font-weight: lighter;
+    }
+  }
+}
+
+@each $k in $TypoTheme {
+  .theme-#{$k} {
+    color: var(--#{$k}-color);
+  }
+}

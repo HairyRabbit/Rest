@@ -22,6 +22,7 @@ export { default as  FormItem } from './FormItem'
  */
 export { default as Tag } from './Tag'
 export { default as Icon } from './Icon'
+export { default as Typo } from './Typo'
 
 
 /**
@@ -60,6 +61,7 @@ export { default as Pie } from './Pie'
  */
 export { default as Button } from './Button'
 export { default as ButtonGroup } from './ButtonGroup'
+export { default as IconButton } from './IconButton'
 export { default as Switch } from './Switch'
 export { default as CheckBox } from './CheckBox'
 export { default as TextField } from './TextField'

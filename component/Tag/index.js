@@ -42,7 +42,8 @@ export default function Tag({ closable, onClose, editable, isEdit, onEditChange,
   )
   return (
     <Button size="xs" className={containerClassName}
-            onDoubleClick={handleMouseDoubleClick}>
+            onDoubleClick={handleMouseDoubleClick}
+            {...props}>
       {editable && _isEdit ? (
         <TextField value={_value}
                    onChange={handleChange}
