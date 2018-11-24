@@ -1,0 +1,19 @@
+/**
+ * <Collapse /> style
+ */
+
+$CollapseTransitionDuring: 280;
+@value during: #{$CollapseTransitionDuring};
+
+.handler {
+  cursor: pointer;
+}
+
+.transition {
+  overflow-y: hidden;
+  transition: height #{$CollapseTransitionDuring}ms ease-in-out 0s;
+}
+
+.hide {
+  display: none;
+}

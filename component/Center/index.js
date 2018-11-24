@@ -11,9 +11,16 @@ import style from './style.css'
 
 /// code
 
-export default function Center({ children, className, Tag = 'div', ...props }) {
+export type Props = {
+  tag?: string,
+  className?: string,
+  fill?: boolean,
+  children?: React.Node
+}
+
+export default function Center({ fill, children, className, Tag = 'div', ...props }) {
   return (
-    <Tag className={cs(style.main, className)} {...props}>
+    <Tag className={cs(style.main, fill && style.fill, className)} {...props}>
       {children}
     </Tag>
   )

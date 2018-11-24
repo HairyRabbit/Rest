@@ -12,9 +12,11 @@ export { default as Layout } from './layout'
 /**
  * layout
  */
-export { default as  Center } from './Center'
-export { default as  Card } from './Card'
-export { default as  FormItem } from './FormItem'
+export { default as Center } from './Center'
+export { default as Card } from './Card'
+export { default as Collapse } from './Collapse'
+export { default as CollapseGroup } from './CollapseGroup'
+export { default as FormItem } from './FormItem'
 
 
 /**
