@@ -38,3 +38,23 @@ export function parseImageRepoTag(repotag: string) {
     tag
   }
 }
+
+export function transformDockerContainerId(id: string): string {
+  return id.substr(0, 12)
+}
+
+export function transformDockerContainerName(name: string): string {
+  return name.substr(1)
+}
+
+export function transformDockerContainerPorts(ports: { [string]: string }) {
+  return Object.keys(ports).map(port => port.split('/'))
+}
+
+export function transformDockerContainerVolumes(volumes: { [string]: string }) {
+  return Object.keys(volumes)
+}
+
+export function transformDockerContainerNetWorks(networks) {
+  return Object.keys(networks)
+}

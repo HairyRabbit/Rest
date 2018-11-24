@@ -23,6 +23,12 @@ $ErrorColorDarken2: darken($ErrorColor, 10%);
 $ErrorColorLighten: lighten($ErrorColor, 5%);
 $ErrorColorLighten2: lighten($ErrorColor, 10%);
 
+$SuccessColor: #5ee28d;
+$SuccessColorDarken: darken($SuccessColor, 5%);
+$SuccessColorDarken2: darken($SuccessColor, 10%);
+$SuccessColorLighten: lighten($SuccessColor, 5%);
+$SuccessColorLighten2: lighten($SuccessColor, 10%);
+
 $Shadow: 0px 6px 20px -16px #000;
 
 :root {
@@ -36,6 +42,11 @@ $Shadow: 0px 6px 20px -16px #000;
   #{--error-color-darken-2}: $ErrorColorDarken2;
   #{--error-color-lighten}: $ErrorColorLighten;
   #{--error-color-lighten-2}: $ErrorColorLighten2;
+  #{--success-color}: $SuccessColor;
+  #{--success-color-darken}: $SuccessColorDarken;
+  #{--success-color-darken-2}: $SuccessColorDarken2;
+  #{--success-color-lighten}: $SuccessColorLighten;
+  #{--success-color-lighten-2}: $SuccessColorLighten2;
 
   #{--shadow}: $Shadow;
 }
