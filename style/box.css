@@ -1,17 +1,22 @@
 /**
- * box style
+ * box base style
  */
+
+$BoxPaddingX: 0.375rem;
+$BoxPaddingY: 0.5rem;
+$BorderRadius: 4px;
 
 .box {
   position: relative;
   display: inline-block;
-  padding: 0.5rem 1rem;
+  padding: $BoxPaddingX $BoxPaddingY;
   border: none;
-  border-radius: 2px;
+  border-radius: $BorderRadius;
   vertical-align: middle;
   font-family: inherit;
   font-size: inherit;
   color: inherit;
+  background-color: transparent;
 
   &:focus {
     outline: none;

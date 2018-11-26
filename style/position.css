@@ -1,0 +1,49 @@
+/**
+ * position utils
+ */
+
+@mixin make-position-fill($key, $position: absolute) {
+  @if all == $key or true == $key or a == $key {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  } @else if top == $key or t == $key {
+    top: 0;
+    left: 0;
+    right: 0;
+  } @else if bottom == $key or b == $key {
+    bottom: 0;
+    left: 0;
+    right: 0;
+  } @else if left == $key or l == $key {
+    left: 0;
+    top: 0;
+    bottom: 0;
+  } @else if right == $key or r == $key {
+    right: 0;
+    top: 0;
+    bottom: 0;
+  } @else if topleft == $key or lefttop == $key or tl == $key {
+    top: 0;
+    left: 0;
+  } @else if topright == $key or righttop == $key or tr == $key {
+    top: 0;
+    right: 0;
+  } @else if bottomleft == $key or leftbottom == $key or bl == $key {
+    bottom: 0;
+    left: 0;
+  } @else if bottomright == $key or rightbottom == $key or br == $key {
+    bottom: 0;
+    right: 0;
+  } @else {
+    // invalid key
+    @error('[@mixin make-position-fill] $key was invalid "#{$key}"');
+  }
+
+  @if $position {
+    position: $position;
+  }
+
+  @content;
+}
