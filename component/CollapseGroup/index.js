@@ -5,7 +5,7 @@
  */
 
 import * as React from 'react'
-import { Collapse } from '../'
+import { Layout, Collapse } from '../'
 import style from './style.css'
 
 
@@ -16,16 +16,16 @@ export type Props = {
   children?: React.Node
 }
 
-export default function CollapseGroup({ only, children }: Props = {}): React.Node {
+export default function CollapseGroup({ only, children, ...props }: Props = {}): React.Node {
   if('production' !== process.env.NODE_ENV) {
 
   }
 
   return (
-    <div>
+    <Layout vertical gutter={false} {...props}>
       {React.Children.map(children, (child, idx) => React.cloneElement(child, {
         key: idx
       }))}
-    </div>
+    </Layout>
   )
 }

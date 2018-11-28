@@ -7,6 +7,7 @@
 import * as React from 'react'
 import { Button, Icon } from '../'
 import { classnames as cs } from '../../util'
+import type { Props as IconProps } from '../Icon'
 import style from './style.css'
 
 
@@ -14,13 +15,14 @@ import style from './style.css'
 
 export type Props = {
   value?: string,
-  className?: string
+  className?: string,
+  iconProps?: IconProps
 }
 
-export default function IconButton({ value, className, ...props }: Props = {}): React.Node {
+export default function IconButton({ value, className, iconProps = {}, ...props }: Props = {}): React.Node {
   return (
-    <Button theme="default" className={cs(style.main, className)}>
-      <Icon value={value} {...props} />
+    <Button theme="default" className={cs(style.main, className)} {...props}>
+      <Icon value={value} {...iconProps} />
     </Button>
   )
 }

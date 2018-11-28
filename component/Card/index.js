@@ -13,8 +13,11 @@ import style from './style.css'
 
 export default function Card({ children, className, ...props }) {
   return (
-    <div className={cs(style.main, className)}>
-      {children}
+    <div className={cs(style.main, className)} {...props}>
+      {React.Children.map(children, (children, idx) => children && React.cloneElement(children, {
+        key: idx,
+        className: cs(style.section, children.props.className)
+      }))}
     </div>
   )
 }

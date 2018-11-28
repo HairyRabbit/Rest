@@ -2,18 +2,52 @@
  * <ColorPicker />
  */
 
-.main {
-  background-image: linear-gradient(90deg,red,orange,yellow,green,cyan,blue,purple,red)
+@import "../../style/position";
+
+$Color: (#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+
+@mixin make-linear-gradient($direction, $colors) {
+  $length: length($colors);
+  $acc: ();
+  @for $i from 1 through $length {
+    $color: nth($colors, $i);
+    $offset: percentage(100 / ($length - 1) * ($i - 1) / 100);
+    $acc: append($acc, ($color $offset), comma);
+  }
+  background-image: linear-gradient($direction, $acc);
 }
 
-.white {
-  background-image: linear-gradient(90deg,#fff,hsla(0,0%,100%,0));
+.area {
+  position: relative;
+  width: 360px;
+  height: 360px;
+  line-height: 0;
 }
 
-.black {
-  background-image: linear-gradient(0deg,#000,transparent);
+.bar {
+  width: 360px;
+  height: 10px;
+  line-height: 0;
+  @include make-linear-gradient(to right, $Color);
+  margin-bottom: 1rem;
 }
 
-.color {
-  background-image: linear-gradient(180deg, #f00 0, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%);
+.hsl {
+  @include make-position-fill(a);
+  z-index: 1;
+  // background-image: linear-gradient(to right, white, transparent);
+  background-image: linear-gradient(to bottom,
+                                    hsla(0, 0%, 100%, 1) 0%,
+                                    hsla(0, 0%, 100%, 0) 50%,
+                                    hsla(0, 0%, 0%, 0) 50%,
+                                    hsla(0, 0%, 0%, 1) 100%
+                                   ),
+  linear-gradient(to right,
+                  hsla(0, 0%, 50%, 1) 0%,
+                  hsla(0, 0%, 50%, 0) 100%);
+}
+
+.hue {
+  @include make-position-fill(a);
+  background-color: #f00;
 }

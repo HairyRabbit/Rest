@@ -5,23 +5,26 @@
  */
 
 import * as React from 'react'
-import { classnames as cs } from '../../util'
+import { Card } from '../'
+import { classnames as cs, useProp } from '../../util'
 import style from './style.css'
 
 
 /// code
 
 export type Props = {
+  active?: boolean,
+  onChange?: $PropertyType<Props, 'active'> => any,
   summary?: React.Node,
   children?: React.Node
 }
 
-export default function Collapse({ summary, children }: Props = {}): React.Node {
+export default function Collapse({ active, onChange, summary, children, ...props }: Props = {}): React.Node {
   if('production' !== process.env.NODE_ENV) {
 
   }
 
-  const [_active, setActive] = React.useState(false)
+  const [_active, setActive] = useProp(active, onChange, false)
   const [contentHeight, setContentHeight] = React.useState(null)
   const [height, setHeight] = React.useState('')
   const [timer, setTimer] = React.useState(null)
@@ -34,16 +37,16 @@ export default function Collapse({ summary, children }: Props = {}): React.Node 
   )
 
   return (
-    <div>
-      <div onClick={handleToggle}>
-        {summary}
-      </div>
+    <Card {...props}>
+      {summary && (<div onClick={handleToggle}>
+                     {summary}
+                   </div>)}
       <div ref={contentRef}
            className={contentClassNames}
            style={contentStyle}>
         {children}
       </div>
-    </div>
+    </Card>
   )
 
   function computeContentHeight() {

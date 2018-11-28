@@ -1,0 +1,21 @@
+/**
+ * <Slider /> styles
+ */
+
+@import "../../style/position";
+
+$SilderCursorSize: 1.25rem;
+$SilderCursorColor: var(--primary-color);
+
+.main {
+  position: relative;
+}
+
+.cursor {
+  @include make-position-fill(l);
+  width: $SilderCursorSize;
+  height: $SilderCursorSize;
+  border-radius: 50%;
+  background-color: $SilderCursorColor;
+  user-select: none;
+}

@@ -18,7 +18,9 @@ export type Props = {
   value?: string,
   size?: Size,
   theme?: Theme,
+  color?: string,
   className?: string,
+  style?: { [string]: string },
   children?: React.Node
 }
 

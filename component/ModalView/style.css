@@ -1,0 +1,34 @@
+/**
+ * <ModalView /> styles
+ */
+
+@import '../../style/position';
+
+.header {
+  position: relative;
+}
+
+$ModalViewCloseSize: 1rem;
+$ModalViewAlign: (left, right, center);
+$ModalCloseColor: gray;
+
+.close {
+  @include make-position-fill(r);
+  cursor: pointer;
+  padding: $ModalViewCloseSize;
+}
+
+.icon {
+  width: $ModalViewCloseSize;
+  height: $ModalViewCloseSize;
+  font-size: $ModalViewCloseSize;
+  color: $ModalCloseColor;
+}
+
+.align {
+  @each $align in $ModalViewAlign {
+    &-#{$align} {
+      text-align: $align;
+    }
+  }
+}

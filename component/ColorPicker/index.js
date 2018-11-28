@@ -5,6 +5,8 @@
  */
 
 import * as React from 'react'
+import { classnames as cs } from '../../util'
+import { Slider } from '../'
 import style from './style.css'
 
 
@@ -12,10 +14,13 @@ import style from './style.css'
 
 export default function ColorPicker(): React.Node {
   return (
-    <div>
-      <div className={style.white}></div>
-      <div className={style.black}></div>
-      <div className={style.color}></div>
+    <div className={style.main}>
+      <Slider />
+      <div className={style.bar}></div>
+      <div className={style.area}>
+        <div className={style.hsl}></div>
+        <div className={style.hue}></div>
+      </div>
     </div>
   )
 }
