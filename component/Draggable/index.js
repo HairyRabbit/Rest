@@ -5,6 +5,7 @@
  */
 
 import * as React from 'react'
+import { useProp } from '../../util'
 
 
 /// code
@@ -29,16 +30,17 @@ export type Props = {
       min?: number,
       max?: number,
     }
-  }
+  },
+  relative?: Point,
+  onChange?: Point => any,
+  translate?: Point,
+  onMove?: Point => any
 }
 
-export default function Draggable({ axis = 'both', scope, style = {}, children }: Props = {}): React.Node {
-  const dragged = React.useRef({ x: 0, y: 0 })
-  const dragging = React.useRef({ x: 0, y: 0 })
-  const [ relative, setRelative ] = React.useState({ x: 0, y: 0 })
-  const [ translate, setTranslate ] = React.useState({ x: 0, y: 0 })
-  const containerRef = React.useRef(null)
-  React.useEffect(computePosition, null !== containerRef.current)
+export default function Draggable({ relative, onChange, translate, onMove, axis = 'both', scope, style = {}, children }: Props = {}): React.Node {
+  if('production' !== process.env.NODE_ENV) {
+
+  }
 
   const [ isAllowX, isAllowY ] = parseAxis(axis)
   const {
@@ -46,13 +48,26 @@ export default function Draggable({ axis = 'both', scope, style = {}, children }
     y: { min: minY = -Infinity, max: maxY = +Infinity } = {}
   } = scope || {}
 
+  const dragged = React.useRef({ x: 0, y: 0 })
+  const dragging = React.useRef({ x: 0, y: 0 })
+  const range = React.useRef({
+    minX: -Infinity,
+    maxX: +Infinity,
+    minY: -Infinity,
+    maxY: +Infinity
+  })
+  const [ _relative, setRelative ] = useProp(relative, onChange, { x: 0, y: 0 })
+  const [ _translate, setTranslate ] = useProp(translate, onMove, { x: 0, y: 0 })
+  const containerRef = React.useRef(null)
+  React.useEffect(computePosition, null !== containerRef.current)
+
   return React.Children.only(React.cloneElement(children, {
     ref: containerRef,
     onMouseDown: handleMouseDown,
     style: {
-      left: `${relative.x}px`,
-      top: `${relative.y}px`,
-      transform: `translate(${translate.x}px, ${translate.y}px)`,
+      left: `${_relative.x}px`,
+      top: `${_relative.y}px`,
+      transform: `translate(${_translate.x}px, ${_translate.y}px)`,
       ...style
     }
   }))
@@ -80,7 +95,14 @@ export default function Draggable({ axis = 'both', scope, style = {}, children }
     const { pageX: x, pageY: y } = evt
     dragging.current = { x: 0, y: 0 }
     dragged.current = { x, y }
-    console.log(`drag start at (${dragged.current.x},${dragged.current.y})`)
+    range.current = {
+      minX: minX - _relative.x,
+      maxX: maxX - _relative.x,
+      minY: minY - _relative.y,
+      maxY: maxY - _relative.y
+    }
+
+    // console.log(`drag start at (${dragged.current.x},${dragged.current.y})`)
 
     document.addEventListener('mousemove', handleMouseMove)
     document.addEventListener('mouseup', handleMouseUp)
@@ -88,19 +110,15 @@ export default function Draggable({ axis = 'both', scope, style = {}, children }
 
   function handleMouseMove(evt): void {
     const { pageX: x, pageY: y } = evt
-    dragging.current = {
-      x: !isAllowX ? dragging.current.x : isInScope(),
-      y: !isAllowY ? dragging.current.y : y - dragged.current.y
-    }
-    setTranslate(dragging.current)
-    console.log(`drag move offset (${dragging.current.x},${dragging.current.y}) point: (${x},${y}), from: (${dragged.current.x},${dragged.current.y})`)
 
-    function isInScope() {
-      const detalX = x - dragged.current.x
-      if(detalX + relative.x >= maxX) return dragging.current.x
-      else if(detalX + relative.x <= minX) return dragging.current.x
-      else return detalX
+    dragging.current = {
+      x: !isAllowX ? dragging.current.x : Math.max(range.current.minX, Math.min(range.current.maxX, x - dragged.current.x)),
+      y: !isAllowY ? dragging.current.y : Math.max(range.current.minY, Math.min(range.current.maxY, y - dragged.current.y))
     }
+
+    setTranslate(dragging.current)
+
+    // console.log(`drag move offset (${dragging.current.x},${dragging.current.y}) point: (${x},${y}), from: (${dragged.current.x},${dragged.current.y}), range rect x (${minX},${maxX}) y (${minY},${maxY})`)
   }
 
   function handleMouseUp(evt): void {
@@ -111,13 +129,12 @@ export default function Draggable({ axis = 'both', scope, style = {}, children }
 
     setTranslate({ x: 0, y: 0 })
 
-    console.log(`drag end at (${relative.x + dragging.current.x},${relative.y + dragging.current.y}), point (${dragged.current.x},${dragged.current.y}), offset (${dragging.current.x},${dragging.current.y})`)
+    // console.log(`drag end at (${_relative.x + dragging.current.x},${_relative.y + dragging.current.y}), point (${dragged.current.x},${dragged.current.y}), offset (${dragging.current.x},${dragging.current.y})`)
 
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
   }
 }
-
 
 function parseAxis(axis: Axis): [boolean, boolean] {
   switch(axis) {

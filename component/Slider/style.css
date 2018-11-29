@@ -4,18 +4,31 @@
 
 @import "../../style/position";
 
-$SilderCursorSize: 1.25rem;
+$SilderCursorSize: 16;
 $SilderCursorColor: var(--primary-color);
 
+@value cursorSize: #{$SilderCursorSize};
+
 .main {
+  padding: 0 #{$SilderCursorSize / 2}px;
+  height: #{$SilderCursorSize}px;
+}
+
+.track {
   position: relative;
+  height: 100%;
+  user-select: none;
 }
 
 .cursor {
   @include make-position-fill(l);
-  width: $SilderCursorSize;
-  height: $SilderCursorSize;
+  width: #{$SilderCursorSize}px;
+  height: #{$SilderCursorSize}px;
   border-radius: 50%;
   background-color: $SilderCursorColor;
   user-select: none;
+}
+
+.field {
+  display: none;
 }

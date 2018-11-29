@@ -17,19 +17,27 @@ $Color: (#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
   background-image: linear-gradient($direction, $acc);
 }
 
-.area {
+$ColorPickerWidth: 240;
+$ColorPickerBoxHeight: $ColorPickerWidth / 1.618;
+$ColorPickerCursorSize: 16;
+
+@value boxWidth: #{$ColorPickerWidth};
+@value boxHeight: #{$ColorPickerBoxHeight};
+@value cursorSize: #{$ColorPickerCursorSize};
+
+.main {
+  width: #{$ColorPickerWidth}px;
+}
+
+.box {
   position: relative;
-  width: 360px;
-  height: 360px;
+  height: #{$ColorPickerWidth / 1.618}px;
   line-height: 0;
+  user-select: none;
 }
 
 .bar {
-  width: 360px;
-  height: 10px;
-  line-height: 0;
   @include make-linear-gradient(to right, $Color);
-  margin-bottom: 1rem;
 }
 
 .hsl {
@@ -50,4 +58,21 @@ $Color: (#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
 .hue {
   @include make-position-fill(a);
   background-color: #f00;
+}
+
+.cursor {
+  position: absolute;
+  width: #{$ColorPickerCursorSize}px;
+  height: #{$ColorPickerCursorSize}px;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  z-index: 1;
+  user-select: none;
+}
+
+.color {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  background-color: #eee;
 }

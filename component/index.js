@@ -78,4 +78,5 @@ export { default as ColorPicker } from './ColorPicker'
  * helpers
  */
 export { default as Draggable } from './Draggable'
+export { default as PointMonitor } from './PointMonitor'
 export { default as Close } from './Close'

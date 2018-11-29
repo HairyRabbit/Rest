@@ -5,24 +5,55 @@
  */
 
 import * as React from 'react'
-import { classnames as cs } from '../../util'
-import { Draggable } from '../'
+import { isFunction } from 'lodash'
+import { classnames as cs, useProp } from '../../util'
+import { PointMonitor, Draggable } from '../'
 import style from './style.css'
 
 
 /// code
 
+const CURSOR_SIZE: number = parseFloat(style.cursorSize)
+
 export type Props = {
-  className?: string
+  value: number,
+  onChange?: () => any,
+  className?: string,
+  trackProps?: Object,
+  cursorProps?: Object,
+  fieldProps?: Object
 }
 
-export default function Slider({ className, ...props }: Props = {}): React.Node {
+export default function Slider({ value, onChange, className, trackProps: { className: trackClassName, ...trackProps } = {}, cursorProps: { className: cursorClassName, style: cursorStyle, ...cursorProps} = {}, ...props }: Props = {}): React.Node {
+  if('production' !== process.env.NODE_ENV) {
+    // console.log(children.ref)
+  }
+
+  const [ _value, setValue ] = useProp(value, onChange, 0)
+  const [ point, setPoint ] = React.useState({ x: value, y: 0 })
+  const cursorTranslateStyle = {
+    transform: `translate(${point.x - CURSOR_SIZE / 2}px)`
+  }
+
   return (
     <div className={cs(style.main, className)}>
-      <Draggable axis="x" scope={{ x: { min: 0, max: 100 }}}>
-        <div className={style.cursor} />
-      </Draggable>
-      <input type="range" className={style.field} />
+      <PointMonitor point={point} onChange={handleChange} axis="x">
+        <div className={cs(style.track, trackClassName)} {...trackProps}>
+          <div className={cs(style.cursor, cursorClassName)}
+               style={{ ...cursorTranslateStyle, ...cursorStyle }}
+               {...cursorProps} />
+        </div>
+      </PointMonitor>
+      <input type="range"
+             value={_value}
+             onChange={evt => setValue(evt.target.value)}
+             className={style.field}
+             {...props} />
     </div>
   )
+
+  function handleChange(point) {
+    setValue(point.x / (point.rect.maxX - point.rect.minX))
+    setPoint(point)
+  }
 }
