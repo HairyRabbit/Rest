@@ -24,13 +24,27 @@ export type Props = {
   fieldProps?: Object
 }
 
-export default function Slider({ value, onChange, className, trackProps: { className: trackClassName, ...trackProps } = {}, cursorProps: { className: cursorClassName, style: cursorStyle, ...cursorProps} = {}, ...props }: Props = {}): React.Node {
+export default function Slider({ value,
+                                 onChange,
+                                 className,
+                                 trackProps: { className: trackClassName,
+                                               ...trackProps } = {},
+                                 cursorProps: { className: cursorClassName,
+                                                style: cursorStyle,
+                                                ...cursorProps },
+                                 barProps: { className: barClassName,
+                                             ...barProps } = {},
+                                 ...props }: Props = {}): React.Node {
   if('production' !== process.env.NODE_ENV) {
     // console.log(children.ref)
   }
 
   const [ _value, setValue ] = useProp(value, onChange, 0)
   const [ point, setPoint ] = React.useState({ x: value, y: 0 })
+
+  /**
+   * @compute [point]
+   */
   const cursorTranslateStyle = {
     transform: `translate(${point.x - CURSOR_SIZE / 2}px)`
   }
@@ -42,6 +56,9 @@ export default function Slider({ value, onChange, className, trackProps: { class
           <div className={cs(style.cursor, cursorClassName)}
                style={{ ...cursorTranslateStyle, ...cursorStyle }}
                {...cursorProps} />
+
+          <div className={cs(style.bar, barClassName)}
+               {...barProps} />
         </div>
       </PointMonitor>
       <input type="range"

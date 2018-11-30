@@ -6,17 +6,29 @@
 
 $SilderCursorSize: 16;
 $SilderCursorColor: var(--primary-color);
+$SliderBarSize: $SilderCursorSize / 2;
+$SliderBarColor: lightgray;
 
 @value cursorSize: #{$SilderCursorSize};
 
 .main {
-  padding: 0 #{$SilderCursorSize / 2}px;
+  /* padding: 0 #{$SilderCursorSize / 2}px; */
   height: #{$SilderCursorSize}px;
 }
 
 .track {
   position: relative;
   height: 100%;
+  user-select: none;
+}
+
+.bar {
+  @include make-position-fill(x);
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 4px;
+  height: #{$SliderBarSize}px;
+  background-color: $SliderBarColor;
   user-select: none;
 }
 

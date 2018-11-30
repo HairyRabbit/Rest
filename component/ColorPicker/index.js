@@ -28,34 +28,41 @@ export default function ColorPicker({}: Props = {}): React.Node {
   /**
    * @compute [point]
    */
-  const cursorStyle = {
+  const cursorStyle = ({
     transform: `translate(${point.x - CURSOR_SIZE / 2}px, ${point.y - CURSOR_SIZE / 2}px)`
-  }
+  })
 
   /**
    * @compute [point,hue]
    */
-  const colorStyle = {
+  const colorStyle = ({
     backgroundColor: `hsl(${computeHue()}, ${computeSaturation()}, ${computeLightness()})`
-  }
+  })
 
   /**
    * @compute [hue]
    */
-  const hueStyle = {
+  const hueStyle = ({
     backgroundColor: `hsl(${computeHue()}, 100%, 50%)`
-  }
+  })
 
   return (
     <div className={style.main}>
       <Slider value={hue}
               onChange={setHue}
-              className={style.bar} />
+              barProps={{ className: style.bar }}
+              cursorProps={{ className: cs(style.cursor, style[`cursor-${'slider'}`]) }} />
+      <Slider value={hue}
+              onChange={setHue}
+              barProps={{ className: style.bar }}
+              cursorProps={{ className: cs(style.cursor, style[`cursor-${'slider'}`]) }} />
       <PointMonitor point={point} onChange={setPoint}>
         <div className={style.box}>
-          <div className={style.hsl}></div>
-          <div className={style.hue} style={hueStyle}></div>
-          <div className={style.cursor} style={cursorStyle} />
+          <div className={style.hsl} />
+          <div className={style.hue}
+               style={hueStyle} />
+          <div className={cs(style.cursor, style[`cursor-${'box'}`])}
+               style={cursorStyle} />
         </div>
       </PointMonitor>
       <div>Hue {computeHue()}</div>

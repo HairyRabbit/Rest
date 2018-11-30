@@ -62,12 +62,18 @@ $ColorPickerCursorSize: 16;
 
 .cursor {
   position: absolute;
+  border-radius: 50%;
   width: #{$ColorPickerCursorSize}px;
   height: #{$ColorPickerCursorSize}px;
-  border: 2px solid #ddd;
-  border-radius: 50%;
   z-index: 1;
   user-select: none;
+  &-box {
+    border: 2px solid lightgray;
+    background-color: transparent;
+  }
+  &-slider {
+    background-color: white;
+  }
 }
 
 .color {
