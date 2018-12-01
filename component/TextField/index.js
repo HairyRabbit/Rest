@@ -29,12 +29,12 @@ export type AreaProps = {
   rows?: number
 }
 
-export default function TextField({ name, type = 'text', className, autosize, value, onChange, rows = 8, ...props }: Props = {}): React.Node {
+export default function TextField({ name, size = 'md', type = 'text', className, autosize, value, onChange, rows = 8, ...props }: Props = {}): React.Node {
   const id = name || '__SWITCH_ID__' + rs()
 
   return 'area' === type ? (
     <textarea id={id} name={id}
-              className={cs(style.main, style.area, className)}
+              className={cs(style.main, style.area, style[`size-${size}`], className)}
               value={value}
               rows={rows}
               onChange={onChange}
@@ -42,7 +42,7 @@ export default function TextField({ name, type = 'text', className, autosize, va
   ) : (
     <input id={id} name={id}
            type={type}
-           className={cs(style.main, className)}
+           className={cs(style.main, style[`size-${size}`], className)}
            value={value}
            onChange={onChange}
            size={true === autosize ? value.length : undefined}

@@ -39,7 +39,7 @@ export default function Slider({ value, onChange, className, children, trackProp
   const [ point, setPoint ] = React.useState({ x: 0, y: 0 })
 
   /**
-   * sync point with rect if has init value
+   * sync point with rect
    */
   React.useEffect(syncPoint, [rect])
 

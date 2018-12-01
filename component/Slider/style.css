@@ -20,6 +20,7 @@ $SliderBarColor: lightgray;
   position: relative;
   height: 100%;
   user-select: none;
+  z-index: 1;
 }
 
 .bar {
@@ -30,6 +31,7 @@ $SliderBarColor: lightgray;
   height: #{$SliderBarSize}px;
   background-color: $SliderBarColor;
   user-select: none;
+  // z-index: 10;
 }
 
 .cursor {

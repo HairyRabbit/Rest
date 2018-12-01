@@ -15,3 +15,20 @@
 .area {
   resize: vertical;
 }
+
+.size {
+  &-xs {
+    font-size: 10px;
+    padding: 0.05rem 0.15rem;
+  }
+  &-sm {
+    font-size: 12px;
+    padding: 0.1875rem 0.35rem;
+  }
+  &-md {
+    font-size: 14px;
+    padding: 0.375rem 0.75rem;
+  }
+  &-lg { font-size: 16px; }
+  &-xl { font-size: 18px; }
+}
