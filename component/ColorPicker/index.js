@@ -7,7 +7,7 @@
 import * as React from 'react'
 import { isFunction, isEqual, memoize } from 'lodash'
 import { classnames as cs, numberScope, useRect } from '../../util'
-import { Slider, PointMonitor, Card, Layout, Center, Typo, TextField } from '../'
+import { Slider, PointMonitor, Card, Layout, Center, Typo, NumberInput } from '../'
 import style from './style.css'
 
 
@@ -54,7 +54,7 @@ export default function ColorPicker({ value }: Props = {}): React.Node {
    * @compute [point,hue,alpha]
    */
   const previewStyle = ({
-    backgroundColor: `hsla(${computeHue()}, ${computeSaturation()}, ${computeLightness()}, ${alpha})`
+    backgroundColor: `hsla(${computeHue()}, ${computeSaturation()}%, ${computeLightness()}%, ${alpha})`
   })
 
   /**
@@ -68,7 +68,7 @@ export default function ColorPicker({ value }: Props = {}): React.Node {
    * @!compute [hue]
    */
   const alphaBarStyle = {
-    backgroundImage: `linear-gradient(to right, hsla(${computeHue()}, ${computeSaturation()}, ${computeLightness()}, 0), hsla(${computeHue()}, ${computeSaturation()}, ${computeLightness()}, 1))`
+    backgroundImage: `linear-gradient(to right, hsla(${computeHue()}, ${computeSaturation()}%, ${computeLightness()}%, 0), hsla(${computeHue()}, ${computeSaturation()}%, ${computeLightness()}%, 1))`
   }
 
   return (
@@ -109,31 +109,31 @@ export default function ColorPicker({ value }: Props = {}): React.Node {
       </Layout>
       <Layout gutter="xs">
         <Layout vertical nogutter align=",center">
-          <TextField name="hue"
-                     size="xs"
-                     className={style.field}
-                     value={computeHue()} />
+          <NumberInput name="hue"
+                       size="xs"
+                       className={style.field}
+                       value={computeHue()} />
           <Typo size="xs" value="H" />
         </Layout>
         <Layout vertical nogutter align=",center">
-          <TextField name="saturation"
-                     size="xs"
-                     className={style.field}
-                     value={computeSaturation()} />
-          <Typo size="xs" value="S" />
+          <NumberInput name="saturation"
+                       size="xs"
+                       className={style.field}
+                       value={computeSaturation()} />
+          <Typo size="xs" value="S%" />
         </Layout>
         <Layout vertical nogutter align=",center">
-          <TextField name="lightness"
-                     size="xs"
-                     className={style.field}
-                     value={computeLightness()} />
-          <Typo size="xs" value="L" />
+          <NumberInput name="lightness"
+                       size="xs"
+                       className={style.field}
+                       value={computeLightness()} />
+          <Typo size="xs" value="L%" />
         </Layout>
         <Layout vertical nogutter align=",center">
-          <TextField name="alpha"
-                     size="xs"
-                     className={style.field}
-                     value={transformOpacity(alpha)} />
+          <NumberInput name="alpha"
+                       size="xs"
+                       className={style.field}
+                       value={transformOpacity(alpha)} />
           <Typo size="xs" value="A" />
         </Layout>
       </Layout>
@@ -156,13 +156,13 @@ export default function ColorPicker({ value }: Props = {}): React.Node {
   }
 
   function computeSaturation(): string {
-    if(!rect) return '0%'
-    return Math.round(point.x / rect.width * 100).toString() + '%'
+    if(!rect) return 0
+    return Math.round(point.x / rect.width * 100)
   }
 
   function computeLightness(): string {
-    if(!rect) return '100%'
-    return 100 - Math.round(point.y / rect.height * 100).toString() + '%'
+    if(!rect) return 100
+    return 100 - Math.round(point.y / rect.height * 100)
   }
 
   function transformOpacity(opacity): string {

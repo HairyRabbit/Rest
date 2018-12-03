@@ -6,7 +6,11 @@
 
 import * as React from 'react'
 import { isFunction } from 'lodash'
-import { classnames as cs, numberScope, useProp, useRect } from '../../util'
+import { classnames as cs,
+         numberScope,
+         useProp,
+         useRect } from '../../util'
+import handleMouseWheel, { DEFAULT_MODIFIER_PERCENT } from '../../util/mouse-wheel-handler'
 import { PointMonitor, Draggable } from '../'
 import style from './style.css'
 
@@ -16,7 +20,9 @@ import style from './style.css'
 const CURSOR_SIZE: number = parseFloat(style.cursorSize)
 
 export type Props = {
-  sync: boolean,
+  min?: number,
+  max?: number,
+  step?: number,
   value: number,
   onChange?: () => any,
   className?: string,
@@ -25,7 +31,7 @@ export type Props = {
   fieldProps?: Object
 }
 
-export default function Slider({ value, onChange, className, children, trackProps: { className: trackClassName, ...trackProps } = {}, cursorProps: { className: cursorClassName, style: cursorStyle, ...cursorProps }, barProps: { className: barClassName, ...barProps } = {}, ...props }: Props = {}): React.Node {
+export default function Slider({ min, max, step, value, onChange, className, children, trackProps: { className: trackClassName, ...trackProps } = {}, cursorProps: { className: cursorClassName, style: cursorStyle, ...cursorProps }, barProps: { className: barClassName, ...barProps } = {}, ...props }: Props = {}): React.Node {
   /**
    * precheck
    */
@@ -33,15 +39,14 @@ export default function Slider({ value, onChange, className, children, trackProp
 
   }
 
-  const containerRef = React.useRef()
-  const rect = useRect(containerRef)
   const [ _value, setValue ] = useProp(value, onChange, 0)
   const [ point, setPoint ] = React.useState({ x: 0, y: 0 })
-
-  /**
-   * sync point with rect
-   */
-  React.useEffect(syncPoint, [rect])
+  const containerRef = React.useRef()
+  const rect = useRect(containerRef, syncPoint(value, setPoint))
+  const handleWheel = handleMouseWheel(
+    subscriptionWheel,
+    DEFAULT_MODIFIER_PERCENT
+  )
 
 
   /**
@@ -53,10 +58,12 @@ export default function Slider({ value, onChange, className, children, trackProp
 
   return (
     <div className={cs(style.main, className)}>
-      <PointMonitor value={point} onChange={handlePointChange}>
+      <PointMonitor value={point}
+                    onChange={handlePointChange}>
         {({ ...injects }) => (
           <div ref={containerRef}
                className={cs(style.track, trackClassName)}
+               onWheel={handleWheel}
                {...trackProps}
                {...injects}>
             <div className={cs(style.cursor, cursorClassName)}
@@ -91,21 +98,28 @@ export default function Slider({ value, onChange, className, children, trackProp
     setValue(calc / width)
   }
 
-  /**
-   * used for sync point state
-   *
-   * @prop sync
-   */
-  function syncPoint(): void {
+  function subscriptionWheel(evt, wheel, base) {
     if(!rect) return
-    setPoint({ x: computePointFromValue(_value), y: 0 })
-  }
+    const { width } = rect
+    const delta = wheel * base * width
+    const calc = numberScope(point.x + delta, { min: 0, max: width })
 
-  /**
-   * convert value to point
-   */
-  function computePointFromValue(value) {
-    if(!rect) return 0
-    return value * rect.width
+    setPoint({
+      x: calc,
+      y: point.y
+    })
+    setValue(calc / width)
+  }
+}
+
+
+/**
+ * used for sync point state on fetch DOMRect
+ *
+ * @prop sync
+ */
+function syncPoint(value, setPoint) {
+  return function syncPoint1(rect): void {
+    setPoint({ x: value * rect.width, y: 0 })
   }
 }

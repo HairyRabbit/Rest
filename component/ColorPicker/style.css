@@ -87,6 +87,8 @@ $ColorPickerCursorSize: 16;
   height: #{$ColorPickerCursorSize}px;
   z-index: 1;
   user-select: none;
+  border: 1px solid #ddd;
+  box-shadow: var(--shadow3);
   &-box {
     border: 2px solid lightgray;
     background-color: transparent;

@@ -72,6 +72,7 @@ export { default as TagsInput } from './TagsInput'
 export { default as TagsGroup } from './TagsGroup'
 export { default as Slider } from './Slider'
 export { default as ColorPicker } from './ColorPicker'
+export { default as NumberInput } from './NumberInput'
 
 
 /**

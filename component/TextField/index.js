@@ -46,6 +46,6 @@ export default function TextField({ name, size = 'md', type = 'text', className,
            value={value}
            onChange={onChange}
            size={true === autosize ? value.length : undefined}
-           {...props}/>
+           {...props} />
   )
 }

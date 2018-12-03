@@ -1,0 +1,31 @@
+/**
+ * <NumberInput /> styles
+ */
+
+@import '../../style/position';
+@import '../../style/border-radius';
+
+$NumberInputSpinWidth: 0.65rem;
+
+.main {
+  position: relative;
+  padding-right: $NumberInputSpinWidth;
+  border: 1px solid #ddd;
+}
+
+.field {
+  composes: number from '@style/reset.css';
+}
+
+.spins {
+  @include make-position-fill(r);
+  width: $NumberInputSpinWidth;
+}
+
+.spin {
+  height: 50%;
+  background-color: lightgray;
+
+  &-top { @include make-border-radius(tr); }
+  &-bottom { @include make-border-radius(br); }
+}
