@@ -10,13 +10,13 @@ import FetcherError from './error-type'
 /// code
 
 export type Options = {
-  parser?: Response => any
+  responseRarser?: Response => any
 }
 
 export default function response({
-  parser = parseByType
+  responseParser = parseByType
 }: Options = {}): * {
-  if(!isFunction(parser)) {
+  if(!isFunction(responseParser)) {
     throw new Error(`Fetcher response parser type invalid`)
   }
 
@@ -61,7 +61,7 @@ export default function response({
     /**
      * handle parse error
      */
-    return parser(res).catch(error => {
+    return responseParser(res).catch(error => {
       throw new FetcherError({
         type: 5,
         error: new Error(`Can't parse data`)

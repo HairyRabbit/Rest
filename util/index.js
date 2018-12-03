@@ -13,4 +13,13 @@ export { default as randomString } from './random-string'
 export { default as toShortSize } from './short-size'
 export { default as toDateAgo } from './date-ago'
 export { default as api } from './fetcher'
+export { default as setCSSVariable } from './css-variable-setter'
+export { default as numberScope } from './number-scope'
+export { default as handleMouseWheel } from './mouse-wheel-handler'
+
+
+/**
+ * react hooks
+ */
 export { default as useProp } from './use-prop'
+export { default as useRect } from './use-rect'

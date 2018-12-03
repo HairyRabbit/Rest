@@ -11,7 +11,7 @@ export type Options = {
   base?: string,
   type?: 'json' | 'form',
   method?: string,
-  parser?: parseByType,
+  requestParser?: parseByType,
   params?: { [key: string]: string },
   body?: { [key: string]: string }
 }
@@ -19,7 +19,7 @@ export type Options = {
 export default function request(url: string, {
   base = 'http://location',
   type = 'json',
-  parser = parseByType,
+  requestParser = parseByType,
   method = 'GET',
   params,
   body,
@@ -50,7 +50,7 @@ export default function request(url: string, {
 
   const options = {
     method,
-    headers: rest.headers,
+    headers: rest.headers || {},
     ...rest
   }
 
@@ -58,7 +58,7 @@ export default function request(url: string, {
    * parse data and set content-type header
    */
   if('GET' !== method && body) {
-    const [ header, data ] = parser(body)
+    const [ header, data ] = requestParser(type, body)
     options.headers['Content-Type'] = header
     options.body = data
   }
@@ -77,7 +77,7 @@ function parseByType(type, data): [string, string] {
       return ['application/x-www-form-urlencoded', qs.toString()]
     }
     case 'json': {
-      return ['application/json', JSON.string(data)]
+      return ['application/json', JSON.stringify(data)]
     }
     default: {
       throw new Error(`Unsupport type "${type}"`)

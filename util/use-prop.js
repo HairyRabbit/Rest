@@ -7,11 +7,11 @@
 import { isFunction } from 'lodash'
 import { useState, useRef } from 'react'
 
-export default function useProp(init, handle?, value?, pre?) {
-  const val = init || value
+export default function useProp(prop, handle?, init?, pre?) {
+  const val = prop || init
   const [ state, setState ] = useState(val)
   const initState = useRef(val)
-  if(undefined !== init && state !== init) setState(init)
+  if(undefined !== prop && state !== prop) setState(prop)
   return [
     state,
     isFunction(handle)
