@@ -8,6 +8,7 @@
 $NumberInputSpinWidth: 0.65rem;
 
 .main {
+  @include make-border-radius(a);
   position: relative;
   padding-right: $NumberInputSpinWidth;
   border: 1px solid #ddd;
@@ -15,6 +16,8 @@ $NumberInputSpinWidth: 0.65rem;
 
 .field {
   composes: number from '@style/reset.css';
+  display: block;
+  border: none;
 }
 
 .spins {
@@ -23,7 +26,12 @@ $NumberInputSpinWidth: 0.65rem;
 }
 
 .spin {
+  @include make-border-radius(n);
+  display: block;
+  padding: 0;
+  border: 0;
   height: 50%;
+  line-height: 0;
   background-color: lightgray;
 
   &-top { @include make-border-radius(tr); }

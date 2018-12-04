@@ -112,7 +112,11 @@ export default function ColorPicker({ value }: Props = {}): React.Node {
           <NumberInput name="hue"
                        size="xs"
                        className={style.field}
-                       value={computeHue()} />
+                       value={computeHue()}
+                       min={HUE_MIN}
+                       max={HUE_MAX}
+                       step={2}
+                       onChange={handleHueNumberInputChange} />
           <Typo size="xs" value="H" />
         </Layout>
         <Layout vertical nogutter align=",center">
@@ -167,5 +171,9 @@ export default function ColorPicker({ value }: Props = {}): React.Node {
 
   function transformOpacity(opacity): string {
     return opacity.toFixed(2)
+  }
+
+  function handleHueNumberInputChange(evt, val) {
+    setHue(val / HUE_MAX)
   }
 }

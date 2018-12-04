@@ -17,10 +17,11 @@ export type Props = {
   theme?: 'default' | 'primary' | 'secondary' | 'info' | 'error' | 'warning',
   surface?: 'outline' | 'flat' | 'text',
   className?: string,
+  value?: string,
   children?: React.Node
 }
 
-export default function Button({ children, type = 'button', theme = 'primary', size='md', surface = 'flat', className, ...props }: Props = {}): React.Node {
+export default function Button({ children, type = 'button', theme = 'primary', size='md', surface = 'flat', value, className, ...props }: Props = {}): React.Node {
   const containerClassName = cs(
     style.main,
     style.theme,
@@ -33,7 +34,7 @@ export default function Button({ children, type = 'button', theme = 'primary', s
     <button className={containerClassName}
             type={type}
             {...props}>
-      {children}
+      {value || children}
     </button>
   )
 }
