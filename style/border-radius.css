@@ -3,9 +3,9 @@
  */
 
 @mixin make-border-radius($key, $val: 4px) {
-  @if true == $key or all == $key {
+  @if true == $key or all == $key or a == $key or yes == $key {
     border-radius: $val;
-  } @else if false == $key or none == $key or null == $key {
+  } @else if false == $key or none == $key or null == $key or no == $key or n == $key {
     border-radius: 0;
   } @else if top == $key or t == $key {
     border-top-left-radius: $val;
@@ -19,7 +19,7 @@
   } @else if right == $key or r == $key {
     border-top-right-radius: $val;
     border-bottom-right-radius: $val;
-  } @else if topleft == $key or lefttop == $key or or tl == $key {
+  } @else if topleft == $key or lefttop == $key or tl == $key {
     border-top-left-radius: $val;
   } @else if topright == $key or righttop == $key or tr == $key {
     border-top-right-radius: $val;

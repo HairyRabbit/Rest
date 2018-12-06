@@ -1,0 +1,21 @@
+/**
+ * make css var from prop
+ *
+ * @example
+ *
+ * ```scss
+ * cssvar(primary-color)
+ *
+ * // transform to
+ *
+ * var(--primary-color)
+ * ```
+ *
+ * @prop {String} $prop - CSS variable name
+ *
+ * @function
+ */
+
+@function cssvar($prop) {
+  @return var(--#{$prop});
+}

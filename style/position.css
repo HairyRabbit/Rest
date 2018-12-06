@@ -2,12 +2,18 @@
  * position utils
  */
 
-@mixin make-position-fill($key, $position: absolute) {
+@mixin make-position-fill($key, $position: absolute, $z: null) {
   @if all == $key or true == $key or a == $key {
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
+  } @else if horizontal == $key or h == $key or x == $key {
+    left: 0;
+    right: 0;
+  } @else if vertical == $key or v == $key or y == $key {
+    top: 0;
+    bottom: 0;
   } @else if top == $key or t == $key {
     top: 0;
     left: 0;
@@ -43,6 +49,10 @@
 
   @if $position {
     position: $position;
+  }
+
+  @if $z {
+    z-index: $z;
   }
 
   @content;

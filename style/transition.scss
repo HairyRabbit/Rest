@@ -1,0 +1,42 @@
+/**
+ * transition helper
+ *
+ * @example
+ *
+ * ```scss
+ * @import '@style/transition.scss';
+ *
+ * .foo {
+ *   @include make-transition-props((background-color, color));
+ * }
+ *
+ * // transform to
+ *
+ * .foo {
+ *   transition: background-color 0.28s ease-in-out 0s,
+ *               color 0.28s ease-in-out 0s;
+ * }
+ * ```
+ *
+ * @prop {List} $props [`()`] - render props
+ * @prop {Number} $during [`280ms`] - transition during time
+ * @prop {String} $easing [`ease-in-out`] - timing function
+ * @prop {Number} $delay [`0s`] - transition delay time
+ *
+ * @mixin
+ */
+
+@mixin make-transition-props($props: (),
+                             $during: 280ms,
+                             $easing: ease-in-out,
+                             $delay: 0s) {
+  $values: ();
+  $suffix: #{$during $easing $delay};
+
+  @each $prop in $props {
+    $values: append($values, #{$prop $suffix}, comma);
+  }
+
+  // render
+  transition: $values;
+}
