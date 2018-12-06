@@ -1,5 +1,5 @@
 /**
- * transition helper
+ * Transition helper, easy set transition with multi properties.
  *
  * @example
  *
@@ -18,10 +18,11 @@
  * }
  * ```
  *
- * @prop {List} $props [`()`] - render props
+ * @prop {List<String>} $props [`()`] - render props
  * @prop {Number} $during [`280ms`] - transition during time
  * @prop {String} $easing [`ease-in-out`] - timing function
  * @prop {Number} $delay [`0s`] - transition delay time
+ * @prop {Map<String, Map<{ during: Number, easing: String, delay: Number}>>} $modifier [`()`] - if want to modify some prop's "during", "easeing", or "delay", can set this map override default values
  *
  * @mixin
  */
@@ -29,12 +30,14 @@
 @mixin make-transition-props($props: (),
                              $during: 280ms,
                              $easing: ease-in-out,
-                             $delay: 0s) {
+                             $delay: 0s,
+                             $modifier: ()) {
   $values: ();
-  $suffix: #{$during $easing $delay};
-
   @each $prop in $props {
-    $values: append($values, #{$prop $suffix}, comma);
+    $during: map_get(map_get($modifier, $prop) or (), during) or $during;
+    $easing: map_get(map_get($modifier, $prop) or (), easing) or $easing;
+    $delay:  map_get(map_get($modifier, $prop) or (), delay) or $delay;
+    $values: append($values, #{$prop $during $easing $delay}, comma);
   }
 
   // render
