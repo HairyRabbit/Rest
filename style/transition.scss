@@ -22,7 +22,7 @@
  * @prop {Number} $during [`280ms`] - transition during time
  * @prop {String} $easing [`ease-in-out`] - timing function
  * @prop {Number} $delay [`0s`] - transition delay time
- * @prop {Map<String, Map<{ during: Number, easing: String, delay: Number}>>} $modifier [`()`] - if want to modify some prop's "during", "easeing", or "delay", can set this map override default values
+ * @prop {Map<(key: String: Map<(during: Number, easing: String, delay: Number)>)>} $modifier [`()`] - if want to modify some prop's "during", "easeing", or "delay", can set this map override default values
  *
  * @mixin
  */
