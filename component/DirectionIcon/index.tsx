@@ -1,8 +1,28 @@
 /**
- * <DirectionIcon />
+ * <DirectionIcon />, A svg icon to show and animation directions
+ * include up, down, prev and next. can used for <NumberInput />
+ * <Select />, <Dropdown /> or <Pagination /> etc..
+ *
+ * @example
+ *
+ * ```js
+ * import { DirectionIcon, Direction } from '@component'
+ *
+ * <DirectionIcon value={Direction.UP} />
+ *
+ * // or more simple
+ *
+ * <DirectionIcon value="up" />
+ * ```
+ *
+ * @prop {string | Direction} - value, directions
  */
 
+import { isString } from 'lodash'
 import * as React from 'react'
+import { combineClassNames as cc } from '../../util'
+import * as reset from '../../style/reset.scss'
+
 
 
 /// code
@@ -17,13 +37,25 @@ export const ICON_PATHS: { [D in Direction]: string } = {
 }
 
 export interface Props {
-  readonly direction?: Direction
+  readonly value?: 'up' | 'down' | 'prev' | 'next' | Direction
+  readonly className?: string
 }
 
-export default function DirectionIcon({ direction, ...props }: Props) {
+/**
+ * @memo
+ */
+export default function DirectionIcon({ value = Direction.DOWN,
+                                        className,
+                                        ...props }: Props) {
+  const dir: Direction = isString(value)
+    ? Direction[value.toUpperCase()]
+    : value
+
   return (
-    <svg viewBox="0 0 64 64" {...props}>
-      <path d={ICON_PATHS[direction]} />
+    <svg viewBox="0 0 64 64"
+         className={cc(reset.icon, className)}
+         {...props}>
+      <path d={ICON_PATHS[dir]} />
     </svg>
   )
 }

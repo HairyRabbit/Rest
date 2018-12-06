@@ -68,8 +68,13 @@ function NumberInput({ min,
   const unsubscription = React.useRef(noop)
 
   const controls = [Direction.UP, Direction.DOWN].map(dir => (
-    <Button key={`NumberInputControl-${dir}`} theme="default" surface="text" className={cc(style.spin, style[`spin-${Direction[dir]}`])} onMouseDown={handleMouseDown(dir)} onMouseUp={unsubscription.current}>
-      <DirectionIcon direction={mapDirectionToIconDirection(dir)} />
+    <Button key={`NumberInputControl-${dir}`}
+            theme="default"
+            surface="text"
+            className={cc(style.spin, style[`spin-${Direction[dir]}`])}
+            onMouseDown={handleMouseDown(dir)}
+            onMouseUp={unsubscription.current}>
+      <DirectionIcon value={mapDirectionToIconDirection(dir)} />
     </Button>
   ))
 
