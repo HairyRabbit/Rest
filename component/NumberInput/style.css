@@ -28,12 +28,12 @@ $NumberInputSpinWidth: 0.65rem;
 .spin {
   @include make-border-radius(n);
   display: block;
-  padding: 0;
+  padding: 0.1rem;
   border: 0;
   height: 50%;
   line-height: 0;
   background-color: lightgray;
 
-  &-top { @include make-border-radius(tr); }
-  &-bottom { @include make-border-radius(br); }
+  &-UP { @include make-border-radius(tr); }
+  &-DOWN { @include make-border-radius(br); }
 }

@@ -81,3 +81,8 @@ export { default as NumberInput } from './NumberInput'
 export { default as Draggable } from './Draggable'
 export { default as PointMonitor } from './PointMonitor'
 export { default as Close } from './Close'
+export { default as CloseIcon } from './CloseIcon'
+export { default as DirectionIcon,
+         Props as DirectionIconProps,
+         Direction,
+         ICON_PATHS as DirectionIconPaths } from './DirectionIcon'
