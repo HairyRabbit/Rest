@@ -4,11 +4,12 @@
  * -?(\d+|\d+\.\d+|\.\d+)([eE][-+]?\d+)?
  */
 
-/// <reference types="../../typings" />
-
 import * as React from 'react'
 import { isUndefined, noop } from 'lodash'
-import { TextField, Button, Slider, DirectionIcon, Direction as IconDirection } from '../'
+import { TextField,
+         Button, ButtonTheme, ButtonSurface,
+         Slider,
+         DirectionIcon, Direction as IconDirection } from '../'
 import { combineClassNames as cc, numberScope as ns } from '../../util'
 import { handleMouseWheel,
          handleMouseDownFire,
@@ -69,8 +70,9 @@ function NumberInput({ min,
 
   const controls = [Direction.UP, Direction.DOWN].map(dir => (
     <Button key={`NumberInputControl-${dir}`}
-            theme="default"
-            surface="text"
+            theme={ButtonTheme.DEFAULT}
+            surface={ButtonSurface.TEXT}
+            block
             className={cc(style.spin, style[`spin-${Direction[dir]}`])}
             onMouseDown={handleMouseDown(dir)}
             onMouseUp={unsubscription.current}>

@@ -4,6 +4,8 @@
  * @flow
  */
 
+/// <reference types="../../typings" />
+
 export { default as withMount } from './withMount'
 export { default as Avatar } from './avatar'
 export { default as Layout } from './layout'
@@ -62,7 +64,12 @@ export { default as Pie } from './Pie'
 /**
  * form
  */
-export { default as Button } from './Button'
+export { default as Button,
+         Type as ButtonType,
+         Size as ButtonSize,
+         Theme as ButtonTheme,
+         Surface as ButtonSurface,
+         Props as ButtonProps } from './Button'
 export { default as ButtonGroup } from './ButtonGroup'
 export { default as IconButton } from './IconButton'
 export { default as Switch } from './Switch'

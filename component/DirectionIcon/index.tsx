@@ -24,7 +24,6 @@ import { combineClassNames as cc } from '../../util'
 import * as reset from '../../style/reset.scss'
 
 
-
 /// code
 
 export enum Direction { UP, DOWN, PREV, NEXT }
@@ -46,7 +45,7 @@ export interface Props {
  */
 export default function DirectionIcon({ value = Direction.DOWN,
                                         className,
-                                        ...props }: Props) {
+                                        ...props }: Props = {}) {
   const dir: Direction = isString(value)
     ? Direction[value.toUpperCase()]
     : value

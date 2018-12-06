@@ -23,6 +23,11 @@ $ButtonTheme: (
   user-select: none;
 }
 
+.block {
+  display: block;
+  width: 100%;
+}
+
 .theme {
   transition: background-color 0.28s ease-in-out 0s,
   color 0.28s ease-in-out 0s,
