@@ -15,7 +15,7 @@
  * <DirectionIcon value="up" />
  * ```
  *
- * @prop {string | Direction} - value, directions
+ * @prop {'up' | 'down' | 'prev' | 'next' | Direction} - value, directions
  */
 
 import { isString } from 'lodash'
