@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "strictNullChecks": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "sourceMap": true,
+    // "baseUrl": "./",
+    // "paths": {
+    //   "@component": ["component"],
+    //   "@style": ["style"],
+    //   "@util": ["util"],
+    //   "@util/dom": ["util/dom"]
+    // },
+    "typeRoots": [
+      "../../../node_modules/@types/"
+    ]
+  }
+}

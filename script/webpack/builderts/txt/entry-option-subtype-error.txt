@@ -1,0 +1,7 @@
+[WebpackBuilder] Error:
+
+Unknow webpack option.entry["{{ name }}"] type "{{ entrytype }}"
+The entry["{{ name }}"] type should one of:
+
+  * string
+  * Array<string>
