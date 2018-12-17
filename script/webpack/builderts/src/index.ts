@@ -4,3 +4,5 @@
  */
 
 export { default as default } from './builder'
+export * from './presets'
+export * from './transforms'

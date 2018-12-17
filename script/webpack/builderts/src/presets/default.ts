@@ -2,19 +2,23 @@
  * default preset
  */
 
-import { IPreset } from '../builder'
+import { Builder } from '../builder'
+import Preset from '../preset'
 import sourcemapOverride from '../sourcemap-path-absolute'
+
+
+/// code
 
 export interface Options {}
 
 export const DEFAULT_EXTENSIONS: Array<string> = ['.mjs', '.js', '.jsx', '.ts', '.tsx']
 
-export default class DefaultPreset implements IPreset<Options> {
+export default class DefaultPreset extends Preset<Options> {
   public readonly name = 'default'
   public readonly dependencies = [ 'webpack', 'webpack-cli' ]
   public readonly use = []
 
-  apply(builder, options?: Options): void {
+  apply(builder: Builder, options?: Options): void {
     const context = builder.context
 
     builder

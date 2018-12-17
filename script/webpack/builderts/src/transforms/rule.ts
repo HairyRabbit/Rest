@@ -27,7 +27,7 @@ type RuleValue = {
 export interface Options {}
 
 export default class Rule implements ITransform {
-  public readonly name: string = 'Rule'
+  public readonly name: string = 'rule'
   public readonly exports: Array<string> = [
     'setRule',
     'deleteRule',

@@ -5,7 +5,9 @@
 import { cpus } from 'os'
 import TerserPlugin from 'terser-webpack-plugin'
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin'
-import { IPreset } from '../builder'
+import { Builder } from '../builder'
+import Preset, { PresetOption } from '../preset'
+import { DependencyCompose } from '../dep'
 
 export enum Compiler {
   Babel = 'babel',
@@ -13,8 +15,8 @@ export enum Compiler {
 }
 
 export enum Compresser {
-  Terser = 'terser',
   Uglify = 'uglify-es',
+  Terser = 'terser',
   Closure = 'closure-compiler',
   Babel = 'babel-minify'
 }
@@ -43,11 +45,10 @@ const DEFAULT_COMPRESSOPTIONS: Options['compressOptions'] = {
   sourceMap: true
 }
 
-
-export default class ScriptPreset implements IPreset<Options> {
-  public readonly name = 'script'
-  public readonly use = []
-  public readonly dependencies = [
+export default class ScriptPreset extends Preset<Options> {
+  public readonly name: string = 'script'
+  public readonly use: PresetOption<Options> = []
+  public readonly dependencies: Array<DependencyCompose<any>> = [
     ['ts-loader', { assert: assertUseTypescript }],
     ['fork-ts-checker-webpack-plugin', { assert: assertUseTypescript }],
     'terser-webpack-plugin',
@@ -58,13 +59,13 @@ export default class ScriptPreset implements IPreset<Options> {
   ]
 
 
-  apply(builder, { compiler = Compiler.TypeScript,
-                   useCacheLoader = true,
-                   cacheLoaderOptions,
-                   useThreadLoader = false,
-                   threadLoaderOptions,
-                   compress = true,
-                   compressOptions = DEFAULT_COMPRESSOPTIONS }: Options = {}): void {
+  apply(builder: Builder, { compiler = Compiler.TypeScript,
+                            useCacheLoader = true,
+                            cacheLoaderOptions,
+                            useThreadLoader = false,
+                            threadLoaderOptions,
+                            compress = true,
+                            compressOptions = DEFAULT_COMPRESSOPTIONS }: Options = {}): void {
 
     if(useCacheLoader) {
       builder.setRuleLoaderDev(this.name, 'cache-loader', {
@@ -89,7 +90,7 @@ export default class ScriptPreset implements IPreset<Options> {
     }
 
     builder
-      .setRuleTypes(this.name, ['ts', 'tsx'])
+      .setRuleFileTypes(this.name, ['ts', 'tsx'])
       .setRuleLoaderDev(this.name, 'cache-loader', {
         options: {
           cacheIdentifier: 'ts'

@@ -3,12 +3,15 @@
  */
 
 import * as webpack from 'webpack'
-import { set, isFunction, isArray, isString, isUndefined } from 'lodash'
-import Entry, { Options as EntryOptions} from './transform/entry'
-import Plugin, { Options as PluginOptions} from './transform/plugin'
-import Rule, { Options as RuleOptions} from './transform/rule'
-import DefaultPreset from './preset/default'
-import npm from 'npm'
+import { set, isFunction, isArray, isString, isUndefined, cloneDeep, startCase } from 'lodash'
+import { inspect } from 'util'
+import { Dependencies,
+         DependencyCompose,
+         report as reportDependencyValidateResult,
+         install as installMissDependencies } from './dep'
+import * as buildInPresets from './presets'
+import * as buildInTransforms from './transforms'
+import { parsePresetOptions, PresetOption, IPreset, IPresetConstructor } from './preset'
 
 
 /// code
@@ -40,15 +43,15 @@ export interface ITransformConstructor<O> {
   new (builder: Builder, options: O): ITransform
 }
 
-export interface IPreset<O = {}> {
-  readonly name: string
-  readonly dependencies: Array<string>
-  readonly use: string | Array<string>
-  apply(builder: Builder, options?: O): void
+export enum DependencyFlag { Dev = 'D', Prod = 'P'}
+
+export interface DependencyOptions<O> {
+  readonly flag?: DependencyFlag
+  assert?(options?: O): boolean
 }
 
-export interface IPresetConstructor<O = {}> {
-  new (): IPreset<O>
+const DEFAULT_DEPENDENCYOPTIONS: DependencyOptions<never> = {
+  flag: DependencyFlag.Dev
 }
 
 export type ModeDefintion = string | [ string, string ]
@@ -71,36 +74,18 @@ export interface Options {
   readonly debug?: boolean
 }
 
-export interface IBuilder {
-  transform(): webpack.Configuration | Promise<webpack.Configuration>
-  use<O>(preset: IPresetConstructor<O>, options?: O): this
-  useTransform<O>(transform: ITransformConstructor<O>): this
-  [setter: string]: Function
-}
-
-interface IPresetOption<O = {}> {
-  readonly preset: string,
-  readonly options?: O
-}
-
-type PresetOption =
-  | string
-  | Array<string | IPresetOption>
-
-class Builder implements IBuilder {
-  private webpackOptions: webpack.Configuration
-  private readonly transforms: { [transform: string]: ITransform }
-  private readonly preloadPresets: Array<IPresetOption>
-  private readonly presets: { [preset: string]: IPreset }
+export class Builder {
   public readonly context: string
+  public webpackOptions: webpack.Configuration
+  private readonly transforms: { [transform: string]: ITransform }
+  private readonly presets: { [preset: string]: IPreset }
   private readonly mode: string
   private readonly modeList: Array<string>
   private readonly modeAlias: { [mode: string]: string }
-  private deps: { [dep: string]: Array<string> }
+  private deps: Dependencies<Options>
   [setter: string]: any
 
-  constructor(presets: PresetOption = [],
-              { context = process.cwd(),
+  constructor({ context = process.cwd(),
                 modeList = DEFAULT_MODES,
                 mode,
                 check = true,
@@ -118,7 +103,6 @@ class Builder implements IBuilder {
     this.modeAlias = ma
     this.mode = mode || parseModeFromEnv(this.modeList) || Mode.Dev
 
-    this.preloadPresets = parserPresets(presets)
     this.check = check
     this.installOnCheckFail = installOnCheckFail
     this.logger = logger
@@ -126,7 +110,7 @@ class Builder implements IBuilder {
 
     this.transforms = {}
     this.presets = {}
-    this.deps = {}
+    this.deps = new Dependencies(this.options)
 
     this.init()
   }
@@ -137,15 +121,6 @@ class Builder implements IBuilder {
      */
     this.modeList.forEach(mode => {
       this['set' + this.modeAlias[mode]] = this.callWithMode(this.set, this, mode)
-    })
-
-    /**
-     * mount presets from initial
-     */
-    this.preloadPresets.forEach(presetOption => {
-      const preset = loadPreset(presetOption)
-      const options = { ...presetOption, ...this.options[presetOption.preset] }
-      this.use(preset, options)
     })
 
     return this
@@ -176,8 +151,8 @@ class Builder implements IBuilder {
     return this
   }
 
-  public use<O>(Preset: IPresetConstructor<O>, options?: O): this {
-    const preset = new Preset()
+  public use<O>(PresetConstructor: IPresetConstructor<O>, options?: O): this {
+    const preset = new PresetConstructor()
     const { name, use, dependencies } = preset
 
     /**
@@ -189,28 +164,19 @@ class Builder implements IBuilder {
      * mount preset
      */
     if(!isUndefined(use)) {
-      parserPresets(use).forEach(presetOption => {
-        const _Preset = loadPreset(presetOption)
+      parsePresetOptions(use).forEach(({ preset, options}) => {
         /**
          * should not merge options from `this.options`
          */
-        this.use(_Preset, presetOption.options)
+        this.use(preset, options)
       })
     }
 
     /**
-     * push dependencies to `this.deps`
+     * normalize and push to `this.deps`
      */
     if(isArray(dependencies)) {
-      dependencies.forEach(dep => {
-        const deps = this.deps[dep]
-
-        if(isArray(deps)) {
-          if(!~deps.indexOf(name)) this.deps[dep].push(name)
-        } else {
-          this.deps[dep] = [ name ]
-        }
-      })
+      dependencies.forEach(dep => { this.deps.create(dep, name) })
     }
 
     preset.apply(this, options)
@@ -221,36 +187,31 @@ class Builder implements IBuilder {
 
   public useTransform<O>(Transform: ITransformConstructor<O>): this {
     const transform = new Transform(this, this.options)
+    if(this.transform[transform.name]) return this
     this.transforms[transform.name] = transform
     this.export(transform)
     return this
   }
 
-  public transform(): webpack.Configuration | Promise<webpack.Configuration> {
+  public transform(): webpack.Configuration {
     let promise: Promise<boolean> | undefined = undefined
     /**
      * check `deps` when `check` options was enabled
      */
     if(false !== this.check) {
-      const failed: Array<string> = []
-
-      Object.keys(this.deps).forEach(dep => {
-        if(!checkDep(dep)) {
-          failed.push(dep)
-        }
-      })
-
-      if(failed.length > 0) {
-        reportFailed(failed, this.deps, this.logger)
+      const result = this.deps.validate()
+      if(!result[0]) {
+        const miss: Array<string> = reportDependencyValidateResult(result[1], { logger: this.logger })
 
         if(this.installOnCheckFail) {
-          promise = installFailed(failed, this.logger).catch(error => {
-            throw new Error(error)
-          })
+          const installResult: boolean = installMissDependencies(miss, { logger: this.logger })
         }
       }
     }
 
+    /**
+     * start transform
+     */
     this.set('context', this.context)
     this.set('mode', this.mode)
 
@@ -258,39 +219,12 @@ class Builder implements IBuilder {
       this.transforms[name].transform(this.set, this.webpackOptions)
     })
 
-    if(promise) return promise.then(() => this.webpackOptions)
-    return this.webpackOptions
+    return cloneDeep(this.webpackOptions)
   }
-}
 
-function checkDep(dep: string): boolean {
-  try {
-    __non_webpack_require__.resolve(dep)
-  } catch(e) {
-    return false
+  public print(): void {
+    this.logger.info(inspect(this.transform(), { depth: Infinity }))
   }
-  return true
-}
-
-function installFailed(failed: Array<string>, logger: Logger): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    npm.load({}, () => {
-      npm.commands.install(failed, err => {
-        if(err) reject(err)
-        resolve(true)
-      })
-    })
-  })
-}
-
-function reportFailed(failed: Array<string>,
-                      deps: { [dep:string]: Array<string> },
-                      logger: Logger): void {
-  const message: Array<string> = []
-  failed.forEach(dep => {
-    message.push(`  - ${dep} was not found, requied by ${deps[dep].join(' ')}`)
-  })
-  logger.warn(`dependencies checked result: \n\n ${message.join('\n')}`)
 }
 
 type ReturnType = [ Array<string>, { [mode: string]: string} ]
@@ -310,49 +244,42 @@ function normalizeModeList(modeList: Array<ModeDefintion>): ReturnType {
   }, [ [], {} ])
 }
 
-function parserPresets(presets: PresetOption): Array<IPresetOption> {
-  if(isString(presets)) {
-    return parserPresets(presets.split(','))
-  } else if(isArray(presets)) {
-    return presets.map(preset => {
-      if(isString(preset)) return { preset, options: {} }
-      return preset
-    })
-  } else {
-    throw new Error(`Presets should be string or string[]`)
-  }
-}
-
 function parseModeFromEnv(modeList: Array<string>): string | undefined {
   const env: string | undefined = process.env.NODE_ENV
   if(!env || ~modeList.indexOf(env)) return undefined
   return env
 }
 
-function loadPreset<O>({ preset }: IPresetOption): IPresetConstructor<O> {
-  try {
-    return require(`./preset/${preset}.ts`).default
-  } catch(e) {}
-
-  try {
-    return __non_webpack_require__(`webpack-builder-preset-${preset}`).default
-  } catch(e) {}
-
-  throw new Error(`Can't find webpack-builder preset "${preset}"`)
-}
-
 export type BuilderOptions =
   & Options
-  & EntryOptions
-  & PluginOptions
+  & buildInTransforms.EntryOptions
+  & buildInTransforms.PluginOptions
+  & buildInTransforms.RuleOptions
 
-export default function createBuilder(presets: string | Array<string>,
-                                      options: BuilderOptions): Builder {
-  const builder: Builder = new Builder(presets, options)
+/**
+ * create a builder instance, can some preload presets
+ *
+ * @param presets
+ * @param options
+ */
+export default function createBuilder(presets?: PresetOption<{}>,
+                                      options?: BuilderOptions): Builder {
+  const builder: Builder = new Builder(options)
+
+  /**
+   * preload build-in transforms and presets
+   */
+  Object.values(buildInTransforms).filter(t => isFunction(t)).forEach(t => builder.useTransform(t))
+  builder.use(buildInPresets.Default)
+
+  /**
+   * preload presets
+   */
+  if(presets) {
+    parsePresetOptions(presets).forEach(({ preset, options }) => {
+      builder.use(preset, options)
+    })
+  }
 
   return builder
-    .useTransform(Entry)
-    .useTransform(Plugin)
-    .useTransform(Rule)
-    .use(DefaultPreset)
 }
