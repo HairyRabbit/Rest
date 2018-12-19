@@ -6,9 +6,9 @@ import * as webpack from 'webpack'
 import { set, isFunction, isArray, isString, isUndefined, cloneDeep, startCase } from 'lodash'
 import { inspect } from 'util'
 import { Dependencies,
-         DependencyCompose,
          report as reportDependencyValidateResult,
          install as installMissDependencies } from './dep'
+import { Logger } from './logger'
 import * as buildInPresets from './presets'
 import * as buildInTransforms from './transforms'
 import { parsePresetOptions, PresetOption, IPreset, IPresetConstructor } from './preset'
@@ -56,11 +56,6 @@ const DEFAULT_DEPENDENCYOPTIONS: DependencyOptions<never> = {
 
 export type ModeDefintion = string | [ string, string ]
 
-export interface Logger {
-  info(...optionalParams: Array<any>): void
-  warn(...optionalParams: Array<any>): void
-  error(...optionalParams: Array<any>): void
-}
 
 export interface Options {
   readonly context?: string
@@ -269,7 +264,9 @@ export default function createBuilder(presets?: PresetOption<{}>,
   /**
    * preload build-in transforms and presets
    */
-  Object.values(buildInTransforms).filter(t => isFunction(t)).forEach(t => builder.useTransform(t))
+  Object.values(buildInTransforms)
+    .filter(t => isFunction(t))
+    .forEach(t => builder.useTransform(t))
   builder.use(buildInPresets.Default)
 
   /**

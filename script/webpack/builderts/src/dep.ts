@@ -4,7 +4,7 @@
 
 import { isString, isFunction, isEmpty, isUndefined, groupBy } from "lodash"
 import { execSync } from 'child_process'
-import { Logger } from "./builder"
+import { Logger } from './logger'
 
 
 /// code
@@ -35,9 +35,9 @@ export const DEFAULT_DEPENDENCYVALIDATEOPTIONS: DependencyValidateOptions = {
   mountOnFailed: false
 }
 
-type ValidateFailed = {
-  dependendy: string,
-  issues: Array<string>,
+interface ValidateFailed {
+  dependendy: string
+  issues: Array<string>
   flag: DependencyFlag
 }
 
@@ -72,7 +72,7 @@ export class Dependencies<O> implements IDependencyManage<O> {
     this.deps.forEach(({ issues, options }, dep) => {
       const { flag, assert } = options
       if(isFunction(assert) && !assert(this.options)) return
-      if(isExists(dep)) return
+      if(requireModule(dep, { test: true })) return
 
       failed.add({
         dependendy: dep,
@@ -96,13 +96,27 @@ export function normalize<O>(dep: DependencyCompose<O>): Dependency<O> {
   return [ dep[0], { ...DEFAULT_DEPENDENCYOPTIONS, ...(dep[1] || []) } ]
 }
 
-export function isExists(dep: string): boolean {
+interface RequireOptions {
+  readonly test?: boolean
+  readonly logger?: Logger
+}
+
+export function requireModule(dep: string, { test, logger = console }: RequireOptions = {}): any | boolean {
   try {
     __non_webpack_require__.resolve(dep)
   } catch(e) {
-    return false
+    if(test) return false
+
+    logger.error(
+      'The module ${dep} not found, please install first'
+    )
+
+    return
   }
-  return true
+
+  if(test) return true
+  const m = __non_webpack_require__(dep)
+  return m.default || m
 }
 
 export interface ReportOption {
@@ -112,7 +126,6 @@ export interface ReportOption {
 export function report(failed: Array<ValidateFailed>,
                        { logger = console }: ReportOption): Array<string> {
   const message: Array<string> = []
-  const groupByFlag = groupBy(failed, 'flag')
   const accByFlag: { [ K in DependencyFlag ]: Array<string> } = {
     [DependencyFlag.Dev]: [],
     [DependencyFlag.Prod]: []
