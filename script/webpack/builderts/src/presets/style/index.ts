@@ -10,7 +10,9 @@ export enum Compiler { Sass = 'sass', Less = 'less' }
 
 export interface Options {
   readonly global?: string
-  readonly compiler?: boolean | Compiler
+  readonly compiler?: boolean | Compiler | [ Compiler, object | ((o?: object) => object | undefined) ]
+  readonly style?: object
+  readonly css?: object
 }
 
 export default class StylePreset extends Preset<Options> {

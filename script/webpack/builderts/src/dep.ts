@@ -23,6 +23,7 @@ export const DEFAULT_DEPENDENCYOPTIONS: DependencyOptions<never> = {
 export type Dependency<O> = [ string, DependencyOptions<O> ]
 export type DependencyCompose<O> =
   | string
+  | [ string ]
   | Dependency<O>
 
 export type DependencyValidateOptions = {
@@ -53,8 +54,8 @@ export interface IDependencyManage<O> {
 export class Dependencies<O> implements IDependencyManage<O> {
   deps: IDependencyManage<O>['deps']
   options: O
-  constructor(options) {
-    this.options = options || {}
+  constructor(options: O) {
+    this.options = options
     this.deps = new Map()
   }
   create(dep: DependencyCompose<O>, issue: string): void {
@@ -101,17 +102,15 @@ interface RequireOptions {
   readonly logger?: Logger
 }
 
-export function requireModule(dep: string, { test, logger = console }: RequireOptions = {}): any | boolean {
+export function requireModule(dep: string, { test = false, logger = console }: RequireOptions = {}): any | boolean {
   try {
-    __non_webpack_require__.resolve(dep)
+    __non_webpack_require__.resolve(`${dep}/package.json`)
   } catch(e) {
     if(test) return false
 
-    logger.error(
-      'The module ${dep} not found, please install first'
+    throw new Error(
+      `The module "${dep}" not found, please install first`
     )
-
-    return
   }
 
   if(test) return true

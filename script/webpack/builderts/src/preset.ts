@@ -4,7 +4,7 @@
 
 import { isString, isArray, startCase } from 'lodash'
 import { Builder, Options as BuilderOptions } from './builder'
-import { DependencyCompose } from './dep'
+import { DependencyCompose, requireModule } from './dep'
 import * as buildInPresets from './presets'
 
 
@@ -17,8 +17,8 @@ export interface IPreset<O = {}> {
   apply(builder: Builder, options?: O): void
 }
 
-export interface IPresetConstructor<O = {}> {
-  new (): IPreset<O>
+export interface IPresetConstructor<O> {
+  new (o?: O): IPreset<O>
 }
 
 interface IPresetOption<O> {
@@ -31,11 +31,11 @@ export type PresetOption<O> =
   | PresetOptionItem<O>
   | Array<PresetOptionItem<O> | IPresetOption<O>>
 
-export default abstract class Preset<O = {}> implements IPreset {
+export default abstract class Preset<Options> implements IPreset<Options & BuilderOptions> {
   abstract readonly name: string
-  abstract readonly dependencies: Array<DependencyCompose<BuilderOptions>>
-  abstract readonly use: PresetOption<O>
-  abstract apply(builder: Builder, options?: O): void
+  abstract readonly dependencies: Array<DependencyCompose<Options & BuilderOptions>>
+  abstract readonly use: PresetOption<Options>
+  abstract apply(builder: Builder, options?: Options): void
 }
 
 export function parsePresetOptions<O>(presets: PresetOption<O>): Array<IPresetOption<O>> {
@@ -44,18 +44,15 @@ export function parsePresetOptions<O>(presets: PresetOption<O>): Array<IPresetOp
   } else if(presets instanceof Preset) {
     return [{ preset: presets, options: {} }] as Array<{ preset: IPresetConstructor<O>, options: any }>
   } else if(isArray(presets)) {
-    return presets.map(preset => {
+    return presets.map(_preset => {
+      const [ preset, options ] = isArray(_preset) ? _preset : [ _preset, {} ]
+
       if(preset instanceof Preset) {
-        return { preset, options: {} }
+        return { preset, options }
       } else if(isString(preset)) {
         const tryBuildIn = buildInPresets[startCase(preset)]
-        if(tryBuildIn) return { preset: tryBuildIn, options: {} }
-
-        try {
-          return __non_webpack_require__(`webpack-builder-preset-${preset}`).default
-        } catch(e) {}
-
-        throw new Error(`Can't find webpack-builder preset "${preset}"`)
+        if(tryBuildIn) return { preset: tryBuildIn, options }
+        return requireModule(`webpack-builder-preset-${preset}`)
       } else {
         return preset
       }

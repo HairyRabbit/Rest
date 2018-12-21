@@ -6,3 +6,6 @@ export enum Compiler {
   Babel = 'babel',
   TypeScript = 'typescript'
 }
+
+
+export default {}

@@ -5,7 +5,7 @@
  */
 
 import * as webpack from 'webpack'
-import { isUndefined, isEmpty } from 'lodash'
+import { isUndefined, isEmpty, isFunction } from 'lodash'
 import { webpackOptionSetter, ITransform } from '../builder'
 
 type LoaderOption<O> = { [P in keyof O]: O[P] }
