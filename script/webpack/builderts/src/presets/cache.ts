@@ -21,11 +21,11 @@ export interface Options {
 
 export default class CachePreset extends Preset<Options> {
   public name: string
-  public readonly use: []
+  public readonly use = []
   public readonly dependencies: Array<DependencyCompose<Options>> = ['cache-loader']
-  constructor({ name }: Options = {}) {
-    super()
-    this.name = name || 'cache'
+  constructor(options: Options = {}) {
+    super(options)
+    this.name = options.name || 'cache'
   }
   apply(builder: Builder, { use, loader = {} }: Options = {}) {
     if(isUndefined(use)) throw new Error(
@@ -64,8 +64,8 @@ interface CacheLoaderReader {
 }
 
 interface CacheLoaderFSCallback {
-  (error: Error): void
-  (error: null, data?: any): void
+  (error: Error | undefined): void
+  (error: Error | null, data?: any): void
 }
 
 function memoryFSAdapter(): { write: CacheLoaderWriter, read: CacheLoaderReader } {

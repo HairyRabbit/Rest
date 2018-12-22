@@ -21,11 +21,11 @@ export interface Options {
 
 export default class ThreadPreset extends Preset<Options> {
   public name: string
-  public readonly use: []
+  public readonly use = []
   public readonly dependencies: Array<DependencyCompose<Options>> = ['thread-loader']
-  constructor({ name }: Options = {}) {
-    super()
-    this.name = name || 'thread'
+  constructor(options: Options = {}) {
+    super(options)
+    this.name = options.name || 'thread'
   }
   apply(builder: Builder, { use, loader = {} }: Options = {}) {
     if(isUndefined(use)) throw new Error(

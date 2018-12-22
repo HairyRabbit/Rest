@@ -6,7 +6,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as webpack from 'webpack'
 import { isUndefined, isArray, isFunction } from 'lodash'
-import { webpackOptionSetter, ITransform } from '../builder'
+import { webpackOptionSetter, ITransform, Builder } from '../builder'
 
 type EntryName = string
 type EntryPrepends = Array<string>
@@ -46,7 +46,7 @@ export default class Entry implements ITransform {
   private commons: Set<string>
   private readonly guessEntry: boolean
 
-  constructor(builder, { guessEntry = true }: Options = {}) {
+  constructor(builder: Builder, { guessEntry = true }: Options = {}) {
     this.context = builder.context
     this.guessEntry = guessEntry
     this.value = new Map()
@@ -66,27 +66,27 @@ export default class Entry implements ITransform {
   }
 
   private ensureEntry(entry: EntryName,
-                      module?: EntryValue['module'],
-                      prepends?: EntryValue['prepends'],
-                      name?: EntryValue['name']): EntryValue {
+                      module?: string,
+                      prepends?: Array<string>,
+                      name?: string): EntryValue {
     const value = this.value.get(entry)
     if(!isUndefined(value)) return value
     return this.initEntry(entry, module, prepends, name)
   }
 
   private initEntry(entry: EntryName,
-                    module?: EntryValue['module'],
-                    prepends?: EntryValue['prepends'],
-                    name?: EntryValue['name']): EntryValue {
+                    module?: string,
+                    prepends?: Array<string>,
+                    name?: string): EntryValue {
     const value = { name, module, prepends: new Set(prepends || []) }
     this.value.set(entry, value)
     return value
   }
 
   public setEntry(entry: EntryName,
-                  module?: EntryValue['module'],
-                  prepends?: EntryValue['prepends'],
-                  name?: EntryValue['name']): this {
+                  module?: string,
+                  prepends?: Array<string>,
+                  name?: string): this {
     if(module) this.setEntryModule(entry, module)
     if(isArray(prepends) && prepends.length > 0) this.setEntryPrepends(entry, prepends)
     if(name) this.setEntryName(entry, name)
@@ -98,8 +98,10 @@ export default class Entry implements ITransform {
     return this
   }
 
-  public setEntries(entries: Array<{ entry: EntryName, module?: string, prepends?: EntryPrepends }>): this {
-    entries.forEach(this.setEntry.bind(this))
+  public setEntries(entries: Array<{ entry: EntryName, module?: string, prepends?: EntryPrepends, name?: string }>): this {
+    entries.forEach(
+      ({ entry, module, prepends, name }) => this.setEntry(entry, module, prepends, name)
+    )
     return this
   }
 
@@ -142,7 +144,7 @@ export default class Entry implements ITransform {
   }
 
   public setEntryPrepends(entry: EntryName, prepends: Array<string>): this {
-    prepends.forEach(this.addEntryPrepend.bind(this))
+    prepends.forEach(prepend => this.addEntryPrepend(entry, prepend))
     return this
   }
 
@@ -175,6 +177,7 @@ export default class Entry implements ITransform {
     const acc: webpack.Entry = Object.create(null)
     this.value.forEach(({ module, prepends, name }, entry) => {
       if('string' !== typeof module) return
+
       acc[name || entry] = [
         ...Array.from(this.commons),
         ...Array.from(prepends),

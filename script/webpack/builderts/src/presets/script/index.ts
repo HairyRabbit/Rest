@@ -2,9 +2,10 @@
  * script preset
  *
  * @todo js/flow supports
+ * @see [babel-preset-env](https://babeljs.io/docs/en/babel-preset-env)
  */
 
-import { isFunction, isArray, isUndefined } from 'lodash'
+import { isFunction, isArray } from 'lodash'
 import { Builder } from '../../builder'
 import Preset, { PresetOption, IPresetConstructor } from '../../preset'
 import { DependencyCompose } from '../../dep'
@@ -22,10 +23,12 @@ export interface Options {
   readonly compressor?: Compressor | [ Compressor, object | ((o?: object) => object | undefined) ]
   readonly jsx?: boolean
   readonly flow?: boolean
-  readonly preCompiler?: boolean
-  readonly postCompiler?: boolean
   readonly cache?: boolean
   readonly thread?: boolean
+  /**
+   * set Babel preset-env `options.targets`
+   */
+  readonly targets?: string | Array<string> | { [key: string]: string }
 }
 
 function assertUseTypescript(options: Options) {
@@ -68,13 +71,14 @@ export default class ScriptPreset extends Preset<Options> {
 
   public apply(builder: Builder, { compiler = Compiler.TypeScript,
                                    compressor = Compressor.Uglify,
+                                   targets,
                                    jsx = true,
                                    flow = false,
                                    cache = true,
                                    thread = false, }: Options = {}): void {
 
     const mode = builder.mode
-
+    flow&&flow
     /**
      * prepend cache-loader
      */
@@ -126,7 +130,8 @@ export default class ScriptPreset extends Preset<Options> {
                 modules: false,
                 loose: true,
                 debug: process.env.DEBUG,
-                useBuiltIns: 'usage'
+                useBuiltIns: 'usage',
+                targets
               }],
               compiler === Compiler.TypeScript ? ['@babel/preset-typescript'] : null,
               jsx ? ['@babel/preset-react', {

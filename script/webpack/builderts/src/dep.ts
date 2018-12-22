@@ -2,7 +2,7 @@
  * dependency
  */
 
-import { isString, isFunction, isEmpty, isUndefined, groupBy } from "lodash"
+import { isString, isFunction, isEmpty, isUndefined } from "lodash"
 import { execSync } from 'child_process'
 import { Logger } from './logger'
 
@@ -102,7 +102,7 @@ interface RequireOptions {
   readonly logger?: Logger
 }
 
-export function requireModule(dep: string, { test = false, logger = console }: RequireOptions = {}): any | boolean {
+export function requireModule(dep: string, { test = false }: RequireOptions = {}): any | boolean {
   try {
     __non_webpack_require__.resolve(`${dep}/package.json`)
   } catch(e) {
@@ -137,8 +137,8 @@ export function report(failed: Array<ValidateFailed>,
 
   const printInstalls: Array<string> = []
 
-  Object.keys(accByFlag).forEach(flag => {
-    printInstalls.push(`-${flag} ${accByFlag[flag].join(' ')}`)
+  Object.keys(accByFlag).forEach((flag) => {
+    printInstalls.push(`-${flag} ${accByFlag[flag as DependencyFlag].join(' ')}`)
   })
 
   logger.warn(`dependencies checked result: \n\n ${message.join('\n')}`)

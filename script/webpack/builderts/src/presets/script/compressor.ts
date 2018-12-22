@@ -108,16 +108,14 @@ interface BabelMinifyWebpackPluginOptions {
   sourceMap?: webpack.Configuration['devtool']
   comments?: boolean | RegExp | ((node: object, comment: string) => boolean) | ExtractCommentsOptions
   babel?: object
-  parserOpts?: object
+  parserOpts?: babelMinifyOptions
   minifyPreset?: (file: string, sourceMap: object) => void
 }
 
 /**
  * not impl
  */
-interface babelMinifyOptions {
-
-}
+interface babelMinifyOptions {}
 
 interface closureWebpackPluginOptions {
   platform?: 'native' | 'java' | 'javascript'

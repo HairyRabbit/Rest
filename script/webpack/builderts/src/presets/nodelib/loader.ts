@@ -7,7 +7,7 @@ import loaderUtils from 'loader-utils'
 
 /// code
 
-export function pitch(remainingRequest) {
+export function pitch(this: any, remainingRequest: string): void | string {
   if (!this.resourceQuery) return
   const query = loaderUtils.parseQuery(this.resourceQuery)
   if (!(query && query.boot)) return

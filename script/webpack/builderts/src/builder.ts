@@ -3,7 +3,9 @@
  */
 
 import * as webpack from 'webpack'
-import { set, isFunction, isArray, isString, isUndefined, cloneDeep, startCase } from 'lodash'
+import path from 'path'
+import { EventEmitter } from 'events'
+import { get, set, isFunction, isArray, isUndefined, cloneDeep } from 'lodash'
 import { inspect } from 'util'
 import { Dependencies,
          report as reportDependencyValidateResult,
@@ -18,7 +20,7 @@ import { Mode } from './mode'
 /// code
 
 export const DEFAULT_MODES: Array<string> = [ Mode.Prod, Mode.Dev, Mode.None ]
-export const DEFAULT_MODEALIAS = {
+export const DEFAULT_MODEALIAS: { [ k in Mode ]: string } = {
   [Mode.None]: '',
   [Mode.Prod]: 'Prod',
   [Mode.Dev]: 'Dev'
@@ -32,6 +34,7 @@ export interface ITransform {
   readonly exports: Array<string>
   transform(setWebpackOptions: webpackOptionSetter,
             webpackOptions: webpack.Configuration): void
+  [key: string]: any & { [K in keyof typeof import('./transforms')]: (typeof import('./transforms'))[K]}[keyof typeof import('./transforms')]
 }
 
 export interface ITransformConstructor<O> {
@@ -42,6 +45,7 @@ export type ModeDefintion = string | [ string, string ]
 
 
 export interface Options {
+  readonly root?: string
   readonly context?: string
   readonly mode?: Mode
   readonly modeList?:
@@ -53,34 +57,37 @@ export interface Options {
   readonly debug?: boolean
 }
 
-export class Builder {
+export class Builder extends EventEmitter {
+  public readonly root: string
   public readonly context: string
   public webpackOptions: webpack.Configuration
   private readonly transforms: { [transform: string]: ITransform }
-  private readonly presets: { [preset: string]: IPreset }
+  private readonly presets: { [preset: string]: IPreset<any> }
   public readonly mode: string
   private readonly modeList: Array<string>
   private readonly modeAlias: { [mode: string]: string }
   private deps: Dependencies<Options>
   private readonly check: boolean = true
-  private transformed: boolean = false
+  public transformed: boolean = false
   private readonly logger: Logger = console
   private readonly installOnCheckFail: Options['installOnCheckFail'] = false
   private readonly options: any
+  public pkg!: { [key: string]: any }
 
-  [setter:string]: any & { [ K in keyof Builder['transforms']]: Builder['transforms'][K] }
-
+  [setter:string]: { [ K in keyof this]: this[K] | ((a: any) => this) }[keyof this]
 
   constructor({ context = process.cwd(),
+                root = process.cwd(),
                 modeList = DEFAULT_MODES,
                 mode,
                 check = true,
                 installOnCheckFail = false,
                 logger = console,
                 ...options }: Options = {}) {
-
+    super()
     this.webpackOptions = {}
     this.context = context
+    this.root = root
 
     const [ ml, ma ] = normalizeModeList(
       isFunction(modeList) ? modeList(DEFAULT_MODES) : modeList
@@ -104,10 +111,15 @@ export class Builder {
 
   private init(): this {
     /**
-     * export core `set` method
+     * try load `package.json`
+     */
+    this.pkg = __non_webpack_require__(path.resolve(this.root, 'package.json'))
+
+    /**
+     * exports `set` method
      */
     this.modeList.forEach(mode => {
-      this['set' + this.modeAlias[mode]] = this.callWithMode(this.set, this, mode)
+      this['set' + this.modeAlias[mode]] = this.callWithMode(this.set, this, mode) as any
     })
 
     return this
@@ -128,21 +140,25 @@ export class Builder {
     transform.exports.forEach(name => {
       const fn = transform[name]
       this.modeList.forEach(mode => {
-        this[name + this.modeAlias[mode]] = this.callWithMode(fn, transform, mode)
+        this[name + this.modeAlias[mode]] = this.callWithMode(fn, transform, mode) as any
       })
     })
     return this
   }
 
-  public setDev: Builder['set']
-  public setProd: Builder['set']
+  public setDev!: Builder['set']
+  public setProd!: Builder['set']
   public set<V>(key: string, value: V): this {
     set(this.webpackOptions, key, value)
     return this
   }
 
+  public get<V>(key: string, defaults?: V): any {
+    return get(this.webpackOptions, key) || defaults
+  }
+
   public use<O>(PresetConstructor: IPresetConstructor<O>, options?: O): this {
-    const preset = new PresetConstructor(options)
+    const preset: IPreset<O> = new PresetConstructor((options || {}) as O)
     const { name, use, dependencies } = preset
 
     /**
@@ -154,7 +170,7 @@ export class Builder {
      * mount preset
      */
     if(!isUndefined(use)) {
-      parsePresetOptions(use).forEach(({ preset, options}) => {
+      parsePresetOptions(use as PresetOption).forEach(({ preset, options}) => {
         /**
          * should not merge options from `this.options`
          */
@@ -177,7 +193,7 @@ export class Builder {
 
   public useTransform<O>(Transform: ITransformConstructor<O>): this {
     const transform = new Transform(this, this.options)
-    if(this.transform[transform.name]) return this
+    if(this.transforms[transform.name]) return this
     this.transforms[transform.name] = transform
     this.export(transform)
     return this
@@ -193,7 +209,7 @@ export class Builder {
         const miss: Array<string> = reportDependencyValidateResult(result[1], { logger: this.logger })
 
         if(this.installOnCheckFail) {
-          const installResult: boolean = installMissDependencies(miss, { logger: this.logger })
+            installMissDependencies(miss, { logger: this.logger })
         }
       }
     }
@@ -201,7 +217,14 @@ export class Builder {
     /**
      * start transform
      */
-    this.set('context', this.context)
+    Object.keys(this.presets).forEach(name => {
+      const preset = this.presets[name]
+      if(!isFunction(preset.applyTransform)) return
+      preset.applyTransform(this, preset.options)
+    })
+
+    if(this.pkg.name) this.set('name', this.pkg.name)
+    if(this.context) this.set('context', this.context)
     this.set('mode', this.mode)
 
     Object.keys(this.transforms).forEach(name => {
@@ -228,8 +251,8 @@ function normalizeModeList(modeList: Array<ModeDefintion>): ReturnType {
     const [ mode, alias ] = (
       isArray(curr)
         ? curr
-        : [ curr, !isUndefined(DEFAULT_MODEALIAS[curr])
-                    ? DEFAULT_MODEALIAS[curr]
+        : [ curr, !isUndefined(DEFAULT_MODEALIAS[curr as Mode])
+                    ? DEFAULT_MODEALIAS[curr as Mode]
                     : curr
           ]
     )
@@ -241,8 +264,9 @@ function normalizeModeList(modeList: Array<ModeDefintion>): ReturnType {
 
 function parseModeFromEnv(modeList: Array<string>): string | undefined {
   const env: string | undefined = process.env.NODE_ENV
-  console.log(process.env.NODE_ENV, env)
+  // console.log(process.env.NODE_ENV, env)
   if(!env || ~modeList.indexOf(env)) return undefined
+  // if(!env) return undefined
   return env
 }
 
@@ -263,15 +287,19 @@ export default function createBuilder(presets?: PresetOption<{}>,
   const builder: Builder = new Builder(options)
 
   /**
-   * preload build-in transforms and presets
+   * mount build-in transforms
    */
   Object.values(buildInTransforms)
     .filter(t => isFunction(t))
     .forEach(t => builder.useTransform(t))
+
+  /**
+   * mount `Default` preset
+   */
   builder.use(buildInPresets.Default)
 
   /**
-   * preload presets
+   * mount presets from arguments
    */
   if(presets) {
     parsePresetOptions(presets).forEach(({ preset, options }) => {

@@ -2,29 +2,20 @@
  * plugin transform
  *
  * @todo impl plugin groups
+ * @todo impl plugin args when constructor not one argument
  */
 
 import * as webpack from 'webpack'
 import { isUndefined } from 'lodash'
 import { webpackOptionSetter, ITransform } from '../builder'
 import { isString } from 'util';
-import { requireModule } from '../dep';
+import { requireModule } from '../dep'
 
-type UnionToIntersection<U> =
-  (U extends any
-    ? (k: U) => void
-    : never
-  ) extends ((k: infer I) => void) ? I : never
+type Constructor = string | { new(...a: any[]): any }
 
-type ConvertToMapFromObject<O> = UnionToIntersection<{
-  [K in keyof O]: Map<K, O[K]>
-}[keyof O]>
-
-type PluginName = string
-type PluginOption<O> = { [P in keyof O]: O[P] }
-type PluginValue = {
-  constructor: string | { new(...a: any[]): any } | undefined,
-  // options: ConvertToMapFromObject<PluginOption<O>> | {}
+interface Value {
+  ctor?: Constructor
+  args?: Array<any>
   options: Map<string, any>
 }
 
@@ -45,45 +36,50 @@ export default class Plugin implements ITransform {
     'clearPluginOptions'
   ]
 
-  private value: any
+  private value: Map<string, Value>
 
   constructor() {
     this.value = new Map()
   }
 
-  private ensurePlugin(plugin: PluginName,
-                       constructor?: PluginValue['constructor'],
-                       options?: PluginValue['options']): PluginValue {
+  private ensurePlugin(plugin: string,
+                       ctor?: Constructor,
+                       options?: object): Value {
     const value = this.value.get(plugin)
     if(!isUndefined(value)) return value
-    return this.initPlugin(plugin, constructor, options)
+    return this.initPlugin(plugin, ctor, options)
   }
 
-  private initPlugin(plugin: PluginName,
-                     constructor?: PluginValue['constructor'],
-                     options?: PluginValue['options']): PluginValue {
-    const value = ({
-      constructor,
-      options: new Map(Object.entries(options || {})) as ConvertToMapFromObject<PluginOption<Map<string, {}>>>
-    })
+  private initPlugin(plugin: string,
+                     ctor?: Constructor,
+                     options?: object): Value {
+    const value: Value = {
+      ctor,
+      options: new Map(Object.entries(options || Object.create(null)))
+    }
     this.value.set(plugin, value)
     return value
   }
 
-  public setPlugin(plugin: PluginName,
-                   constructor?: PluginValue['constructor'],
-                   options?: PluginValue['options']): this {
-    this.ensurePlugin(plugin, constructor, options)
+  public setPlugin(plugin: string,
+                   constructor?: Constructor,
+                   options?: object): this {
     return this
+      .setPluginConstructor(plugin, constructor)
+      .setPluginOptions(plugin, options)
   }
 
-  public deletePlugin(plugin: PluginName): this {
+  public deletePlugin(plugin: string): this {
     this.value.delete(plugin)
     return this
   }
 
-  public setPlugins(plugins: Array<{ plugin: PluginName, constructor?: any, options?: PluginOption<any> }>): this {
-    plugins.forEach(this.setPlugin.bind(this))
+  public setPlugins(plugins: Array<{ plugin: string } & Value>): this {
+    plugins.forEach(
+      ({ plugin, constructor, options }) => this.setPlugin(plugin,
+                                                           constructor as Constructor,
+                                                           options)
+    )
     return this
   }
 
@@ -92,32 +88,31 @@ export default class Plugin implements ITransform {
     return this
   }
 
-  public setPluginConstructor(plugin: PluginName, constructor: PluginValue['constructor']): this {
-    this.ensurePlugin(plugin).constructor = constructor
+  public setPluginConstructor(plugin: string, constructor?: Constructor): this {
+    this.ensurePlugin(plugin).ctor = constructor
     return this
   }
 
-  public deletePluginConstructor(plugin: PluginName): this {
-    this.ensurePlugin(plugin).constructor = undefined
-    return this
+  public deletePluginConstructor(plugin: string): this {
+    return this.setPluginConstructor(plugin)
   }
 
-  public setPluginOption<V>(plugin: PluginName, key: string, value: V): this {
+  public setPluginOption<V>(plugin: string, key: string, value: V): this {
     this.ensurePlugin(plugin).options.set(key, value)
     return this
   }
 
-  public deletePluginOption(plugin: PluginName, key: string): this {
+  public deletePluginOption(plugin: string, key: string): this {
     this.ensurePlugin(plugin).options.delete(key)
     return this
   }
 
-  public setPluginOptions<Options>(plugin: PluginName, options: PluginOption<Options>): this {
-    this.ensurePlugin(plugin).options = new Map(Object.entries(options || {}))
+  public setPluginOptions<O>(plugin: string, options?: O): this {
+    this.ensurePlugin(plugin).options = new Map(Object.entries(options || Object.create(null)))
     return this
   }
 
-  public clearPluginOptions(plugin: PluginName): this {
+  public clearPluginOptions(plugin: string): this {
     this.ensurePlugin(plugin).options.clear()
     return this
   }
@@ -125,15 +120,19 @@ export default class Plugin implements ITransform {
   public transform(setWebpackOptions: webpackOptionSetter): void {
     const plugins: Array<webpack.Plugin> = []
 
-    this.value.forEach(({ constructor, options }) => {
-      if(isUndefined(constructor)) return
-      if(isString(constructor)) constructor = requireModule(constructor)
+    this.value.forEach(({ ctor, options }) => {
+      if(isUndefined(ctor)) return
 
-      const opt = {}
+      /**
+       * require plugin first when type was `string`
+       */
+      const Ctor: { new(...a: any[]): any } = isString(ctor) ? requireModule(ctor) : ctor
+
+      const opt: { [key: string]: any } = Object.create({})
       options.forEach((value, key) => {
         opt[key] = value
       })
-      plugins.push(new constructor(opt))
+      plugins.push(new Ctor(opt))
     })
 
     setWebpackOptions('plugins', plugins)

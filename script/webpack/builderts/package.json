@@ -1,0 +1,31 @@
+{
+  "name": "@rabbitcc/webpack-builder1",
+  "version": "0.0.1",
+  "description": "A builder for configure webpack options",
+  "repository": {},
+  "main": "index.js",
+  "scripts": {
+    "start": "cross-env NODE_ENV=development npx webpack -d -w",
+    "build": "cross-env NODE_ENV=production npx webpack -p",
+    "deploy": "cp package.json dist/ && cd dist && npm publish",
+    "test": "mocha"
+  },
+  "files": [
+    "index.js",
+    "nodelib-pitch-loader.js"
+  ],
+  "author": "Rabbit <yfhj1990@hotmail.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@babel/polyfill": "^7.2.5",
+    "@babel/runtime-corejs2": "^7.2.0",
+    "@rabbitcc/webpack-builder": "0.0.3",
+    "lodash": "^4.17.11",
+    "typescript": "^3.2.2",
+    "webpack": "^4.28.1",
+    "webpack-cli": "^3.1.2"
+  }
+}
