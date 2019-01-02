@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+
+const pkg = require('./package.json')
+require('yargs')
+  .usage(`$0 [options]`, pkg.description)
+  .alias('v', 'version')
+  .alias('h', 'help')
+  .showHelp()
+  .epilog('copyright 2015')
+  .argv
