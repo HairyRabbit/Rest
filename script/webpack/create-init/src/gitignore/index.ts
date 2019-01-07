@@ -16,13 +16,11 @@ export interface Options {
 
 class GitIgnore implements Task<Options>, StateManager {
   static readonly id: string = 'gitignore'
-  readonly title: string = 'Create file ~/.gitignore'
+  readonly title: string = 'create file ~/.gitignore'
   state: TaskState = TaskState.Run
   description!: string
   private targetFile: string = '.gitignore'
   private targetPath: string
-  beg: number = 0
-  end!: number
   setState!: StateManager['setState']
   constructor(public context: string, public options: Options = Object.create(null)) {
     this.context = context
@@ -30,7 +28,6 @@ class GitIgnore implements Task<Options>, StateManager {
     this.targetPath = path.resolve(this.context, this.targetFile)
   }
   up(): void {
-    this.beg = Date.now()
     const { addons } = this.options
     const hash: null | string = getFileHash(this.targetPath)
     const tplstr = template(tpl)({ addons: '' })

@@ -2,8 +2,9 @@
  * the default task
  */
 
-import createTask from '../task'
-import gitignore from '../gitignore'
-import editorconfig from '../editorconfig'
+import { combineTasks } from '../task'
+import gitignore, { Options as GitIgnoreOptions } from '../gitignore'
+import editorconfig, { Options as EditorConfigOptions } from '../editorconfig'
 
-export default createTask('base', gitignore, editorconfig)
+export interface Options {}
+export default combineTasks<[GitIgnoreOptions, EditorConfigOptions]>('base', gitignore, editorconfig)

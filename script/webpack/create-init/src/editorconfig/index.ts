@@ -1,5 +1,5 @@
 /**
- *
+ * create .editorconfig file
  */
 
 import path from 'path'
@@ -7,7 +7,7 @@ import fs from 'fs'
 import { template } from 'lodash'
 import { getFileHash, getContentHash, applyMixins } from '../utils'
 import tpl from './template.txt'
-import { Task, TaskState, StateManager } from '../task'
+import { Task, TaskState, StateManager, combineTasks } from '../task'
 
 
 export interface Options {
@@ -16,13 +16,11 @@ export interface Options {
 
 class Editorconfig implements Task<Options>, StateManager {
   static readonly id: string = 'editorconfig'
-  readonly title: string = 'Create file ~/.editorconfig'
+  readonly title: string = 'create file ~/.editorconfig'
   state: TaskState = TaskState.Run
   description!: string
   private targetFile: string = '.editorconfig'
   private targetPath: string
-  beg: number = 0
-  end!: number
   setState!: StateManager['setState']
   constructor(public context: string, public options: Options = Object.create(null)) {
     this.context = context
@@ -30,7 +28,6 @@ class Editorconfig implements Task<Options>, StateManager {
     this.targetPath = path.resolve(this.context, this.targetFile)
   }
   up(): void {
-    this.beg = Date.now()
     const { addons } = this.options
     const hash: null | string = getFileHash(this.targetPath)
     const tplstr = template(tpl)()
@@ -52,4 +49,4 @@ class Editorconfig implements Task<Options>, StateManager {
   }
 }
 
-export default applyMixins(Editorconfig, StateManager)
+export default combineTasks('create dir', applyMixins(Editorconfig, StateManager))

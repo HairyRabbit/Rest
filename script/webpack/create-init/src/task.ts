@@ -2,11 +2,8 @@
  * tasks utils
  */
 
-import { EventEmitter } from "events"
-import Task from "./components/Task";
-import { isFunction } from "lodash";
-import { applyMixins } from "./utils";
-import base from "./base";
+import { isFunction } from "lodash"
+import { applyMixins } from "./utils"
 
 /// code
 
@@ -16,13 +13,21 @@ export interface Task<O> {
   description: string
   context: string
   options: O
-  beg: number
-  end?: number
+  dur?: number
+  up(): Promise<void>
   up(): void
+  down(): Promise<void>
   down(): void
 }
 
-type TaskTuple<T> = { [K in keyof T]: Task<T[K]> }
+export interface TaskConstructor<O> {
+  id: string,
+  new(context: string, options: O): Task<O>
+}
+
+export type TaskConstructorTuple<T> = { [K in keyof T]: TaskConstructor<T[K]> }
+
+export type TaskTuple<T> = { [K in keyof T]: Task<T[K]> }
 
 export interface TaskGroup<T> extends Task<object> {
   children: TaskTuple<T>
@@ -42,54 +47,51 @@ export function isFail(state: TaskState): boolean {
   return state === TaskState.Fail
 }
 
+const counter = {
+  value: 0
+}
+
 export class StateManager {
   state!: TaskState
   description!: string
   onCompleted?: (isDone: boolean, state: TaskState) => void
-  beg!: number
-  end!: number
   setState(state: TaskState, description?: string) {
     this.state = state
     if(description) this.description = description
-    this.end = Date.now()
-    if(isFunction(this.onCompleted)) {
-      this.onCompleted(isDone(state), this.state)
-    }
+    const result: boolean = isDone(state)
+    if(result) counter.value += 1
+    isFunction(this.onCompleted) && this.onCompleted(result, this.state)
   }
 }
 
-export default function createTask<T extends any[]>(id: string, ...tasks: T) {
+export function combineTasks<T extends any[]>(id: string, ...tasks: TaskConstructorTuple<T>) {
   class Tasks implements TaskGroup<T>, StateManager {
     static readonly id: string = id
-    readonly title: string = `Tasks ${id}`
-    state: TaskState = TaskState.Run
-    beg: number = Date.now()
-    end!: number
+    readonly title: string = `${id}`
+    public state: TaskState = TaskState.Run
+    dur!: number
     description!: string
     children!: TaskTuple<T>
     setState!: StateManager['setState']
-    counter: number = 0
+    counter!: typeof counter
     constructor(public context: string,
-                public options: object = Object.create(null),
+                public options: { [key: string]: object } = Object.create(null),
                 public onTasksCompleted?: Function) {
       this.context = context
       this.options = options
-      this.children = tasks.map(Task => {
-        const task = new Task(context, options[Task.id])
-        task.onCompleted = this.onTaskCompleted(Task.id)
+      this.children = tasks.map(Ctor => {
+        const task = new Ctor(context, options[Ctor.id])
+        task.onCompleted = this.onTaskCompleted(Ctor.id)
         return task
-      })
+      }) as TaskTuple<T>
     }
 
     onTaskCompleted(id: string) {
       return (isDone: boolean, state: TaskState) => {
-        if(isDone) this.counter += 1
-        this.end = Date.now()
 
         const status: Array<TaskState> = this.children.map(t => t.state)
         if(isGroupDone(status)) {
           this.setState(TaskState.Done)
-          this.counter += 1
         } else if(isGroupFail(status)) {
           this.setState(TaskState.Fail)
         }
@@ -100,8 +102,21 @@ export default function createTask<T extends any[]>(id: string, ...tasks: T) {
       }
     }
 
-    up(): void { this.beg = Date.now() }
-    down(): void {}
+    async up(): Promise<void> {
+      const tasks = () => Promise.all(this.children.map(
+        async task => {
+          const [res, dur] = await runTaskAndComputeDuring(task.up.bind(task))
+          task.dur = dur
+          return res
+        }
+      ))
+
+      const [ress, dur] = await runTaskAndComputeDuring(tasks)
+      this.dur = dur
+      
+    }
+
+    async down(): Promise<void> {}
   }
 
   return applyMixins(Tasks, StateManager)
@@ -115,11 +130,33 @@ export function isGroupFail(status: Array<TaskState>): boolean {
   return status.some(isFail)
 }
 
-export function createRootTask(context: string, options: object, ...tasks: any[]) {
-  const Tasks = createTask.apply(null, ['root', ...tasks])
-  const task = new Tasks(context, options, () => {
-    task.end = Date.now()
+export interface RootTask<O> extends TaskGroup<O> {
+  counter: typeof counter
+}
+
+export function createRootTask<O extends { [k: string]: object }, T extends any[]>(context: string, options: O, ...tasks: TaskConstructorTuple<T>): RootTask<O> {
+  const Tasks = combineTasks.apply(null, ['root', ...tasks])
+  
+  const root = new Tasks(context, options, () => {
     setTimeout(process.exit, 500)
   })
-  return task
+  
+  root.counter = counter
+  return root
+}
+
+export function createTask() {
+
+}
+
+async function runTaskAndComputeDuring<F extends (...a: any[]) => any>(fn: F): Promise<[ReturnType<F>, number, number, number]> {
+  const beg: number = Date.now()
+  let result: ReturnType<F>
+  try {
+    result = await fn()
+  } catch(e) {
+    throw new Error(e)
+  }
+  const end: number = Date.now()
+  return [result, end - beg, beg, end]
 }

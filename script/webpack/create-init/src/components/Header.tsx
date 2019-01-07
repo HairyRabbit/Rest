@@ -1,26 +1,31 @@
-import { h, Color, InkElement } from 'ink'
+/**
+ * <Header /> task manager header
+ */
+
+
+import { h, Color, Indent, InkNode } from 'ink'
+import Spinner from 'ink-spinner'
+
 
 /// code
 
 export interface Props {
-  readonly sum?: number
-  readonly completed?: number
-  readonly state?: string
+  readonly color?: string
+  readonly icon?: InkNode
+  readonly value: InkNode
+  readonly children?: InkNode
 }
 
-export default function Header({ sum, completed, state, cast }: Props = Object.create(null)): InkElement {
+export default function Header({ color, icon = <Spinner />, value, children }: Props): InkNode {
   return (
-    <div>
-      <br />
-      <div>
-        <Color blueBright>
-          &gt;
-          Tasks ({completed}/{sum})
-        </Color>
-        <Color gray> ({cast}ms) </Color>
-        {state}
-      </div>
-    </div>
+    <Indent>
+      <Color keyword={color}>
+        {icon} {value}
+      </Color>
+      <Indent>
+        {children}
+      </Indent>
+    </Indent>
   )
 }
 

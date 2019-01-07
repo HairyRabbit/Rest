@@ -1,47 +1,42 @@
-// import base from './base'
-// import createTask from './task'
-
-// export default async function main() {
-//   const task = createTask({}, base)
-//   try {
-//     await task.up()
-//   } catch(e) {
-//     try {
-//       await task.down()
-//     } catch(es) {
-//       throw new Error([e, ...es].join('\n'))
-//     }
-//   }
-// }
+/**
+ * create-init cli, util for quickly create green project 
+ * by advance default configure
+ */
 
 import app from './components'
-import base from './base'
+import path from 'path'
+import base, { Options as BaseOptions } from './base'
 import { createRootTask } from './task'
+import TaskManager from './manager'
+import mkdir from './modules/mkdir'
+import mkfile from './modules/mkfile'
+import gitignore from './modules/gitignore'
+import editorconfig from './modules/editorconfig'
 
-const tasks = {
-  children: [{
-    id: '1',
-    state: 0,
-    title: '1',
-    up() { console.log(1); setTimeout(() => this.state = 1, 3000) },
-    children: [{
-      id: '11',
-      title: '11',
-      state: 0,
-      up() { console.log(11); setTimeout(() => this.state = 3, 1000) },
-      children: [{
-        id: '111',
-        title: '111',
-        up() { console.log(111) }
-      }]
-    },{
-      id: '12',
-      title: '12',
-      up() { console.log(12) }
-    }]
-  }]
-}
+
+/// code
 
 export default function main() {
-  app(createRootTask(process.cwd(), {}, base))
+  // const context = process.cwd()
+  // const options = {}
+  // const root = createRootTask(context, options, base)
+  // // <typeof options, [BaseOptions]>
+  // app(root)
+  // const tm = TaskManager([foo, bar, baz])
+  const tm = TaskManager([
+    [mkfile, { filepath: 'foo/bar/qux/bar.txt', content: '233'}],
+    [mkfile, { filepath: 'foo/baz/qux/foo.txt', content: '445'}],
+    // [gitignore, { addons: '' }],
+    // [gitignore, {}],
+    // [editorconfig, {}]
+  ], path.resolve('./foo'))
+  // console.log(tm)
+  // tm.start()
+  app(tm)
+}
+
+function sleep(ms) {
+  return new Promise(res => {
+    setTimeout(res, ms)
+  })
 }
