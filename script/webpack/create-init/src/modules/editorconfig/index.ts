@@ -8,11 +8,14 @@ import MakeFile, { Options as MakeFileOptions } from '../mkfile'
 
 /// code
 
+export interface Options extends MakeFileOptions {
+}
+
 export default class EditorConfig extends MakeFile {
-  constructor(context: string) {
-    super(context, { filepath: './.editorconfig' })
+  constructor(public context: string, public options: Options) {
+    super(context, { filepath: '.editorconfig', ...options })
     this.id = `editorconfig`
-    this.title = `create ~/.editorconfig`
     this.content = template(tpl)({})
+    this.flag = `<${this.id}>`
   }
 }

@@ -36,6 +36,7 @@
     "@types/lodash": "^4.14.119",
     "raw-loader": "^1.0.0",
     "webpack": "^4.28.2",
-    "webpack-cli": "^3.1.2"
+    "webpack-cli": "^3.1.2",
+    "yaml-loader": "^0.5.0"
   }
 }

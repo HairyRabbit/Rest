@@ -9,8 +9,8 @@ import { TaskManager } from '../manager'
 
 /// code
 
-export default function App<T>(taskManager: TaskManager): void {
+export default function App(taskManager: TaskManager): void {
   taskManager.start(
-    render(<Manager state={taskManager.state} value={taskManager} />)
+    render(<Manager value={taskManager} />)
   )
 }

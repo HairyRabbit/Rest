@@ -3,9 +3,10 @@
  */
 
 import path from 'path'
-import Task, { TaskInterface, TaskConstructor, TaskState, TaskResult } from './tasker'
+import Task, { TaskInterface, TaskConstructor, TaskState, TaskResult, TaskResultReturnType, TaskAction, TaskContext } from './tasker'
 import { forEachParallel, forEachMapParallel } from './utils'
-import MakeDir from './modules/mkdir';
+import { isArray } from 'lodash';
+import { isUndefined, isString } from 'util';
 
 /// code
 
@@ -34,11 +35,14 @@ export type TaskMap = Map<string, TaskBox>
 export const enum TaskManagerState { Init, Start, Validate, Run, Rollback }
 export const enum TaskManagerResult { Done, Fail }
 
-export interface TaskManagerInterface {
+export interface TaskManagerInterface extends TaskManagerAction {
   tasks: TaskMap
   stack: TaskStack
   state: TaskManagerState
-  result?: TaskManagerResult 
+  result?: TaskManagerResult
+}
+
+interface TaskManagerAction {
   validate(): Promise<void>
   run(): Promise<void>
 }
@@ -64,7 +68,6 @@ function setTaskCounter(tasks: TaskMap, task: TaskInterface<any>): void {
 
 export type TaskError = { task: TaskInterface<any>, error: Error }
 export class TaskManager implements TaskManagerInterface {
-  public context!: string
   public state: TaskManagerState = TaskManagerState.Init
   public result?: TaskManagerResult
   public tasks: TaskMap = new Map()
@@ -72,18 +75,9 @@ export class TaskManager implements TaskManagerInterface {
   public validateErrors: Set<TaskError> = new Set()
   public runErrors: Set<TaskError> = new Set()
   public rollbackErrors: Set<TaskError> = new Set()
-  public exit!: (code?: number | undefined) => never;
+  public exit!: (code?: number | undefined) => void;
   public errors: Set<{ box: TaskBox, error: Error}> = new Set();
-
-  constructor(public tasklist: Array<[TaskConstructor<any>, any]>, context?: string) {
-    if(!context) {
-      this.context = process.cwd()
-    } else if(!path.isAbsolute(context)) {
-      this.context = path.normalize(context)
-    } else {
-      this.context = context
-    }
-  }
+  constructor(public tasklist: Array<[TaskConstructor<any>, any, undefined | Array<string>]>, public context: TaskContext) {}
 
   /**
    * init tasks
@@ -93,14 +87,42 @@ export class TaskManager implements TaskManagerInterface {
      * if context dir was not exists, add `mkdir(this.context)` 
      * before all the tasks.
      */
-    const contextTask = new MakeDir(this.context, { dirpath: this.context })
-
-    await forEachParallel(async ([Task, options]) => {
+    const depTaskMap: Map<string, Set<TaskBox>> = new Map()
+    await forEachParallel(async ([Task, options, deps]) => {
+      /**
+       * @todo catch errors
+       */
       const task = new Task(this.context, options)
+      if(!task.title) task.id = task.title
       const box: TaskBox = makeTaskBox(this.tasks.size + 1, task)
+      if(deps) deps.forEach(dep => {
+        const depset: undefined | Set<TaskBox> = depTaskMap.get(dep)
+        if(depset) {
+          depset.add(box)
+        } else {
+          depTaskMap.set(dep, new Set([ box ]))
+        }
+      })
       this.tasks.set(task.id, box)
-      task.dependencies.add(contextTask)
+
+      /**
+       * task self and task's dependencies all are not dynamic
+       */
+      task.static = true
+      task.dependencies.forEach(deptask => deptask.static = true)
     }, this.tasklist)
+
+    /**
+     * mount deps to each task box
+     */
+    depTaskMap.forEach((boxs, dep) => {
+      boxs.forEach(box => {
+        const depbox = this.tasks.get(dep)
+        if(!depbox) throw new Error(`task not found "${dep}"`)
+        box.task.dependencies.add(depbox.task)
+        box.task.static = true
+      })
+    })
 
     /**
      * clean up, no more need `tasklist`
@@ -118,14 +140,21 @@ export class TaskManager implements TaskManagerInterface {
     for await (const [id, box] of this.tasks) {
       if(box.validated) return
       const task = box.task
+
+      /**
+       * set task state and run `validate()`, then set result
+       */
+      task.state = TaskState.Validate
       try {
-        await task.validate()
+        const description = await task.validate()
+        task.result = TaskResult.Done
+        task.description = description || undefined
       } catch(e) {
         this.errors.add({ box, error: new Error(e) })
         task.result = TaskResult.Fail
+        task.description = String(e)
       }
       
-      task.state = TaskState.Validate
       task.dependencies.forEach(deptask => {
         /**
          * find deptask from `this.tasks` by `deptask.id`,
@@ -176,32 +205,42 @@ export class TaskManager implements TaskManagerInterface {
     /**
      * run tasks pall
      */
-    await Promise.all(Array.from(nextTasks).map(async t => {
-      const { task } = t
+    await Promise.all(Array.from(nextTasks).map(async box => {
+      const { task } = box
+
+      task.state = TaskState.Run
+      
       try {
         const beg: number = Date.now()
-        task.state = TaskState.Run
-        await task.run()
-        task.state = TaskState.Complate
-        if(!task.result) task.result = TaskResult.Done
-        t.during = Date.now() - beg
-        t.counter = -1
+
+        const [ result, description ] = await runTaskAction(task.run.bind(task))
+        task.result = result
+        task.description = description
+        
+        box.during = Date.now() - beg
+
+        /**
+         * `task.run()` complated 
+         */
+        box.counter = -1
         this.stack.add(task)
         setTaskCounter(this.tasks, task)
       } catch(e) {
         /**
-         * task failed, collect errors and ready do rollback
+         * task failed, collect errors, set flag, and ready 
+         * do rollback action
          */
-        this.runErrors.add({
-          task,
-          error: new Error(e)
-        })
-        task.state = TaskState.Complate
-        if(!task.result) task.result = TaskResult.Fail
+        task.result = TaskResult.Fail
+        task.description = String(e)
+        this.errors.add({ box, error: e })
       }
     }))
     
-    if(this.runErrors.size) return
+    /**
+     * if any errors happend, stop run next loop, otherwise
+     * stil call `run()` until no tasks found
+     */
+    if(this.errors.size) return
     return this.run()
   }
   
@@ -219,105 +258,160 @@ export class TaskManager implements TaskManagerInterface {
     }
   }
 
+  /**
+   * reset varabiles for next state
+   */
+  private reset(state: TaskManagerState) {
+    this.result = undefined
+    this.errors.clear()
+    this.state = state
+    return this
+  }
+
   async start(handler: () => void): Promise<void> {
     this.exit = exit(handler)
     /**
      * initial all tasks
      */
-    this.state = TaskManagerState.Start
-    await this.init()
+    await this.reset(TaskManagerState.Start).init()
 
     /**
      * validate tasks
      */
-    this.state = TaskManagerState.Validate
-    await this.validate() 
+    await this.reset(TaskManagerState.Validate).validate()
     //console.log('VALIDATED DONE', require('util').inspect(this.tasks, { depth: null }))
     //console.log('VALIDATED DONE', this.tasks)
     
     /**
      * validate failed, stop run task and exit
      */
-    if(this.errors.size) {
-      this.result = TaskManagerResult.Fail
-      console.log('')
-      this.exit(2)
-      return
-    }
+    if(this.errors.size) return this.exit(2)
 
     /**
      * run task recur
      */
-    this.state = TaskManagerState.Run
-    await this.run()
+    await this.reset(TaskManagerState.Run).run()
+    
 
     /**
      * run tasks successful
      */
-    if(!this.runErrors.size) {
-      // console.log('DONE', this)
-      //console.log('DONE', require('util').inspect(this.tasks, { depth: null }))
-      //console.log(Array.from(this.runErrors))
+    if(!this.errors.size) {
       this.result = TaskManagerResult.Done
-      return
+      return this.exit(0)
+    } else {
+      this.result = TaskManagerResult.Fail
+      return this.exit(2)
     }
 
     /**
      * run rollback
      */
-    await this.rollback()
+    await this.reset(TaskManagerState.Rollback).rollback()
 
     /**
      * rollback failed
      */
-    if(this.rollbackErrors.size) {
+    if(this.errors.size) {
       console.log(Array.from(this.rollbackErrors))
+      this.exit()
+      return
     }
   }
 }
 
+/**
+ * exit app
+ * 
+ * @param f call function before `process.exit`
+ */
 function exit(f: () => void) {
-  return (code?: number) => {
-    f()
-    setTimeout(() => process.exit(code), 500)
+  return (code?: number): void => {
+    setTimeout(() => {
+      f()
+      process.exit(code)
+    }, 500)
   }
 }
 
-async function taskStateMachine(taskManager: TaskManager): Promise<void> {
-  switch(taskManager.state) {
-    case TaskManagerState.Init: {
-      await taskManager.start()
-      break
-    }
+async function runTaskAction(action: { [K in keyof TaskAction]: TaskAction[K] }[keyof TaskAction]): Promise<[TaskResult, string | undefined]> {
+  const result: TaskResultReturnType | void = await action()
+  return !result 
+    ? [ TaskResult.Done, undefined ]
+    : isArray(result)
+    ? result
+    : isString(result)
+    ? [ TaskResult.Done, result ]
+    : [ result, undefined ]
+}
 
-    case TaskManagerState.Start: {
-      await taskManager.validate()
-      break
-    }
-
+export function mapToTaskManagerStateProps(state: TaskManagerState, result?: TaskManagerResult): { icon: boolean | string, color: string, state: string } {
+  switch(state) {
+    case TaskManagerState.Init: return { icon: true, color: 'gray', state: 'initializing...' }
     case TaskManagerState.Validate: {
-      await taskManager.run()
-      break
+      switch(result) {
+        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'validated failed' }
+        case TaskManagerResult.Done: return { icon: '✓', color: 'blueBright', state: 'validated complated' }
+        default: return { icon: true, color: 'blueBright', state: 'validating...' }
+      }
     }
-
     case TaskManagerState.Run: {
-      await taskManager.run()
-      break
+      switch(result) {
+        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'tasks failed' }
+        case TaskManagerResult.Done: return { icon: '✓', color: 'greenBright', state: 'tasks complated' }
+        default: return { icon: true, color: 'greenBright', state: 'running...' }
+      }
     }
-
     case TaskManagerState.Rollback: {
-      await taskManager.rollback()
-      break
+      switch(result) {
+        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'rollback failed' }
+        case TaskManagerResult.Done: return { icon: '✓', color: 'magentaBright', state: 'rollback complated' }
+        default: return { icon: true, color: 'magentaBright', state: 'rollbacking...' }
+      }
     }
-
-    default: throw new Error(
-      `Unknown task state "${taskManager.state}"`
-    )
+    default: throw new Error(`Unknown task state "${state}"`)
   }
-
-  return taskStateMachine(taskManager)
 }
 
-export default function taskManager<T extends [TaskConstructor<T>, T]>(tasklist: { [K in keyof T]: T[K] }, context?: string): TaskManager {
-  return new TaskManager(tasklist, context)
+export function mapToTaskStateProps(state: TaskState, result?: TaskResult): { icon: boolean | string, color: string, state: string } {
+  switch(state) {
+    case TaskState.Init: return { icon: true, color: 'gray', state: 'initializing...' }
+    case TaskState.Validate: {
+      switch(result) {
+        case TaskResult.Fail: return { icon: '✗', color: 'redBright', state: 'validated failed' }
+        case TaskResult.Done: return { icon: '✓', color: 'blueBright', state: 'validated complated' }
+        case TaskResult.Skip: return { icon: '✓', color: 'yellowBright', state: 'validated skipped' }
+        default: return { icon: true, color: 'blueBright', state: 'validating...' }
+      }
+    }
+    case TaskState.Run: {
+      switch(result) {
+        case TaskResult.Fail: return { icon: '✗', color: 'redBright', state: 'task failed' }
+        case TaskResult.Done: return { icon: '✓', color: 'greenBright', state: 'task complated' }
+        case TaskResult.Skip: return { icon: '✓', color: 'yellowBright', state: 'task skipped' }
+        case TaskResult.Force: return { icon: '✓', color: 'cyanBright', state: 'task overrided' }
+        default: return { icon: true, color: 'greenBright', state: 'running...' }
+      }
+    }
+    case TaskState.Rollback: {
+      switch(result) {
+        case TaskResult.Fail: return { icon: '✗', color: 'redBright', state: 'rollback failed' }
+        case TaskResult.Done: return { icon: '✓', color: 'magentaBright', state: 'rollback complated' }
+        case TaskResult.Skip: return { icon: '✓', color: 'yellowBright', state: 'rollback skipped' }
+        case TaskResult.Force: return { icon: '✓', color: 'cyanBright', state: 'rollback overrided' }
+        default: return { icon: true, color: 'magentaBright', state: 'rollbacking...' }
+      }
+    }
+    default: throw new Error(`Unknown task state "${state}"`)
+  }
+}
+
+export default function taskManager<T extends [TaskConstructor<T>, T, undefined | Array<string>]>(tasklist: Array<any>, context?: string): TaskManager {
+  if(!context) {
+    context = process.cwd()
+  } else if(!path.isAbsolute(context)) {
+    context = path.normalize(context)
+  }
+
+  return new TaskManager(tasklist, { root: context, cmdroot: context })
 }

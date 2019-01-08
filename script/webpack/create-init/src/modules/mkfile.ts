@@ -4,42 +4,55 @@
 
 import fs from 'fs'
 import path from 'path'
-import Task, { TaskResult, TaskInterface } from '../tasker'
-import MakeDir, { Options as MakeDirOptions } from './mkdir'
+import Task, { TaskResult, TaskResultReturnType, TaskContext } from '../tasker'
+import MakeDir from './mkdir'
 import { getFileHash, getContentHash, isFileExists, isDirExists, formatToPosixPath } from '../utils'
 import { isUndefined } from 'lodash'
 
 /// code
 
 export interface Options {
+  readonly _?: [ string?, string? ]
   readonly filepath?: string
   readonly content?: string | Buffer
   readonly override?: boolean
 }
 
-export default class MakeFile extends Task implements TaskInterface<Options> {
-  public target: NonNullable<Options['filepath']>
-  public content: NonNullable<Options['content']>
+export default class MakeFile extends Task<Options> {
+  protected target: NonNullable<Options['filepath']>
+  protected content: NonNullable<Options['content']>
+  protected override: NonNullable<Options['override']>
+  protected flag: string = '<mkfile>'
   private exists: boolean = false
   private sumchecked: boolean = false
   private created: boolean = false
 
-  constructor(public context: string, public options: Options) {
+  constructor(public context: TaskContext, public options: Options) {
     super(context)
-    const { filepath, content } = this.options
-    
-    if(isUndefined(filepath)) {
-      throw new Error('<mkfile> options.filepath was required')
-    }
 
-    this.target = path.resolve(this.context, filepath)
-    const relative: string = path.relative(this.context, this.target)
+    const { root } = context
+    const {  _: defaults = [], 
+            filepath: _filepath, 
+            content: _content, 
+            override = false } = this.options
+
+    const [ _filepath_, _content_ ] = defaults
+    const filepath = _filepath || _filepath_
+    const content = _content || _content_
+    
+    if(isUndefined(filepath)) throw new Error(
+      `${this.flag} file path was required`
+    )
+
+    this.target = path.resolve(root, filepath)
+    const relative: string = path.relative(root, this.target)
     this.content = content || ''
     this.id = `mkfile(${this.target})`
-    this.title = `create file ~/${formatToPosixPath(relative)}`
+    this.title = `create file @/${formatToPosixPath(relative)}`
+    this.override = override
   }
 
-  async validate(addDependency: <D>(t: Task<D>) => Promise<void>): Promise<void> {
+  validate() {
     /**
      * check file and dir paths
      */
@@ -50,9 +63,7 @@ export default class MakeFile extends Task implements TaskInterface<Options> {
        * if dir not exists, add sub task to create dir first 
        */
       if(isDirExists(dir)) return
-      const task = new MakeDir(this.context, { dirpath: dir })
-      this.dependencies.add(task)
-      // await addDependency<MakeDirOptions>(new MakeDir(this.context, { dirpath: dir }))
+      this.dependencies.add(new MakeDir(this.context, { dirpath: dir }))
       return
     }
 
@@ -66,27 +77,24 @@ export default class MakeFile extends Task implements TaskInterface<Options> {
     /**
      * throw when checksum failed, and override not allowed
      */
-    if(!this.sumchecked) throw new Error(
+    if(false === this.override && false === this.sumchecked) throw new Error(
       `<mkfile> file already exists and invalid ${this.target}`
     )
   }
 
-  async run(): Promise<void> {
+  run(): TaskResultReturnType {
     /**
      * skipped task, when the sumchecked 
      */
-    if(this.sumchecked) {
-      this.result = TaskResult.Skip
-      return
-    }
+    if(this.sumchecked) return TaskResult.Skip
 
     fs.writeFileSync(this.target, this.content, 'utf8')
     this.created = true
 
   }
 
-  async rollback(): Promise<void> {
-    if(!this.created) return
+  rollback(): TaskResultReturnType {
+    if(!this.created) return TaskResult.Skip
     fs.unlinkSync(this.target)
   }
 }

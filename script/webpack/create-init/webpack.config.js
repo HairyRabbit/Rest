@@ -11,5 +11,6 @@ module.exports = require('@rabbitcc/webpack-builder').default(
     entryOnly: true
   })
   .setRuleLoader('txt', 'raw-loader')
+  .setRuleLoader('yaml', 'yaml-loader')
   .print()
   .transform()

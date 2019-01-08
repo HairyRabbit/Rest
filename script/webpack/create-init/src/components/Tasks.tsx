@@ -1,74 +1,42 @@
 /**
- * <Tasks /> views
+ * <Tasks /> tasks list views
  */
 
-import { h, Indent, InkElement } from 'ink'
-import Header from './Header'
-import Task, { mapTaskStateToDescription } from './Task'
-import { TaskManager, TaskBox } from '../manager'
-
+import { h, Fragment } from 'ink'
+import Task, { Props as TaskProps } from './Task'
+import { TaskBox } from '../manager'
 
 
 /// code
 
-export interface Props<O> {
-  readonly sum?: number
-  readonly value: TaskManager
-  readonly footer?: InkElement
-  readonly children?: InkElement
+export interface Props {
+  readonly value: Array<TaskBox>
 }
 
-export default function Tasks<O>({ ids, sum, value, children, footer }: Props<O>): InkElement {
-  const { digits, list } = reduceTaskUIState(value)
+export default function Tasks({ value }: Props) {
+  if(0 === value.length) return null
+
   return (
-    <div>
-      {/* <Indent>
-        <Header sum={sum}
-                completed={value.counter.value <= 0 ? 0 : value.counter.value - 1}
-                cast={value.dur}
-                state={mapTaskStateToDescription(value.state)} />
-        {children}
-      </Indent> */}
-      {list.map(box => (
-        <Task key={`task-${box.id}`} value={box} ids={digits} />
+    <Fragment>
+      {value.map(box => (
+        <Task key={`task-${box.id}`} 
+              id={box.id}
+              title={box.task.title}
+              state={box.task.state}
+              result={box.task.result}
+              description={box.task.description}
+              during={box.during}
+              dynamic={!box.task.static}
+              issues={mapToTaskIssues(box.issues)} />
       ))}
-      {/* {isComplated(value.state) ? (
-        <div>Completed</div>
-      ) : null} */}
-    </div>
+    </Fragment>
   )
 }
 
-function reduceTaskUIState(taskManager: TaskManager) {
-  interface Acc {
-    digits: number
-    list: Array<TaskBox>
-  }
-  const acc: Acc = Array.from(taskManager.tasks.values()).reduce<Acc>((a, c) => {
-    a.digits = Math.max(a.digits, c.id.toString().length)
-    a.list.push({
-      ...c,
-      issues: Array.from(c.issues)
-    })
-    return a
-  }, { digits: 0, list: [] })
-
-  if(!acc.list.length) return acc
-  const list: Array<TaskBox> = []
-  acc.list.sort((a, b) => b.issues.length - a.issues.length)
-  // console.log(taskManager)
-  // console.log(acc.list[0])
-  // list.push(acc.list[0])
-  // acc.list[0].issues.forEach(pushToList)
-
-  // function pushToList(box: TaskBox) {
-  //   list.push(box)
-  //   box.issues.forEach(pushToList)
-  // }
-
-  
-  
-  
-  // acc.list = list
-  return acc
+function mapToTaskIssues(issues: TaskBox['issues']): TaskProps['issues'] {
+  return Array.from(issues).map(issue => ({ 
+    id: issue.id, 
+    title: issue.task.title,
+    dynamic: !issue.task.static
+  }))
 }

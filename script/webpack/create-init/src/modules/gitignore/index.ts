@@ -13,10 +13,10 @@ export interface Options extends MakeFileOptions {
 }
 
 export default class GitIgnore extends MakeFile {
-  constructor(context: string, options: Options) {
-    super(context, { filepath: './.gitignore', ...options })
+  constructor(public context: string, public options: Options) {
+    super(context, { filepath: '.gitignore', ...options })
     this.id = `gitignore`
-    this.title = `create ~/.gitignore`
     this.content = template(tpl)({ addons: options.addons || '' })
+    this.flag = `<${this.id}>`
   }
 }
