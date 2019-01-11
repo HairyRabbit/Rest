@@ -30,7 +30,7 @@ export interface TaskInterface<O> extends TaskAction {
 }
 
 export interface TaskConstructor<O> {
-  new(context: TaskContext, options: O): TaskInterface<O>
+  new(context: TaskContext, options: O): Task<O>
 }
 
 export interface TaskAction {

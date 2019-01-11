@@ -12,6 +12,11 @@
           "label": "dev",
           "type": "shell",
           "command": "node dist/${workspaceFolderBasename}"
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "npx webpack -p"
         }
     ],
     "typescript.tsc.autoDetect": "off",

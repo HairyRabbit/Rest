@@ -5,6 +5,8 @@
 import { template } from 'lodash'
 import tpl from './template.txt'
 import MakeFile, { Options as MakeFileOptions } from '../mkfile'
+import { TaskContext } from '../../tasker'
+
 
 /// code
 
@@ -13,7 +15,7 @@ export interface Options extends MakeFileOptions {
 }
 
 export default class GitIgnore extends MakeFile {
-  constructor(public context: string, public options: Options) {
+  constructor(public context: TaskContext, public options: Options) {
     super(context, { filepath: '.gitignore', ...options })
     this.id = `gitignore`
     this.content = template(tpl)({ addons: options.addons || '' })

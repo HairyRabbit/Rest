@@ -1,0 +1,34 @@
+name: cli
+description: Create a nodejs cli(command line interface) project.
+usage: npm create my cli <name> [options]
+defaults:
+  - name: the cli name
+options:
+  context:
+    type: string
+    description: where is the cli project install to, default to current dir
+    default: '.'
+  init:
+    type: boolean
+    description: install at current dir, not create a new dir
+    default: false
+  open:
+    type: boolean
+    description: open vscode hacking the code when everything is ok
+    default: false
+examples: |
+  $ npm create my cli foo-cli -- --open
+tasks:
+  - group base as base:
+      tasks:
+        - gitignore
+        - editorconfig
+        - tpl tsconfig.json
+        - tpl package.json:
+            options:
+              name: $0
+        - tpl src/index.ts:
+            options:
+              name: $0
+  - group npm start after base:
+  - group npm

@@ -3,7 +3,7 @@ module.exports = require('@rabbitcc/webpack-builder').default(
   { installOnCheckFail: true, nodelib: { script: { jsx: true }}, script: { jsx: true } }
 )
   .setEntryName('main', require('./package.json').name)
-  // .set('output.path', __dirname)
+  .setProd('output.path', 'bin')
   .set('output.filename', '[name]')
   .setPlugin('banner', require('webpack').BannerPlugin, {
     banner: '#!/usr/bin/env node\n',
@@ -11,6 +11,7 @@ module.exports = require('@rabbitcc/webpack-builder').default(
     entryOnly: true
   })
   .setRuleLoader('txt', 'raw-loader')
+  .setRuleLoader('yaml', 'json-loader')
   .setRuleLoader('yaml', 'yaml-loader')
   .print()
   .transform()

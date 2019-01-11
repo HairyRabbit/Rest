@@ -31,7 +31,7 @@ export default class MakeFile extends Task<Options> {
     super(context)
 
     const { root } = context
-    const {  _: defaults = [], 
+    const { _: defaults = [], 
             filepath: _filepath, 
             content: _content, 
             override = false } = this.options

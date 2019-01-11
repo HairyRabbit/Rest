@@ -1,0 +1,19 @@
+name: foy
+description: Create a foy config file.
+usage: npm create my foy [options]
+defaults:
+  - name: the cli name
+options:
+  context:
+    type: string
+    description: where is the cli project install to, default to current dir
+    default: '.'
+  open:
+    type: boolean
+    description: open vscode hacking the code when everything is ok
+    default: false
+examples: |
+  $ npm create my foy -- --open
+var:
+  target: Foyfile.ts
+tasks: tpl $target

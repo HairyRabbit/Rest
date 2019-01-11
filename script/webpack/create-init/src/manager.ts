@@ -4,9 +4,9 @@
 
 import path from 'path'
 import Task, { TaskInterface, TaskConstructor, TaskState, TaskResult, TaskResultReturnType, TaskAction, TaskContext } from './tasker'
-import { forEachParallel, forEachMapParallel } from './utils'
+import { forEachParallel } from './utils'
 import { isArray } from 'lodash';
-import { isUndefined, isString } from 'util';
+import { isString } from 'util';
 
 /// code
 
@@ -67,6 +67,7 @@ function setTaskCounter(tasks: TaskMap, task: TaskInterface<any>): void {
 }
 
 export type TaskError = { task: TaskInterface<any>, error: Error }
+
 export class TaskManager implements TaskManagerInterface {
   public state: TaskManagerState = TaskManagerState.Init
   public result?: TaskManagerResult
@@ -88,11 +89,34 @@ export class TaskManager implements TaskManagerInterface {
      * before all the tasks.
      */
     const depTaskMap: Map<string, Set<TaskBox>> = new Map()
-    await forEachParallel(async ([Task, options, deps]) => {
+    // await forEachParallel(async ([Task, options, deps]) => {
+    //   /**
+    //    * @todo catch errors
+    //    */
+    //   const task = new Task(this.context, options)
+    //   if(!task.title) task.id = task.title
+    //   const box: TaskBox = makeTaskBox(this.tasks.size + 1, task)
+    //   if(deps) deps.forEach(dep => {
+    //     const depset: undefined | Set<TaskBox> = depTaskMap.get(dep)
+    //     if(depset) {
+    //       depset.add(box)
+    //     } else {
+    //       depTaskMap.set(dep, new Set([ box ]))
+    //     }
+    //   })
+    //   this.tasks.set(task.id, box)
+
+    //   /**
+    //    * task self and task's dependencies all are not dynamic
+    //    */
+    //   task.static = true
+    //   task.dependencies.forEach(deptask => deptask.static = true)
+    // }, this.tasklist)
+    await forEachParallel(async ({ task, alias, deps }) => {
       /**
        * @todo catch errors
        */
-      const task = new Task(this.context, options)
+      // const task = new Task(this.context, options)
       if(!task.title) task.id = task.title
       const box: TaskBox = makeTaskBox(this.tasks.size + 1, task)
       if(deps) deps.forEach(dep => {
@@ -348,24 +372,25 @@ async function runTaskAction(action: { [K in keyof TaskAction]: TaskAction[K] }[
 export function mapToTaskManagerStateProps(state: TaskManagerState, result?: TaskManagerResult): { icon: boolean | string, color: string, state: string } {
   switch(state) {
     case TaskManagerState.Init: return { icon: true, color: 'gray', state: 'initializing...' }
+    case TaskManagerState.Start: return { icon: true, color: 'gray', state: 'starting...' }
     case TaskManagerState.Validate: {
       switch(result) {
-        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'validated failed' }
-        case TaskManagerResult.Done: return { icon: '✓', color: 'blueBright', state: 'validated complated' }
+        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'failed' }
+        case TaskManagerResult.Done: return { icon: '✓', color: 'blueBright', state: 'validated' }
         default: return { icon: true, color: 'blueBright', state: 'validating...' }
       }
     }
     case TaskManagerState.Run: {
       switch(result) {
-        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'tasks failed' }
-        case TaskManagerResult.Done: return { icon: '✓', color: 'greenBright', state: 'tasks complated' }
+        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'failed' }
+        case TaskManagerResult.Done: return { icon: '✓', color: 'greenBright', state: 'complated' }
         default: return { icon: true, color: 'greenBright', state: 'running...' }
       }
     }
     case TaskManagerState.Rollback: {
       switch(result) {
-        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'rollback failed' }
-        case TaskManagerResult.Done: return { icon: '✓', color: 'magentaBright', state: 'rollback complated' }
+        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'failed' }
+        case TaskManagerResult.Done: return { icon: '✓', color: 'magentaBright', state: 'rollbacked' }
         default: return { icon: true, color: 'magentaBright', state: 'rollbacking...' }
       }
     }
@@ -378,27 +403,27 @@ export function mapToTaskStateProps(state: TaskState, result?: TaskResult): { ic
     case TaskState.Init: return { icon: true, color: 'gray', state: 'initializing...' }
     case TaskState.Validate: {
       switch(result) {
-        case TaskResult.Fail: return { icon: '✗', color: 'redBright', state: 'validated failed' }
-        case TaskResult.Done: return { icon: '✓', color: 'blueBright', state: 'validated complated' }
-        case TaskResult.Skip: return { icon: '✓', color: 'yellowBright', state: 'validated skipped' }
+        case TaskResult.Fail: return { icon: '✗', color: 'redBright', state: 'failed' }
+        case TaskResult.Done: return { icon: '✓', color: 'blueBright', state: 'validated' }
+        case TaskResult.Skip: return { icon: '✓', color: 'yellowBright', state: 'skipped' }
         default: return { icon: true, color: 'blueBright', state: 'validating...' }
       }
     }
     case TaskState.Run: {
       switch(result) {
-        case TaskResult.Fail: return { icon: '✗', color: 'redBright', state: 'task failed' }
-        case TaskResult.Done: return { icon: '✓', color: 'greenBright', state: 'task complated' }
-        case TaskResult.Skip: return { icon: '✓', color: 'yellowBright', state: 'task skipped' }
-        case TaskResult.Force: return { icon: '✓', color: 'cyanBright', state: 'task overrided' }
+        case TaskResult.Fail: return { icon: '✗', color: 'redBright', state: 'failed' }
+        case TaskResult.Done: return { icon: '✓', color: 'greenBright', state: 'complated' }
+        case TaskResult.Skip: return { icon: '✓', color: 'yellowBright', state: 'skipped' }
+        case TaskResult.Force: return { icon: '✓', color: 'cyanBright', state: 'overrided' }
         default: return { icon: true, color: 'greenBright', state: 'running...' }
       }
     }
     case TaskState.Rollback: {
       switch(result) {
-        case TaskResult.Fail: return { icon: '✗', color: 'redBright', state: 'rollback failed' }
-        case TaskResult.Done: return { icon: '✓', color: 'magentaBright', state: 'rollback complated' }
-        case TaskResult.Skip: return { icon: '✓', color: 'yellowBright', state: 'rollback skipped' }
-        case TaskResult.Force: return { icon: '✓', color: 'cyanBright', state: 'rollback overrided' }
+        case TaskResult.Fail: return { icon: '✗', color: 'redBright', state: 'failed' }
+        case TaskResult.Done: return { icon: '✓', color: 'magentaBright', state: 'rollbacked' }
+        case TaskResult.Skip: return { icon: '✓', color: 'yellowBright', state: 'skipped' }
+        case TaskResult.Force: return { icon: '✓', color: 'cyanBright', state: 'overrided' }
         default: return { icon: true, color: 'magentaBright', state: 'rollbacking...' }
       }
     }
@@ -406,12 +431,19 @@ export function mapToTaskStateProps(state: TaskState, result?: TaskResult): { ic
   }
 }
 
-export default function taskManager<T extends [TaskConstructor<T>, T, undefined | Array<string>]>(tasklist: Array<any>, context?: string): TaskManager {
-  if(!context) {
-    context = process.cwd()
-  } else if(!path.isAbsolute(context)) {
-    context = path.normalize(context)
-  }
+function makeOptionsContext<T extends TaskContext>(options?: string | T): TaskContext {
+  const opt = isString(options) ? { root: options, cmdroot: undefined } : options || {}
+  const { root: _root, 
+          cmdroot: _cmdroot,
+          ...rest } = opt
+  const root = _root 
+    ? (path.isAbsolute(_root) ? _root : path.resolve(_root))
+    : process.cwd()
+  
+  const cmdroot = _cmdroot || root
+  return { root, cmdroot, ...rest }
+}
 
-  return new TaskManager(tasklist, { root: context, cmdroot: context })
+export default function taskManager<T extends [TaskConstructor<T>, T, undefined | Array<string>]>(tasklist: Array<any>, options?: any): TaskManager {
+  return new TaskManager(tasklist, makeOptionsContext(options))
 }

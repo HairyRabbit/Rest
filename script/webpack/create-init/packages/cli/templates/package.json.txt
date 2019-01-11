@@ -1,0 +1,12 @@
+{
+    "name": "${name}",
+    "description": "${name} cli",
+    "version": "0.0.1",
+    "main": "dist/index.js",
+    "bin": {
+        "${name}": "dist/index.js"
+    },
+    "license": "MIT",
+    "devDependencies": {},
+    "dependencies": {}
+}

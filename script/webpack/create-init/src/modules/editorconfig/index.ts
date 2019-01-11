@@ -5,14 +5,16 @@
 import { template } from 'lodash'
 import tpl from './template.txt'
 import MakeFile, { Options as MakeFileOptions } from '../mkfile'
+import { TaskContext } from '../../tasker'
+
 
 /// code
 
-export interface Options extends MakeFileOptions {
+export interface EditorConfigOptions extends MakeFileOptions {
 }
 
 export default class EditorConfig extends MakeFile {
-  constructor(public context: string, public options: Options) {
+  constructor(public context: TaskContext, public options: EditorConfigOptions) {
     super(context, { filepath: '.editorconfig', ...options })
     this.id = `editorconfig`
     this.content = template(tpl)({})

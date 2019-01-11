@@ -29,7 +29,7 @@ export default class Group extends Task<Options> {
 
     this.name = name
     this.id = `group(${this.name})`
-    this.title = this.id
+    this.title = `+${this.name}`
   }
 
   run() { return TaskResult.Skip }
