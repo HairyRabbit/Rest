@@ -12,7 +12,7 @@ export interface Props {
   readonly children: InkNode
 }
 
-export default function Box({ padding = 1, children }: Props): InkNode {
+export default function Box({ padding = 1, children }: Props) {
   const pads: Array<InkNode> = Array(padding).fill(0).map(_ => <br />)
   return (
     <div>

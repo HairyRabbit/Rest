@@ -10,7 +10,7 @@ import { isString } from 'util';
 
 /// code
 
-export type TaskStack = Set<TaskInterface<any>>
+export type TaskStack = Set<TaskBox>
 
 export interface TaskBox {
   id: number
@@ -47,8 +47,15 @@ interface TaskManagerAction {
   run(): Promise<void>
 }
 
-export interface TaskManagerConstructor {
-  new(tasklist: Array<TaskConstructor<any>>): TaskManagerInterface
+interface TaskManagerRendered {
+  readonly id: string
+  readonly name: string
+  readonly state: TaskState
+  readonly result?: TaskResult
+  readonly description?: string
+  readonly during?: number
+  readonly depth: number
+  readonly dynamic: boolean
 }
 
 function getNextTasks(taskmap: TaskMap): Set<TaskBox> {
@@ -68,6 +75,15 @@ function setTaskCounter(tasks: TaskMap, task: TaskInterface<any>): void {
 
 export type TaskError = { task: TaskInterface<any>, error: Error }
 
+const enum TaskManagerMessageType { Info, Warning, Error }
+
+interface TaskManagerMessageRendered {
+  id: string,
+  name: string,
+  type: TaskManagerMessageType,
+  msg: string
+}
+
 export class TaskManager implements TaskManagerInterface {
   public state: TaskManagerState = TaskManagerState.Init
   public result?: TaskManagerResult
@@ -76,8 +92,9 @@ export class TaskManager implements TaskManagerInterface {
   public validateErrors: Set<TaskError> = new Set()
   public runErrors: Set<TaskError> = new Set()
   public rollbackErrors: Set<TaskError> = new Set()
-  public exit!: (code?: number | undefined) => void;
-  public errors: Set<{ box: TaskBox, error: Error}> = new Set();
+  public exit!: (code?: number | undefined) => void
+  public errors: Set<{ box: TaskBox, error: Error}> = new Set()
+  public messages: Set<{ box: TaskBox, msg: string, type: TaskManagerMessageType }> = new Set()
   constructor(public tasklist: Array<[TaskConstructor<any>, any, undefined | Array<string>]>, public context: TaskContext) {}
 
   /**
@@ -89,34 +106,8 @@ export class TaskManager implements TaskManagerInterface {
      * before all the tasks.
      */
     const depTaskMap: Map<string, Set<TaskBox>> = new Map()
-    // await forEachParallel(async ([Task, options, deps]) => {
-    //   /**
-    //    * @todo catch errors
-    //    */
-    //   const task = new Task(this.context, options)
-    //   if(!task.title) task.id = task.title
-    //   const box: TaskBox = makeTaskBox(this.tasks.size + 1, task)
-    //   if(deps) deps.forEach(dep => {
-    //     const depset: undefined | Set<TaskBox> = depTaskMap.get(dep)
-    //     if(depset) {
-    //       depset.add(box)
-    //     } else {
-    //       depTaskMap.set(dep, new Set([ box ]))
-    //     }
-    //   })
-    //   this.tasks.set(task.id, box)
-
-    //   /**
-    //    * task self and task's dependencies all are not dynamic
-    //    */
-    //   task.static = true
-    //   task.dependencies.forEach(deptask => deptask.static = true)
-    // }, this.tasklist)
+    
     await forEachParallel(async ({ task, alias, deps }) => {
-      /**
-       * @todo catch errors
-       */
-      // const task = new Task(this.context, options)
       if(!task.title) task.id = task.title
       const box: TaskBox = makeTaskBox(this.tasks.size + 1, task)
       if(deps) deps.forEach(dep => {
@@ -160,9 +151,12 @@ export class TaskManager implements TaskManagerInterface {
    */
   async validate(): Promise<void> {
     let next: boolean = false
+    let failed: boolean = false
 
     for await (const [id, box] of this.tasks) {
       if(box.validated) return
+      if(failed) return
+      
       const task = box.task
 
       /**
@@ -170,57 +164,63 @@ export class TaskManager implements TaskManagerInterface {
        */
       task.state = TaskState.Validate
       try {
+        /**
+         * @todo add warning supports
+         */
         const description = await task.validate()
         task.result = TaskResult.Done
         task.description = description || undefined
-      } catch(e) {
-        this.errors.add({ box, error: new Error(e) })
-        task.result = TaskResult.Fail
-        task.description = String(e)
-      }
-      
-      task.dependencies.forEach(deptask => {
-        /**
-         * find deptask from `this.tasks` by `deptask.id`,
-         * if not found, create new one and add to `this.tasks`;
-         * if exists, check the validated, `false` means the box
-         * should validate at next loop.
-         */
-        const depbox: undefined | TaskBox = this.tasks.get(deptask.id)
-        if(!depbox) {
-          const newbox = makeTaskBox(this.tasks.size + 1, deptask)
-          newbox.issues.add(box)
-          this.tasks.set(deptask.id, newbox)
-          box.counter += 1
-          next = true
-        } else {          
-          /**
-           * link `depbox.issues` with `box`
-           */
-          if(!depbox.issues.has(box)) {
-            depbox.issues.add(box)
-            box.counter += 1
-          }
 
+        task.dependencies.forEach(deptask => {
           /**
-           * replace refs when got same id
+           * find deptask from `this.tasks` by `deptask.id`,
+           * if not found, create new one and add to `this.tasks`;
+           * if exists, check the validated, `false` means the box
+           * should validate at next loop.
            */
-          if(depbox.task !== deptask) {
-            task.dependencies.delete(deptask)
-            task.dependencies.add(depbox.task)
+          const depbox: undefined | TaskBox = this.tasks.get(deptask.id)
+          if(!depbox) {
+            const newbox = makeTaskBox(this.tasks.size + 1, deptask)
+            newbox.issues.add(box)
+            this.tasks.set(deptask.id, newbox)
+            box.counter += 1
+            next = true
+          } else {          
+            /**
+             * link `depbox.issues` with `box`
+             */
+            if(!depbox.issues.has(box)) {
+              depbox.issues.add(box)
+              box.counter += 1
+            }
+  
+            /**
+             * replace refs when got same id
+             */
+            if(depbox.task !== deptask) {
+              task.dependencies.delete(deptask)
+              task.dependencies.add(depbox.task)
+            }
           }
-        }
-      })
-      box.validated = true
+        })
+        box.validated = true
+      } catch(e) {
+        this.messages.add({ 
+          type: TaskManagerMessageType.Error, 
+          box, 
+          msg: String(e)
+        })
+        task.result = TaskResult.Fail
+        failed = true
+      }
     }
 
     if(next) await this.validate()
+    if(failed) throw 42
   }
 
   async run(): Promise<void> {
     const nextTasks: Set<TaskBox> = getNextTasks(this.tasks)
-    // console.log(require('util').inspect(nextTasks, { depth: null }))
-    // console.log(nextTasks)
     /**
      * done, no more tasks need to run
      */
@@ -247,7 +247,7 @@ export class TaskManager implements TaskManagerInterface {
          * `task.run()` complated 
          */
         box.counter = -1
-        this.stack.add(task)
+        this.stack.add(box)
         setTaskCounter(this.tasks, task)
       } catch(e) {
         /**
@@ -256,7 +256,11 @@ export class TaskManager implements TaskManagerInterface {
          */
         task.result = TaskResult.Fail
         task.description = String(e)
-        this.errors.add({ box, error: e })
+        this.messages.add({ 
+          type: TaskManagerMessageType.Error, 
+          box, 
+          msg: String(e)
+        })
       }
     }))
     
@@ -267,16 +271,17 @@ export class TaskManager implements TaskManagerInterface {
     if(this.errors.size) return
     return this.run()
   }
-  
+
   async rollback(): Promise<void> {
     for await (const task of this.stack) {
       try {
         task.result = undefined
         await task.rollback()
       } catch(e) {
-        this.rollbackErrors.add({
-          task,
-          error: new Error(e)
+        this.messages.add({ 
+          type: TaskManagerMessageType.Error, 
+          box: task, 
+          msg: String(e)
         })
       }
     }
@@ -292,6 +297,43 @@ export class TaskManager implements TaskManagerInterface {
     return this
   }
 
+  render(): Array<TaskManagerRendered> {
+    const acc: Array<TaskManagerRendered> = []
+    this.tasks.forEach(box => {
+      acc.push({
+        id: box.id.toString(),
+        name: box.task.title,
+        state: box.task.state,
+        result: box.task.result,
+        description: box.task.description,
+        during: box.during,
+        dynamic: !box.task.static,
+        depth: parentIssue(box)
+      })
+    })
+
+    return acc
+
+    function parentIssue(box: TaskBox, depth: number = 0): number {
+      if(0 === box.issues.size) return depth
+      return Math.max.apply(
+        null, 
+        Array.from(box.issues).map(ibox => parentIssue(ibox, depth + 1))
+      )
+    }
+  }
+
+  renderMessage(): Array<TaskManagerMessageRendered> {
+    const acc: Array<TaskManagerMessageRendered> = []
+    this.messages.forEach(({ box, type, msg }) => acc.push({
+      id: box.id,
+      name: box.task.title,
+      type,
+      msg
+    }))
+    return acc
+  }
+
   async start(handler: () => void): Promise<void> {
     this.exit = exit(handler)
     /**
@@ -302,14 +344,13 @@ export class TaskManager implements TaskManagerInterface {
     /**
      * validate tasks
      */
-    await this.reset(TaskManagerState.Validate).validate()
-    //console.log('VALIDATED DONE', require('util').inspect(this.tasks, { depth: null }))
-    //console.log('VALIDATED DONE', this.tasks)
-    
-    /**
-     * validate failed, stop run task and exit
-     */
-    if(this.errors.size) return this.exit(2)
+    try {
+      await this.reset(TaskManagerState.Validate).validate()
+      this.result = TaskManagerResult.Done
+    } catch(e) {
+      this.result = TaskManagerResult.Fail
+      return this.exit(2)
+    }
 
     /**
      * run task recur
@@ -375,8 +416,8 @@ export function mapToTaskManagerStateProps(state: TaskManagerState, result?: Tas
     case TaskManagerState.Start: return { icon: true, color: 'gray', state: 'starting...' }
     case TaskManagerState.Validate: {
       switch(result) {
-        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'failed' }
-        case TaskManagerResult.Done: return { icon: '✓', color: 'blueBright', state: 'validated' }
+        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'invalide' }
+        case TaskManagerResult.Done: return { icon: '✓', color: 'blueBright', state: 'passed' }
         default: return { icon: true, color: 'blueBright', state: 'validating...' }
       }
     }
@@ -389,8 +430,8 @@ export function mapToTaskManagerStateProps(state: TaskManagerState, result?: Tas
     }
     case TaskManagerState.Rollback: {
       switch(result) {
-        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'failed' }
-        case TaskManagerResult.Done: return { icon: '✓', color: 'magentaBright', state: 'rollbacked' }
+        case TaskManagerResult.Fail: return { icon: '✗', color: 'redBright', state: 'panic' }
+        case TaskManagerResult.Done: return { icon: '✓', color: 'magentaBright', state: 'cancled' }
         default: return { icon: true, color: 'magentaBright', state: 'rollbacking...' }
       }
     }
@@ -431,19 +472,13 @@ export function mapToTaskStateProps(state: TaskState, result?: TaskResult): { ic
   }
 }
 
-function makeOptionsContext<T extends TaskContext>(options?: string | T): TaskContext {
-  const opt = isString(options) ? { root: options, cmdroot: undefined } : options || {}
-  const { root: _root, 
-          cmdroot: _cmdroot,
-          ...rest } = opt
-  const root = _root 
-    ? (path.isAbsolute(_root) ? _root : path.resolve(_root))
-    : process.cwd()
-  
-  const cmdroot = _cmdroot || root
-  return { root, cmdroot, ...rest }
+function createTaskManager(tasklist: Array<any>, options?: any): TaskManager {
+  return new TaskManager(tasklist, options)
 }
 
-export default function taskManager<T extends [TaskConstructor<T>, T, undefined | Array<string>]>(tasklist: Array<any>, options?: any): TaskManager {
-  return new TaskManager(tasklist, makeOptionsContext(options))
+export {
+  TaskManagerRendered,
+  TaskManagerMessageRendered
 }
+
+export default createTaskManager

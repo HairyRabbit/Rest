@@ -1,0 +1,3 @@
+name: gitignore
+description: Create a .gitignore for configure git ignore
+tasks: tpl .gitignore

@@ -7,6 +7,7 @@ import Box from './Box'
 import Tasks from './Tasks'
 import { TaskManager, mapToTaskManagerStateProps } from '../manager'
 import ErrorList from './ErrorList'
+import Message from './Message'
 import Icon from './Icon'
 import StateResult from './StateResult'
 
@@ -43,7 +44,7 @@ export default function Manager({ value }: Props): InkElement {
     return (
       <Box>
         <Indent size={3}>
-          <Tasks value={Array.from(value.tasks.values())} />
+          <Tasks value={value.render()} />
         </Indent>
       </Box>
     )
@@ -53,7 +54,7 @@ export default function Manager({ value }: Props): InkElement {
     return (
       <Box>
         <Indent>
-          <ErrorList value={Array.from(value.errors)} />
+          <Message value={value.renderMessage()} />
         </Indent>
       </Box>
     )

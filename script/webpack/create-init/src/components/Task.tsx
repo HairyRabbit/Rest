@@ -4,7 +4,7 @@
 
 import { isUndefined } from 'lodash'
 import { h, Indent, Fragment, Bold, Color } from 'ink'
-import { mapToTaskStateProps } from '../manager'
+import { mapToTaskStateProps, TaskManagerRendered } from '../manager'
 import { TaskState, TaskResult } from '../tasker'
 import StateResult from './StateResult'
 import Icon from './Icon'
@@ -13,30 +13,23 @@ import Id from './Number'
 
 /// code
 
-export interface Props {
-  readonly id: number
-  readonly title: string
-  readonly state: TaskState
-  readonly result?: TaskResult
-  readonly description?: string
-  readonly during?: number
-  readonly dynamic?: boolean
-  readonly issues: Array<{ id: number, title: string, dynamic: boolean }>
-}
+export interface Props extends TaskManagerRendered {}
 
-export default function Task({ id, title, state, result, description, during, issues, dynamic }: Props) {
+export default function Task({ id, name, state, result, description, during, issues, dynamic, depth }: Props) {
   const { color, icon, state: str } = mapToTaskStateProps(state, result)
   return (
     <div>
-      <Icon color={color} value={icon} />
-      <Id value={id} />
-      <Title value={title} />
-      <Dynamic value={dynamic} />
-      <During />
-      <Indent>-</Indent>
-      <StateResult color={color} value={str} />
-      <Description />
-      <Issues />
+      <Indent size={depth}>
+        <Icon color={color} value={icon} />
+        <Id value={id} />
+        <Title value={name} />
+        <Dynamic value={dynamic} />
+        <During />
+        <Indent>-</Indent>
+        <StateResult color={color} value={str} />
+        <Description />
+        {/* <Issues /> */}
+      </Indent>
     </div>
   )
 
@@ -102,7 +95,7 @@ export default function Task({ id, title, state, result, description, during, is
       <Fragment>
         <br />
         <Indent key={`task-issues-${id}`} size={2}>
-          <Color gray><Indent>|-</Indent></Color>
+          <Color gray><Indent>└</Indent></Color>
           <Id value={id} />
           <Title value={title} />
           <Dynamic value={dynamic} />

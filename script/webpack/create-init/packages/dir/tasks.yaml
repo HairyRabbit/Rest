@@ -1,0 +1,5 @@
+name: dir
+description: Create dir by name, "@" means root context, default to current dir
+requires:
+  - name: dir name
+tasks: mkdir $0

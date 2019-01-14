@@ -29,7 +29,7 @@ export interface TaskInterface<O> extends TaskAction {
   result?: TaskResult
 }
 
-export interface TaskConstructor<O> {
+export interface TaskConstructor<O extends TaskOptions<any>> {
   new(context: TaskContext, options: O): Task<O>
 }
 
@@ -44,15 +44,19 @@ export interface TaskContext {
   cmdroot: string
 }
 
+interface TaskOptions<T> {
+  readonly _?: { [K in keyof T]: T[K] }
+}
+
 export type TaskResultReturnType = void | TaskResult | string | [TaskResult, string]
 export const enum TaskState { Init, Validate, Run, Rollback }
 export const enum TaskResult { Fail, Done, Skip, Force }
 
-export default abstract class Task<O> implements TaskInterface<O> {
+abstract class Task<O> implements TaskInterface<O> {
   id!: string
   title!: string
   description!: string
-  abstract options: O
+  abstract readonly options: O
   dependencies: Set<TaskInterface<any>> = new Set()
   state: TaskState = TaskState.Init
   result?: TaskResult
@@ -61,3 +65,6 @@ export default abstract class Task<O> implements TaskInterface<O> {
   run() {}
   rollback() {}
 }
+
+export { TaskOptions }
+export default Task

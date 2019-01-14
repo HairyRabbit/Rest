@@ -4,15 +4,15 @@
 
 import fs from 'fs'
 import path from 'path'
-import Task, { TaskResult, TaskResultReturnType, TaskContext } from '../tasker'
+import Task, { TaskResult, TaskResultReturnType, TaskContext, TaskOptions } from '../tasker'
 import MakeDir from './mkdir'
 import { getFileHash, getContentHash, isFileExists, isDirExists, formatToPosixPath } from '../utils'
 import { isUndefined } from 'lodash'
 
 /// code
 
-export interface Options {
-  readonly _?: [ string?, string? ]
+export interface Options extends TaskOptions<[Options['filepath'], Options['content']]> {
+  readonly _?: [ Options['filepath'], Options['content'] ]
   readonly filepath?: string
   readonly content?: string | Buffer
   readonly override?: boolean

@@ -4,13 +4,13 @@
 
 import { h, Fragment } from 'ink'
 import Task, { Props as TaskProps } from './Task'
-import { TaskBox } from '../manager'
+import { TaskBox, TaskManagerRendered } from '../manager'
 
 
 /// code
 
 export interface Props {
-  readonly value: Array<TaskBox>
+  readonly value: Array<TaskManagerRendered>
 }
 
 export default function Tasks({ value }: Props) {
@@ -18,25 +18,18 @@ export default function Tasks({ value }: Props) {
 
   return (
     <Fragment>
-      {value.map(box => (
-        <Task key={`task-${box.id}`} 
-              id={box.id}
-              title={box.task.title}
-              state={box.task.state}
-              result={box.task.result}
-              description={box.task.description}
-              during={box.during}
-              dynamic={!box.task.static}
-              issues={mapToTaskIssues(box.issues)} />
+      {value.map(({ id, name, state, result, description, during, dynamic, depth }) => (
+        <Task key={`task-${id}`} 
+              id={id}
+              name={name}
+              state={state}
+              result={result}
+              description={description}
+              during={during}
+              dynamic={dynamic}
+              depth={depth}
+              issues={[]} />
       ))}
     </Fragment>
   )
-}
-
-function mapToTaskIssues(issues: TaskBox['issues']): TaskProps['issues'] {
-  return Array.from(issues).map(issue => ({ 
-    id: issue.id, 
-    title: issue.task.title,
-    dynamic: !issue.task.static
-  }))
 }

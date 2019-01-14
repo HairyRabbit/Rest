@@ -2,19 +2,19 @@
  * group tasks
  */
 
-import Task, { TaskResult, TaskContext } from "../tasker"
+import Task, { TaskResult, TaskContext, TaskOptions } from "../tasker"
 
 
 /// code
 
-export interface Options {
-  readonly _?: [ string? ]
+interface Options extends TaskOptions<[Options['name']]> {
+  readonly _?: [ Options['name'] ]
   readonly name?: string
 }
 
-export default class Group extends Task<Options> {
-  private name: NonNullable<Options['name']>
-  private flag: string = '<group>'
+class Group extends Task<Options> {
+  protected name: NonNullable<Options['name']>
+  protected flag: string = '<group>'
 
   constructor(public context: TaskContext, public options: Options) {
     super(context)
@@ -34,3 +34,6 @@ export default class Group extends Task<Options> {
 
   run() { return TaskResult.Skip }
 }
+
+export { Options }
+export default Group

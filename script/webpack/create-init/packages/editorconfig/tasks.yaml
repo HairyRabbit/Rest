@@ -1,0 +1,5 @@
+name: editorconfig
+description: >
+  Create a .editorconifg config file
+  see https://EditorConfig.org
+tasks: tpl .editorconfig

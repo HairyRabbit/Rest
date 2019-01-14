@@ -12,7 +12,6 @@ import MakeFile, { Options as MakeFileOptions } from "./mkfile"
 /// code
 
 export interface Options extends MakeFileOptions {
-  readonly _?: [ string? ]
   readonly filepath?: string
   readonly src?: string
   readonly dir?: string
